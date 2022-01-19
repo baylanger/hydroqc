@@ -6,7 +6,7 @@ stages:
 - pypi
 
 test:
-  image: python:3.9-stretch
+  image: python:3.9-bullseye
   stage: test
   before_script:
     - pip install -r requirements.txt
@@ -17,7 +17,7 @@ test:
     - pydocstyle mqtt_hass_base/
 
 pypi:
-  image: python:3.9-stretch
+  image: python:3.9-bullseye
   stage: pypi
   before_script:
   - pip install --upgrade pip
