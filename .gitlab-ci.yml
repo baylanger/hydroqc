@@ -12,9 +12,9 @@ test:
     - pip install -r requirements.txt
     - pip install -r test:_requirements.txt
   script:
-    - pylint --rcfile=.pylintrc mqtt_hass_base/
-    - flake8 mqtt_hass_base/
-    - pydocstyle mqtt_hass_base/
+    - pylint --rcfile=.pylintrc src/
+    - flake8 src/
+    - pydocstyle src/
 
 pypi:
   image: python:3.9-bullseye
