@@ -5,7 +5,7 @@ Services
    :maxdepth: 2
 
 
-.. automodule:: hydro_api.services
+.. automodule:: hydroqc.hydro_api.services
     :members:
     :undoc-members:
     :show-inheritance:

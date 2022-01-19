@@ -5,7 +5,7 @@ Auth
    :maxdepth: 4
 
 
-.. automodule:: hydro_api.auth
+.. automodule:: hydroqc.hydro_api.auth
     :members:
     :undoc-members:
     :show-inheritance:

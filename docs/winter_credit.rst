@@ -7,7 +7,7 @@ Winter Credit
 WinterCredit
 ------------
 
-.. automodule:: winter_credit.winter_credit
+.. automodule:: hydroqc.winter_credit.winter_credit
     :members:
     :undoc-members:
     :show-inheritance:
@@ -15,7 +15,7 @@ WinterCredit
 Period
 ------
 
-.. automodule:: winter_credit.period
+.. automodule:: hydroqc.winter_credit.period
     :members:
     :undoc-members:
     :show-inheritance:
@@ -23,7 +23,7 @@ Period
 Event
 -----
 
-.. automodule:: winter_credit.event
+.. automodule:: hydroqc.winter_credit.event
     :members:
     :undoc-members:
     :show-inheritance:

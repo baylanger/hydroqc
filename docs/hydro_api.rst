@@ -7,7 +7,7 @@ API Wrapper
    auth
    services
 
-.. automodule:: hydro_api
+.. automodule:: hydroqc.hydro_api
     :members:
     :undoc-members:
     :show-inheritance:
