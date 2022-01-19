@@ -1,0 +1,31 @@
+variables:
+  TWINE_USERNAME: __token__
+
+stages:
+- test
+- pypi
+
+test:
+  image: python:3.9-stretch
+  stage: test
+  before_script:
+    - pip install -r requirements.txt
+    - pip install -r test:_requirements.txt
+  script:
+    - pylint --rcfile=.pylintrc mqtt_hass_base/
+    - flake8 mqtt_hass_base/
+    - pydocstyle mqtt_hass_base/
+
+pypi:
+  image: python:3.9-stretch
+  stage: pypi
+  before_script:
+  - pip install --upgrade pip
+  - pip install --upgrade build
+  - pip install twine
+  - pip install -r requirements.txt
+  script:
+  - python setup.py sdist
+  - twine upload --non-interactive --repository testpypi dist/*
+  only:
+  - tags
