@@ -19,12 +19,12 @@ class Period:
     @property
     def start(self):
         """Give period start time as hour (without date)."""
-        return self.start_dt.strftime(self.config.formats.datetime_format)
+        return self.start_dt.strftime(self.config.datetime_format)
 
     @property
     def end(self):
         """Give period end time as hour (without date)."""
-        return self.end_dt.strftime(self.config.formats.datetime_format)
+        return self.end_dt.strftime(self.config.datetime_format)
 
     @property
     def start_ts(self):

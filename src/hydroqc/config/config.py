@@ -57,10 +57,10 @@ class Config:
         self._raw_config = self.read()
         self._validated_config = self.validate()
 
-        self.validate_ssl = self._validated_config.ssl.validate_ssl
-        self.user = self._validated_config.credentials.user
-        self.password = self._validated_config.credentials.password
-        self.datetime_format = self._validated_config.formats.datetime_format
+        self.validate_ssl = self._validated_config['ssl']['validate_ssl']
+        self.user = self._validated_config['credentials']['user']
+        self.password = self._validated_config['credentials']['password']
+        self.datetime_format = self._validated_config['formats']['datetime_format']
 
     def read(self):
         """Read config file."""

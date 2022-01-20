@@ -8,16 +8,14 @@ This will publish only once and exit
 import paho.mqtt.client as paho
 import datetime
 import time
-from config.config import Config
-from winter_credit.winter_credit import WinterCredit
-from winter_credit.event import Event
+from hydroqc.winter_credit.winter_credit import WinterCredit
+from hydroqc.winter_credit.event import Event
 
-config = Config()
-broker = config.mqtt.server
-port = config.mqtt.port
-user = config.mqtt.user
-password = config.mqtt.password
-base_topic = config.mqtt.base_topic
+broker = 'YOUR_MQTT_SERVER'
+port = 1883
+user = 'MQTT_USERNAME'
+password = 'MQTT_PASSWORD'
+base_topic = 'hydroqc' # Or whatever suits you
 
 w = WinterCredit()
 contract_id = w.api.auth.contract_id
@@ -32,7 +30,7 @@ if user and password:
     mqtt_client.username_pw_set(username=user, password=password)
 mqtt_client.connect(broker,port)
 mqtt_client.loop_start()
-next_event_object = w.getNextEvent()
+next_event_object = w.get_next_event()
 if not isinstance(next_event_object,Event):
     next_event = dict()
 else:
@@ -43,7 +41,7 @@ if next_event:
     for key in next_event.keys():
         ret= mqtt_client.publish("%s/%s/winterpeaks/next/critical/%s" % (base_topic, contract_id,key), next_event[key], qos=1, retain=True)
 
-state = w.getCurrentState()
+state = w.get_current_state()
 if state:
     for key in state['state'].keys():
         ret = mqtt_client.publish("%s/%s/winterpeaks/state/%s" % (base_topic, contract_id,key), state['state'][key], qos=1, retain=True)
@@ -56,7 +54,7 @@ if state:
     for topic in state['peak_periods'].keys():
         for key in state['peak_periods'][topic].keys():
             ret = mqtt_client.publish("%s/%s/winterpeaks/today/peak_periods/%s/%s" % (base_topic,contract_id, topic, key), state['peak_periods'][topic][key], qos=1, retain=True)
-    
+
 
 
     # Last update timestamp, should probably be in the winter_credit.py
@@ -64,6 +62,6 @@ if state:
     now = datetime.datetime.now()
     last_update = now.strftime("%Y-%m-%d %H:%M:%S")
     ret = mqtt_client.publish("%s/%s/winterpeaks/last_update" % (base_topic, contract_id), payload=last_update, qos=1, retain=True)
-         
+
 mqtt_client.loop_stop()
 mqtt_client.disconnect()

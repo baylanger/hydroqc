@@ -74,7 +74,7 @@ class Hydro:
         """Read OAUTH2 settings from hydro json"""
         if self.verify:
             # Certificate chain is added manually as there is an issue with this domain
-            data = self.session.get(self.SECURITY_URL, verify="config/hydro-chain.pem")
+            data = self.session.get(self.SECURITY_URL, verify="hydro-chain.pem")
         else:
             data = self.session.get(self.SECURITY_URL, verify=False)
         try:

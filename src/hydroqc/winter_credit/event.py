@@ -10,8 +10,8 @@ class Event:
         self.start_dt = start
         self.end_dt = end
         self.date = date.strftime("%Y-%m-%d")
-        self.start = start.strftime(self.config.formats.datetime_format)
-        self.end = end.strftime(self.config.formats.datetime_format)
+        self.start = start.strftime(self.config.datetime_format)
+        self.end = end.strftime(self.config.datetime_format)
         self.start_ts = self.start_dt.timestamp()
         self.end_ts = self.end_dt.timestamp()
         self.pre_heat_start = None
