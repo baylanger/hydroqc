@@ -10,11 +10,31 @@ class Period:
         self.start_dt = start
         self.end_dt = end
         self.critical = critical
-        self.date = date.strftime("%Y-%m-%d")
-        self.start = start.strftime(self.config.formats.datetime_format)
-        self.end = end.strftime(self.config.formats.datetime_format)
-        self.start_ts = self.start_dt.timestamp()
-        self.end_ts = self.end_dt.timestamp()
+
+    @property
+    def date(self):
+        """Give period date."""
+        return self.date_dt.strftime("%Y-%m-%d")
+
+    @property
+    def start(self):
+        """Give period start time as hour (without date)."""
+        return self.start_dt.strftime(self.config.formats.datetime_format)
+
+    @property
+    def end(self):
+        """Give period end time as hour (without date)."""
+        return self.end_dt.strftime(self.config.formats.datetime_format)
+
+    @property
+    def start_ts(self):
+        """Give period start time as timestamp."""
+        return self.start_dt.timestamp()
+
+    @property
+    def end_ts(self):
+        """Give period end time as timestamp."""
+        return self.end_dt.timestamp()
 
     def to_dict(self):
         """Return the current object attributes as a dict."""

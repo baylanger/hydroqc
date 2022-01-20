@@ -12,6 +12,27 @@ from hydroqc.winter_credit.period import Period
 log = logging.getLogger(__name__)
 
 
+DEFAULT_MORNING_PEAK_START = "06:00:00"
+DEFAULT_MORNING_PEAK_END = "09:00:00"
+DEFAULT_EVENING_PEAK_START = "16:00:00"
+DEFAULT_EVENING_PEAK_END = "20:00:00"
+DEFAULT_ANCHOR_START_OFFSET = 5
+DEFAULT_ANCHOR_DURATION = 3
+DEFAULT_EVENT_REFRESH_SECONDS = 300
+DEFAULT_PRE_HEAT_START_OFFSET = 3
+DEFAULT_PRE_HEAT_END_OFFSET = 0
+
+
+def _date_time_from_string(date_string):
+    """TODO."""
+    return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+
+
+def _timestamp_from_string(date_string):
+    """TODO."""
+    return _date_time_from_string(date_string).timestamp()
+
+
 class WinterCredit:
     """Winter Credit extra logic
 
@@ -32,21 +53,21 @@ class WinterCredit:
         # DATES
         self.ref_date = datetime.datetime.now()
         # To test the date can be modified artificially here.
-        # self.ref_date = self._date_time_from_string("2022-01-18 00:00:00")
+        # self.ref_date = _date_time_from_string("2022-01-18 00:00:00")
         self.today = datetime.datetime.now()
         self.today_date = self.today.strftime("%Y-%m-%d")
-        self.today_noon_ts = self._timestamp_from_string(self.today_date + " 12:00:00")
+        self.today_noon_ts = _timestamp_from_string(self.today_date + " 12:00:00")
 
         self.tomorrow = self.today + datetime.timedelta(days=1)
         self.tomorrow_date = self.tomorrow.strftime("%Y-%m-%d")
-        self.tomorrow_noon_ts = self._timestamp_from_string(
+        self.tomorrow_noon_ts = _timestamp_from_string(
             self.tomorrow_date + " 12:00:00"
         )
 
         log.debug("Cheking if we need to update the Data")
-        if time.time() > (self.last_update + self.config.periods.event_refresh_seconds):
+        if time.time() > (self.last_update + DEFAULT_EVENT_REFRESH_SECONDS):
             log.debug("Refreshing data")
-            self.data = self.api.getWinterCredit()
+            self.data = self.api.get_winter_credit()
             events_data = self._get_winter_credit_events()
             self.events = events_data["events"]
             self.event_in_progress = events_data["event_in_progress"]
@@ -103,12 +124,12 @@ class WinterCredit:
                         event = Event(
                             config=self.config,
                             date=date,
-                            start=self._date_time_from_string(
+                            start=_date_time_from_string(
                                 date.strftime("%Y-%m-%d")
                                 + " "
                                 + hydro_event["heureDebut"]
                             ),
-                            end=self._date_time_from_string(
+                            end=_date_time_from_string(
                                 date.strftime("%Y-%m-%d")
                                 + " "
                                 + hydro_event["heureFin"]
@@ -172,25 +193,20 @@ class WinterCredit:
         self._refresh_data()
         return self.events["next"]
 
-    def _date_time_from_string(self, date_string):
-        return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
-
-    def _timestamp_from_string(self, date_string):
-        return self._date_time_from_string(date_string).timestamp()
-
     def _get_today_peak_periods(self):
+        """TODO."""
         # PEAK PERIODS
-        today_peak_morning_start = self._date_time_from_string(
-            self.today_date + " " + self.config.periods.morning_peak_start
+        today_peak_morning_start = _date_time_from_string(
+            self.today_date + " " + DEFAULT_MORNING_PEAK_START
         )
-        today_peak_morning_end = self._date_time_from_string(
-            self.today_date + " " + self.config.periods.morning_peak_end
+        today_peak_morning_end = _date_time_from_string(
+            self.today_date + " " + DEFAULT_MORNING_PEAK_END
         )
-        today_peak_evening_start = self._date_time_from_string(
-            self.today_date + " " + self.config.periods.evening_peak_start
+        today_peak_evening_start = _date_time_from_string(
+            self.today_date + " " + DEFAULT_EVENING_PEAK_START
         )
-        today_peak_evening_end = self._date_time_from_string(
-            self.today_date + " " + self.config.periods.evening_peak_end
+        today_peak_evening_end = _date_time_from_string(
+            self.today_date + " " + DEFAULT_EVENING_PEAK_END
         )
 
         morning = Period(
@@ -209,6 +225,7 @@ class WinterCredit:
         return {"morning": morning, "evening": evening}
 
     def _get_today_anchor_periods(self, peak_periods, start_offset, duration):
+        """TODO."""
         morning_peak_period = peak_periods["morning"]
         evening_peak_period = peak_periods["evening"]
 
@@ -240,18 +257,16 @@ class WinterCredit:
         morning_peak_period = peak_periods["morning"]
         evening_peak_period = peak_periods["evening"]
         anchor_start_offset = datetime.timedelta(
-            hours=self.config.periods.anchor_start_offset
+            hours=DEFAULT_ANCHOR_START_OFFSET
         )
-        anchor_duration = datetime.timedelta(hours=self.config.periods.anchor_duration)
+        anchor_duration = datetime.timedelta(hours=DEFAULT_ANCHOR_DURATION)
         anchor_periods = self._get_today_anchor_periods(
             peak_periods, anchor_start_offset, anchor_duration
         )
         morning_anchor_period = anchor_periods["morning"]
         evening_anchor_period = anchor_periods["evening"]
 
-        """
-        Calculation for the next periods.
-        """
+        # Calculation for the next periods.
         if self.today.timestamp() <= morning_peak_period.end_ts:
             next_peak_period_start = morning_peak_period.start_dt
             next_peak_period_end = morning_peak_period.end_dt
@@ -382,12 +397,13 @@ class WinterCredit:
                 "morning": morning_peak_period.to_dict(),
                 "evening": evening_peak_period.to_dict(),
             },
-            "last_update": self.today.strftime(self.config.formats.datetime_format),
+            "last_update": self.today.strftime(self.config.datetime_format),
         }
         return response
 
-    def _get_current_state(self):
-        return {}
+    # def _get_current_state(self):
+    #    """TODO - USELESS - FIXME !!!!!!"""
+    #    return {}
 
     def _get_pre_heat(self, start):
         """Calculate pre_heat period according to event start date
@@ -400,18 +416,18 @@ class WinterCredit:
         """
         print(start)
         pre_heat_start_offset = datetime.timedelta(
-            hours=self.config.periods.pre_heat_start_offset
+            hours=DEFAULT_PRE_HEAT_START_OFFSET
         )
         pre_heat_start = start - pre_heat_start_offset
         pre_heat_end_offset = datetime.timedelta(
-            hours=self.config.periods.pre_heat_end_offset
+            hours=DEFAULT_PRE_HEAT_END_OFFSET
         )
         pre_heat_end = start - pre_heat_end_offset
         pre_heat = {
             "pre_heat_start": pre_heat_start.strftime(
-                self.config.formats.datetime_format
+                self.config.datetime_format
             ),
-            "pre_heat_end": pre_heat_end.strftime(self.config.formats.datetime_format),
+            "pre_heat_end": pre_heat_end.strftime(self.config.datetime_format),
             "pre_heat_start_ts": pre_heat_start.timestamp(),
             "pre_heat_end_ts": pre_heat_end.timestamp(),
         }
