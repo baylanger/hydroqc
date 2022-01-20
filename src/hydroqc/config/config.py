@@ -1,4 +1,4 @@
-"""Config helper
+"""Config helper.
 
 This part of the code can probably be rewritten :)
 """
@@ -50,8 +50,10 @@ CONFIG_SCHEMA = Schema({
 
 
 class Config:
-    """returns a config object"""
+    """returns a config object."""
+
     def __init__(self, config_file='config/config.yaml'):
+        """Config constructor."""
         self._configfile_path = config_file
 
         self._raw_config = self.read()

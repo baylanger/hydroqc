@@ -1,1 +1,1 @@
-"""Hydro Quebec API Wrapper"""
+"""Hydro Quebec API Wrapper."""

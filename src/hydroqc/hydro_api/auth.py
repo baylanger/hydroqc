@@ -1,6 +1,4 @@
-"""
-Authentication and initialization of Hydro API
-"""
+"""Authentication and initialization of Hydro API."""
 from datetime import datetime
 import json
 import random
@@ -20,7 +18,7 @@ log = logging.getLogger(__name__)
 
 class Hydro:
     """
-    Hydro API
+    Hydro API.
 
     Defines Hydro API URL and methods to login and initialize the API
     Hydro API is composed of several components that are using different method for authentication
@@ -49,7 +47,7 @@ class Hydro:
                     "/portrait-de-consommation/")
 
     def __init__(self, verify_ssl=True):
-        """Initialize parameters from the config file and hydro OAUTH2 settings URL"""
+        """Initialize parameters from the config file and hydro OAUTH2 settings URL."""
         self.session = requests.Session()
         self.verify = verify_ssl
         self.config = Config()
@@ -71,7 +69,7 @@ class Hydro:
         self.contract_id = ""
 
     def set_oauth_settings(self):
-        """Read OAUTH2 settings from hydro json"""
+        """Read OAUTH2 settings from hydro json."""
         if self.verify:
             # Certificate chain is added manually as there is an issue with this domain
             data = self.session.get(self.SECURITY_URL, verify="hydro-chain.pem")
@@ -83,7 +81,7 @@ class Hydro:
             return {}
 
     def login(self):
-        """Full login
+        """Full login.
 
         Perform all necessary actions to login and get the "session" opened to use hydro API.
 
@@ -114,7 +112,7 @@ class Hydro:
         return True
 
     def _auth(self):
-        """OAUTH2 authentication"""
+        """OAUTH2 authentication."""
         log.debug("performing authentication")
         headers = {
             "Content-Type": "application/json",
@@ -182,7 +180,7 @@ class Hydro:
         return False
 
     def _get_token(self):
-        """OAUTH2 access token retrieval. Needed for the IDP api"""
+        """OAUTH2 access token retrieval. Needed for the IDP api."""
         params = {
             "response_type": "id_token token",
             "client_id": self.oauth2_settings["clientId"],
@@ -206,7 +204,7 @@ class Hydro:
         return ""
 
     def get_api_headers(self):
-        """Headers used by IDP api"""
+        """Headers used by IDP api."""
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.access_token,
@@ -220,7 +218,7 @@ class Hydro:
         return headers
 
     def _get_account_info(self):
-        """Retrieve account id, customer id and contract id"""
+        """Retrieve account id, customer id and contract id."""
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.access_token,

@@ -1,10 +1,11 @@
-"""Class describing an event"""
+"""Class describing an event."""
 
 
 class Event:
-    """This class describe an event object"""
+    """This class describe an event object."""
 
     def __init__(self, config, date, start, end):
+        """Event constructor."""
         self.config = config
         self.date_dt = date
         self.start_dt = start

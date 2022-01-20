@@ -1,10 +1,11 @@
-"""Class describing a period"""
+"""Class describing a period."""
 
 
 class Period:
-    """This class describe a period object"""
+    """This class describe a period object."""
 
     def __init__(self, config, date, start, end, critical=False):
+        """Period constructor."""
         self.config = config
         self.date_dt = date
         self.start_dt = start

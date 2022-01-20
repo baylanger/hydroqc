@@ -1,7 +1,4 @@
-"""
-Wrappers to API calls and associated post processing
-"""
-
+"""Wrappers to API calls and associated post processing."""
 
 import logging
 import json
@@ -26,11 +23,10 @@ DAILY_CONSUMPTION_API_URL = (
 
 
 class Services:
-    """
-    Hydro Quebec API services
-    """
+    """Hydro Quebec API services."""
 
     def __init__(self):
+        """Hydroquebec Services constructor."""
         self.auth = Hydro()
         self.auth.login()
         self.api_headers = self.auth.get_api_headers()
@@ -38,11 +34,10 @@ class Services:
         self.config = Config()
 
     def get_winter_credit(self):
-        """Return information about the winter credit
+        """Return information about the winter credit.
 
         :return: raw JSON from hydro QC API
         """
-
         params = {"noContrat": self.auth.contract_id}
         api_call_response = self.session.get(
             GET_WINTER_CREDIT_API_URL,
@@ -52,7 +47,7 @@ class Services:
         return json.loads(api_call_response.text)
 
     def get_today_hourly_consumption(self):
-        """Return latest consumption info (about 2h delay it seems)
+        """Return latest consumption info (about 2h delay it seems).
 
         :return: raw JSON from hydro QC API for current day (not officially supported, data delayed)
         """
@@ -65,7 +60,7 @@ class Services:
         return self.get_hourly_consumption(today)
 
     def get_hourly_consumption(self, date):
-        """Return hourly consumption for a specific day
+        """Return hourly consumption for a specific day.
 
         :param: date: YYYY-MM-DD string to pass to API
 
@@ -79,7 +74,7 @@ class Services:
         return json.loads(api_call_response.text)
 
     def get_daily_consumption(self, start_date, end_date):
-        """Return hourly consumption for a specific day
+        """Return hourly consumption for a specific day.
 
         :param: start_date: YYYY-MM-DD string to pass to API
         :param: end_date: YYYY-MM-DD string to pass to API

@@ -1,1 +1,1 @@
-"""Winter credit helper"""
+"""Winter credit helper."""

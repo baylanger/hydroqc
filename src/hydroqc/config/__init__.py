@@ -1,1 +1,1 @@
-"""Config handler"""
+"""Config handler."""

@@ -1,4 +1,4 @@
-"""Winter credit processing"""
+"""Winter credit processing."""
 import datetime
 import logging
 import time
@@ -34,13 +34,14 @@ def _timestamp_from_string(date_string):
 
 
 class WinterCredit:
-    """Winter Credit extra logic
+    """Winter Credit extra logic.
 
     This class supplements Hydro API data by providing calculated values for pre_heat period,
     anchor period detection as well as next event information.
     """
 
     def __init__(self):
+        """Winter Credit constructor."""
         self.api = Services()
         self.config = self.api.auth.config
         self.events = {}
@@ -49,7 +50,7 @@ class WinterCredit:
         self._refresh_data()
 
     def _refresh_data(self):
-        """Refresh data if data is older than the config event_refresh_seconds parameter"""
+        """Refresh data if data is older than the config event_refresh_seconds parameter."""
         # DATES
         self.ref_date = datetime.datetime.now()
         # To test the date can be modified artificially here.
@@ -76,7 +77,7 @@ class WinterCredit:
             log.debug("Data is up to date")
 
     def _get_winter_credit_events(self):
-        """Return winter peak events in a more structured way
+        """Return winter peak events in a more structured way.
 
         :return:
 
@@ -153,7 +154,7 @@ class WinterCredit:
         return {"events": events, "event_in_progress": next_event["event_in_progress"]}
 
     def get_future_events(self):
-        """Return future events object
+        """Return future events object.
 
         :return: future events list
 
@@ -169,7 +170,7 @@ class WinterCredit:
         return future_events
 
     def get_all_events(self):
-        """Return future and past events (Current winter only) object
+        """Return future and past events (Current winter only) object.
 
         :return: events list
 
@@ -184,7 +185,7 @@ class WinterCredit:
         return events
 
     def get_next_event(self):
-        """Return next event object
+        """Return next event object.
 
         :return: next event object
 
@@ -250,7 +251,7 @@ class WinterCredit:
         return {"morning": morning, "evening": evening}
 
     def get_current_state(self):
-        """Calculate current periods"""
+        """Calculate current periods."""
         self._refresh_data()
 
         peak_periods = self._get_today_peak_periods()
@@ -406,7 +407,7 @@ class WinterCredit:
     #    return {}
 
     def _get_pre_heat(self, start):
-        """Calculate pre_heat period according to event start date
+        """Calculate pre_heat period according to event start date.
 
         :param: start: datetime object representing the start of the next event
 
@@ -414,7 +415,6 @@ class WinterCredit:
 
         :rtype: dict
         """
-        print(start)
         pre_heat_start_offset = datetime.timedelta(
             hours=DEFAULT_PRE_HEAT_START_OFFSET
         )
@@ -434,7 +434,7 @@ class WinterCredit:
         return pre_heat
 
     def _get_next_event(self, events):
-        """Calculate the next events
+        """Calculate the next events.
 
         :param: events: the events object we have built from hydro API self.data
 
@@ -442,7 +442,6 @@ class WinterCredit:
 
         :rtype: dict
         """
-
         event_in_progress = False
         next_event_timestamp = None
         next_event = {}
