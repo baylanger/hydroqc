@@ -34,7 +34,7 @@ package:
       MAIN_PACKAGE_ID=$(curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages | jq '.[] | select(.pipelines[0].version == "'${CURRENT_VERSION}'") | .id')
     ## Delete existing package in gitlab with the same version (because twine can not override an existing package with the same version
     - |
-      curl -H 'Authorization: Bearer ${CI_JOB_TOKEN}' https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/${MAIN_PACKAGE_ID}
+      curl  --request DELETE -H 'PRIVATE-TOKEN: ${CI_JOB_TOKEN}' https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/${MAIN_PACKAGE_ID}
     ## Push the new version of the package
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
 
