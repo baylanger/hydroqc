@@ -24,12 +24,26 @@ DEFAULT_PRE_HEAT_END_OFFSET = 0
 
 
 def _date_time_from_string(date_string):
-    """TODO."""
+    """Convert string in the YYYY-MM-DD HH:MM:SS to a datetime object.
+
+    :param: date_string: date in YYYY-MM-DD HH:MM:SS format
+
+    :return: datetime object
+
+    :rtype: datetime
+    """
     return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
 
 
 def _timestamp_from_string(date_string):
-    """TODO."""
+    """Convert a date string in format YYYY-MM-DD HH:MM:SS to a timestamp.
+
+    :param: date_string in YYYY-MM-DD HH:MM:SS format
+
+    :return: timestamp
+
+    :rtype: float
+    """
     return _date_time_from_string(date_string).timestamp()
 
 
@@ -195,7 +209,10 @@ class WinterCredit:
         return self.events["next"]
 
     def _get_today_peak_periods(self):
-        """TODO."""
+        """Calculate today's peak periods.
+
+        :return: dict having morning and evening Period objects reprensenting peak periods.
+        """
         # PEAK PERIODS
         today_peak_morning_start = _date_time_from_string(
             self.today_date + " " + DEFAULT_MORNING_PEAK_START
@@ -226,7 +243,14 @@ class WinterCredit:
         return {"morning": morning, "evening": evening}
 
     def _get_today_anchor_periods(self, peak_periods, start_offset, duration):
-        """TODO."""
+        """Calculate anchor periods from the specified offset.
+
+        :params: peak_periods: list of Period objects representing the peak periods
+                 start_offset: datetime.timedelta configured with the defined offset
+                 duration: datetime.timedelta configured with duration of anchor periods
+
+        :return:  dict having morning and evening Period objects reprensenting anchor periods.
+        """
         morning_peak_period = peak_periods["morning"]
         evening_peak_period = peak_periods["evening"]
 
@@ -251,10 +275,50 @@ class WinterCredit:
         return {"morning": morning, "evening": evening}
 
     def get_current_state(self):
-        """Calculate current periods."""
+        """Calculate current periods and state.
+
+        This method compile the data from hydro API and compute periods accordingly
+        It will also give a number of states to help with automation
+
+        :return: dict
+
+        :schema:
+        '''
+        {
+            "state": {
+                "current_period": string (see lexicon),
+                "current_period_time_of_day": string (see lexicon),
+                "current_composite_state" : string (see lexicon),
+                "critical": true / false,
+                "event_in_progress": true / false,
+                "pre_heat": true / false,
+                "upcoming_event":  true / false,
+                "morning_event_today": true / false,
+                "evening_event_today": true / false,
+                "morning_event_tomorrow": true / false,
+                "evening_event_tomorrow": true / false,
+            },
+            "next_periods": {
+                "peak": Period
+                "anchor": Period
+            },
+            "anchor_periods": {
+                "morning": Period
+                "evening": Period
+            },
+            "peak_periods": {
+                "morning": Period
+                "evening": Period
+            },
+            "last_update": datetime string
+        }
+        '''
+        """
         self._refresh_data()
 
         peak_periods = self._get_today_peak_periods()
+        next_event = self.get_next_event()
+
         morning_peak_period = peak_periods["morning"]
         evening_peak_period = peak_periods["evening"]
         anchor_start_offset = datetime.timedelta(
@@ -325,7 +389,6 @@ class WinterCredit:
         evening_event_tomorrow = False
         upcoming_event = False
         next_peak_critical = False
-        next_event = self.get_next_event()
 
         if isinstance(next_event, Event) and next_event.pre_heat_start_ts:
             if (
@@ -372,6 +435,9 @@ class WinterCredit:
             critical=next_peak_critical,
         )
 
+        morning_peak_period.critical = morning_event_today
+        evening_peak_period.critical = evening_event_today
+
         response = {
             "state": {
                 "current_period": current_period,
@@ -386,7 +452,7 @@ class WinterCredit:
                 "morning_event_tomorrow": morning_event_tomorrow,
                 "evening_event_tomorrow": evening_event_tomorrow,
             },
-            "next": {
+            "next_periods": {
                 "peak": next_peak_period.to_dict(),
                 "anchor": next_anchor_period.to_dict(),
             },
@@ -401,10 +467,6 @@ class WinterCredit:
             "last_update": self.today.strftime(self.config.datetime_format),
         }
         return response
-
-    # def _get_current_state(self):
-    #    """TODO - USELESS - FIXME !!!!!!"""
-    #    return {}
 
     def _get_pre_heat(self, start):
         """Calculate pre_heat period according to event start date.
