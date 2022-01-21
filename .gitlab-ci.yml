@@ -21,7 +21,8 @@ package:
   image: python:3.9-bullseye
   stage: test
   script:
-    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i src/hydroqc/__version__.py 
+    # Build package that could be promoted
+    - CURRENT_VERSION=$(sed 's/^VERSION = "\([^"]*\)"/\1')
     - pip install --upgrade pip
     - pip install --upgrade build
     - python3 -m build
@@ -29,7 +30,19 @@ package:
     - pip install -r requirements.txt
     - python setup.py sdist bdist_wheel
     # Get main package ids
-    #- MAIN_PACKAGE_IDS=$(curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages | jq '.[] | select(.pipelines[0].ref == "main") | .id')
+    - MAIN_PACKAGE_ID=$(curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages | jq '.[] | select(.pipelines[0].version == "${CURRENT_VERSION}'") | .id')
+    # Delete existing package in gitlab with the same version (because twine can not override an existing package with the same version
+    - curl -H 'Authorization: Bearer ${CI_JOB_TOKEN}' https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/${MAIN_PACKAGE_ID}
+    # Push the new version of the package
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+    # Get main package ids
+    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i src/hydroqc/__version__.py 
+    - pip install --upgrade pip
+    - pip install --upgrade build
+    - python3 -m build
+    - pip install twine
+    - pip install -r requirements.txt
+    - python setup.py sdist bdist_wheel
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   only:
   - main
