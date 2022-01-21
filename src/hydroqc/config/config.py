@@ -18,6 +18,7 @@ CONFIG_SCHEMA = Schema({
     "credentials": {
         "user": str,
         "password": str,
+        Optional("contract_id", default=""): str,
     },
     "formats": {
         Optional("datetime_format", default='%Y-%m-%d %H:%M:%S'): str,
@@ -58,10 +59,10 @@ class Config:
 
         self._raw_config = self.read()
         self._validated_config = self.validate()
-
         self.validate_ssl = self._validated_config['ssl']['validate_ssl']
         self.user = self._validated_config['credentials']['user']
         self.password = self._validated_config['credentials']['password']
+        self.contract_id = self._validated_config['credentials']['contract_id']
         self.datetime_format = self._validated_config['formats']['datetime_format']
 
     def read(self):

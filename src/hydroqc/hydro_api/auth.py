@@ -64,6 +64,7 @@ class Hydro:
         )
         self.nonce = self.state
         self.access_token = ""
+        self.accounts = []
         self.account_id = ""
         self.customer_id = ""
         self.contract_id = ""
@@ -251,7 +252,13 @@ class Hydro:
         data = resource.json()
         if "comptesContrats" in data:
             try:
-                self.contract_id = data["comptesContrats"][0]["listeNoContrat"][0]
+                self.contracts = data["comptesContrats"][0]["listeNoContrat"]
+                if self.config.contract_id:
+                    for cid in self.contracts:
+                        if cid == self.config.contract_id:
+                            self.contract_id = cid
+                if not self.contract_id and len(self.contracts) > 0:
+                    self.contract_id = self.contracts[0]
             except requests.RequestException:
                 log.error("contract not found")
                 return False
@@ -261,3 +268,12 @@ class Hydro:
         )
 
         return True
+
+    def get_user_info(self):
+        """Return a dict with user information."""
+        return {
+            'customer_id': self.customer_id,
+            'account_id': self.account_id,
+            'contracts': self.contracts,
+            'selected_contract_id': self.contract_id
+        }
