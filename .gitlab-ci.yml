@@ -22,7 +22,7 @@ package:
   stage: test
   script:
     # Build package that could be promoted
-    - CURRENT_VERSION=$(sed 's/^VERSION = "\([^"]*\)"/\1')
+    - CURRENT_VERSION=$(sed 's/^VERSION = "\([^"]*\)"/\1/')
     - pip install --upgrade pip
     - pip install --upgrade build
     - python3 -m build
