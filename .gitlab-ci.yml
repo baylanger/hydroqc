@@ -4,18 +4,18 @@ variables:
 stages:
 - test
 - pypi
-#
-#test:
-#  image: python:3.9-bullseye
-#  stage: test
-#  before_script:
-#    - pip install -r requirements.txt
-#    - pip install -r test_requirements.txt
-#  script:
-#    # TODO use tox
-#    - pylint --rcfile=.pylintrc src/
-#    - flake8 src/ --max-line-length 100
-#    - pydocstyle src/
+
+test:
+  image: python:3.9-bullseye
+  stage: test
+  before_script:
+    - pip install -r requirements.txt
+    - pip install -r test_requirements.txt
+  script:
+    # TODO use tox
+    - pylint --rcfile=.pylintrc src/
+    - flake8 src/ --max-line-length 100
+    - pydocstyle src/
 
 package:
   image: python:3.9-bullseye
@@ -45,10 +45,13 @@ promote2pypi:
     #- rm -rf dist
     #- mkdir -p dist
     #- cd dist
+    #- VERSION=$(curl https://gitlab.com/api/v4/prokects/${CI_PROJECT_ID}/packages | jq '.[] | select(.pipelines[0].sha == "${CI_COMMIT_SHA}") | .version')
+    #- echo "We need to download version ${VERSION}"
     #- |
-    #  pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple --no-deps --no-binary :all:
+    #  pip download Hydro-Quebec-API-Wrapper==${CURRENT_VERSION}rc${} --extra-index-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple --no-deps --no-binary :all:
     #- |
     #  pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple --no-deps
+    # TODO: open archives edit versions and rebuild archive
     #- cd ..
     # Build package that could be promoted
     - CURRENT_VERSION=$(grep VERSION src/hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
