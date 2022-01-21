@@ -21,7 +21,7 @@ package:
   image: python:3.9-bullseye
   stage: test
   script:
-    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1-pre-'${CI_PIPELINE_ID}'"/' -i src/hydroqc/__version__.py 
+    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i src/hydroqc/__version__.py 
     - pip install --upgrade pip
     - pip install --upgrade build
     - python3 -m build
