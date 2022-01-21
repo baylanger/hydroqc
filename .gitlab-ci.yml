@@ -27,7 +27,7 @@ package:
     - pip install twine
     - pip install -r requirements.txt
     - python setup.py sdist bdist_wheel
-    - gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages
+    - curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --skip-existing --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   only:
   - main
