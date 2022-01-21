@@ -31,12 +31,19 @@ pypi:
   image: python:3.9-bullseye
   stage: pypi
   before_script:
-  - pip install --upgrade pip
-  - pip install --upgrade build
+  #- pip install --upgrade pip
+  #- pip install --upgrade build
   - pip install twine
-  - pip install -r requirements.txt
+  #- pip install -r requirements.txt
+  - rm -rf dist
+  - mkdir -p dist
   script:
-  - python setup.py sdist
+  - cd dist
+  - |
+    pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/32908244/packages/pypi/simple --no-deps --no-binary :all:
+  - |
+    pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/32908244/packages/pypi/simple --no-deps
+  - cd ..
   - twine upload --non-interactive --repository testpypi dist/*
   only:
   - tags
