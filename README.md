@@ -48,7 +48,7 @@ $ . hydro-env/bin/activate
 (hydro-env) $ python setup.py develop 
 ```
 
-3. Copy config.default.yaml to config.yaml and add your hydro account credentials
+3. Copy config/config.default.yaml to config/config.yaml and add your hydro account credentials
 
 4. Run ``example/hydro.py``
 
