@@ -39,6 +39,7 @@ promoto2pypi:
   image: python:3.9-bullseye
   stage: pypi
   script:
+    # TODO try to pull the good package from gitlab pypi repo then change the version
     #- rm -rf dist
     #- mkdir -p dist
     #- cd dist
@@ -50,9 +51,9 @@ promoto2pypi:
     # Build package that could be promoted
     - CURRENT_VERSION=$(sed 's/^VERSION = "\([^"]*\)"/\1/')
     - |
-      if [ "${CURRENT_VERSION}" != "{CI_COMMIT_TAG}" ]
+      if [ "${CURRENT_VERSION}" != "${CI_COMMIT_TAG}" ]
       then
-        echo "Tag and version defined in version.py are different. Please fix it." && exit 1
+        echo "Tag '${CI_COMMIT_TAG}' and version '${CURRENT_VERSION}' defined in version.py are different. Please fix it." && exit 1
       fi
     - pip install --upgrade pip
     - pip install --upgrade build
