@@ -17,6 +17,16 @@ test:
     - flake8 src/ --max-line-length 100
     - pydocstyle src/
 
+package:
+  image: python:3.9-bullseye
+  stage: pypi
+  script:
+    - pip install twine
+    - python setup.py sdist bdist_wheel
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+  only:
+  - main
+
 pypi:
   image: python:3.9-bullseye
   stage: pypi
