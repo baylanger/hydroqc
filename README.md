@@ -82,3 +82,60 @@ downloaded correctly. It has been forced in the code. It will not be used if ver
 
 ## TODO 
 https://gitlab.com/groups/hydroqc/-/issues
+
+
+## Targeted architecture (might change in the future)
+
+```mermaid
+classDiagram
+    Account <-- Contract
+    Account <-- Config
+    Account <-- HydroWebClient
+
+    Contract <-- Period
+    Contract <-- Event
+    Contract <-- HydroWebClient
+    Contract <-- WinterCreditHelper
+
+    WinterCreditHelper <-- HydroWebClient
+
+    HydroWebClient <-- Services
+    HydroWebClient <-- Auth
+
+    class HydroWebClient{
+
+    }
+    class WinterCreditHelper{   
+        -HydroWebClient api_client
+    }
+
+    class Account{ 
+        -HydroWebClient api_client
+        +List~Contract~ contracts
+        +Config config
+        +fetch_contracts()
+    }
+
+    class Config{
+        -string config_file_path
+    }
+
+    class Contract{
+        -HydroWebClient api_client
+        +int customer_id
+        +int account_id
+        +string subscription_type
+        +float balance
+        +list~Period~ periods
+        +list~Event~ events
+        +fetch_events()
+        +fetch_periods()
+        +fetch_summary()
+    }
+
+    class Period{
+    }
+
+    class Event{
+    }
+```
