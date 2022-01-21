@@ -1,6 +1,3 @@
----
-lastmod: '2022-01-21T03:54:22.734Z'
----
 # HydroQC
 
 **Important: this project is not yet stable or fully beginner friendly. But we are working toward it!**
