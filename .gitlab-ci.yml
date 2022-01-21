@@ -21,6 +21,7 @@ package:
   image: python:3.9-bullseye
   stage: test
   script:
+    - apt update && apt install -y jq
     # Build package that could be promoted
     - CURRENT_VERSION=$(sed 's/^VERSION = "\([^"]*\)"/\1/')
     - pip install --upgrade pip
