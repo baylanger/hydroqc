@@ -32,7 +32,7 @@ package:
     - python setup.py sdist bdist_wheel
     ## Get main package ids
     - |
-      MAIN_PACKAGE_ID=$(curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages | jq '.[] | select(.pipelines[0].version == "'${CURRENT_VERSION}'") | .id')
+      MAIN_PACKAGE_ID=$(curl https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages | jq '.[] | select(.version == "'${CURRENT_VERSION}'") | .id')
     ## Delete existing package in gitlab with the same version (because twine can not override an existing package with the same version
     - |
       curl  --request DELETE -H 'PRIVATE-TOKEN: ${CI_JOB_TOKEN}' https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/${MAIN_PACKAGE_ID}
