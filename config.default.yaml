@@ -5,8 +5,8 @@ credentials:
   user: ''
   password: ''
 
-formats:
-  datetime_format: '%Y-%m-%d %H:%M:%S'
+#formats:
+#  datetime_format: '%Y-%m-%d %H:%M:%S'
 
 #periods:
 #  # Default peak periods as defined by HQ (as of winter 2021-2022)
