@@ -1,20 +1,13 @@
 """Class describing an event."""
+from .interval import Interval
 
 
-class Event:
+class Event(Interval):
     """This class describe an event object."""
 
-    def __init__(self, config, date, start, end):
+    def __init__(self, date, start, end, datetime_format="%Y-%m-%d %H:%M:%S"):
         """Event constructor."""
-        self.config = config
-        self.date_dt = date
-        self.start_dt = start
-        self.end_dt = end
-        self.date = date.strftime("%Y-%m-%d")
-        self.start = start.strftime(self.config.datetime_format)
-        self.end = end.strftime(self.config.datetime_format)
-        self.start_ts = self.start_dt.timestamp()
-        self.end_ts = self.end_dt.timestamp()
+        super().__init__(date, start, end, datetime_format)
         self.pre_heat_start = None
         self.pre_heat_end = None
         self.pre_heat_start_ts = None
@@ -29,6 +22,8 @@ class Event:
                 "end": self.end,
                 "start_ts": self.start_ts,
                 "end_ts": self.end_ts,
+                "start_iso": self.start_iso,
+                "end_iso": self.end_iso,
                 "pre_heat_start": self.pre_heat_start,
                 "pre_heat_end": self.pre_heat_end,
                 "pre_heat_start_ts": self.pre_heat_start_ts,
@@ -40,10 +35,13 @@ class Event:
             "end": self.end,
             "start_ts": self.start_ts,
             "end_ts": self.end_ts,
+            "start_iso": self.start_iso,
+            "end_iso": self.end_iso,
         }
 
     def add_preheat(self, start, end, start_ts, end_ts):
-        """TODO."""
+        """Add a pre-heat period in the event."""
+        # TODO: Make it an interval ??
         self.pre_heat_start = start
         self.pre_heat_end = end
         self.pre_heat_start_ts = start_ts

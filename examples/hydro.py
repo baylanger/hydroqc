@@ -10,7 +10,7 @@ from hydroqc.hydro_api.services import Services
 from hydroqc.winter_credit.winter_credit import WinterCredit
 from hydroqc.winter_credit.event import Event
 
-myFormatter = logging.Formatter('%(asctime)s - %(name)s [%(levelname)s] : %(message)s')
+myFormatter = logging.Formatter("%(asctime)s - %(name)s [%(levelname)s] : %(message)s")
 handler = logging.StreamHandler()
 handler.setFormatter(myFormatter)
 
@@ -25,7 +25,7 @@ def LowLevelExample():
     print("\n\nTODAY CONSUMPTION")
     print(json.dumps(s.get_today_hourly_consumption(), indent=True))
     print("\n\nDAILY CONSUMPTION")
-    print(json.dumps(s.get_daily_consumption('2022-01-04', '2022-01-05'), indent=True))
+    print(json.dumps(s.get_daily_consumption("2022-01-04", "2022-01-05"), indent=True))
 
 
 def HighLevelExample():

@@ -1,30 +1,31 @@
-# HydroQC
+# HydroQC - Hydro Quebec API wrapper
 
-**Important: this project is not yet stable or fully beginner friendly. But we are working toward it!**
-
-Hydro Quebec API wrapper.
+**This is a library to use if you want to build your own solution. If you want a user-friendly implementation for your home automation system please use [hydroqc2mqtt](https://gitlab.com/hydroqc/hydroqc2mqtt) which provide a MQTT publisher, docker image and HASS addon.**
 
 This is a package to access some functionalities of Hydro Quebec API that are not documented.
 
-We started a discord server for the project where you can come to discuss and find help with the project : https://discord.gg/BTPDntfaXH
+We started a discord server for the project where you can come to discuss and find help with the project [https://discord.gg/NWnfdfRZ7T](https://discord.gg/NWnfdfRZ7T)
 
 ## Documentation
 
 ### Code documentation
+
 [https://hydroqc.readthedocs.io/](https://hydroqc.readthedocs.io/)
 
 ### Architecture / concepts
+
 If you need more information about the winter credit, the associated terms, documents, ... :
    [Winter Credit lexicon and concepts](https://hydroqc.readthedocs.io/en/latest/wintercredit/wintercredit.html)
 
 ## Credit
 
-Thibault Cohen who wrote [pyhydroquebec](https://github.com/titilambert/pyhydroquebec/) 
-That's where I took most of the inspiration (and some portions of the code)
+- [piaf](https://gitlab.com/zepiaf) who revived the flame for a Hydro-Quebec API component, started this project and uncovered some new Hydro-Quebec APIs that are being used in this project.
+- [titilambert](https://gitlab.com/titilambert) who wrote [pyhydroquebec](https://github.com/titilambert/pyhydroquebec/) and is now actively developping with us on this project.
+- [mdallaire](https://gitlab.com/mdallaire1) helps with the documentation, testing and provides some architecture feedback.
 
 ## Goal
 
-Make it easy to fetch and manipulate data from hydro quebec, especially the winter credit periods
+Make it easy to fetch and manipulate data from Hydro-Quebec, especially the winter credit periods
 
 ## Example folder
 
@@ -36,23 +37,30 @@ This uses python 3 (tested with 3.8)
 
 1. Clone the repo
 
-```
-git clone https://gitlab.com/hydroqc/hydroqc.git
-```
+   ```bash
+   git clone https://gitlab.com/hydroqc/hydroqc.git
+   ```
 
 2. Create a virtual-env
-```
-$ python -m venv hydro-env
-$ . hydro-env/bin/activate
-(hydro-env) $ pip install -r requirements.txt
-(hydro-env) $ python setup.py develop 
-```
 
-3. Copy config/config.default.yaml to config/config.yaml and add your hydro account credentials
+   ```bash
+   python -m venv env
+   . env/bin/activate
+   pip install -r requirements.txt
+   python setup.py develop 
+   ```
 
-4. Run ``example/hydro.py``
+3. Enter your hydro account credentials in the examples/hydro.py file (line 6)
+
+4. Run
+
+   ```bash
+   examples/hydro.py
+   ```
 
 ### Basic MQTT publisher
+
+**We provide a full hydroqc2mqtt project here : [hydroqc2mqtt](https://gitlab.com/hydroqc/hydroqc2mqtt)**
 
 Configure the MQTT server information in the mqtt.py file and run it.
 
@@ -65,7 +73,7 @@ datetime format is YYYY-MM-DD HH:MM:SS (can be configured) and {field}_ts is uni
 
 Feel free to tinker with it to suit your needs !
 
-## Available features :
+## Available features
 
 - Services.getWinterCredit() to get raw winter credit data
 - Services.getTodayHourlyConsumption() to get raw hourly consumption for current day
@@ -73,47 +81,59 @@ Feel free to tinker with it to suit your needs !
 - Services.getDailyConsumption(start_date = 'YYYY-MM-DD',end_date = 'YYYY-MM-DD') to get a range of daily consumption
 - WinterCredit.getFutureEvents() to get a list of JSON object with future peak events
 
-An incomplete (so far) list of possible values and their meanings are being documented here : https://hydroqc.readthedocs.io/en/latest/wintercredit/values.html
+An incomplete (so far) list of possible values and their meanings are being documented here : [https://hydroqc.readthedocs.io/en/latest/wintercredit/values.html](https://hydroqc.readthedocs.io/en/latest/wintercredit/values.html)
 
 ## NOTES
 
-As per issue https://github.com/zepiaf/hydroqc/issues/11 the certificate chain for service.hydroquebec.com is not 
-downloaded correctly. It has been forced in the code. It will not be used if verification is disabled.
+As per issue [https://github.com/zepiaf/hydroqc/issues/11](https://github.com/zepiaf/hydroqc/issues/11) the full certificate chain for "session.hydroquebec.com" is not provided completely by Hydro-Quebec, resulting in a failed SSL verification. We are providing it in the "hydro-chain.pem" file and the code is using this file to validate the certificate in queries to "session.hydroquebec.com".
 
-## TODO 
-https://gitlab.com/groups/hydroqc/-/issues
+We would very much like for this to be either fixed by Hydro-Quebec or for this chain to be dynamicaly built at run time. Any help to make this happen would be greatly appreciated.
 
+## TODO
+
+[https://gitlab.com/groups/hydroqc/-/issues](https://gitlab.com/groups/hydroqc/-/issues)
 
 ## Targeted architecture (might change in the future)
 
 ```mermaid
 classDiagram
-    Account <-- Contract
-    Account <-- Config
-    Account <-- HydroWebClient
+    WebUser <-- Customer
+    WebUser <-- HydroClient
 
+    Customer <-- Account
+
+    Account <-- Contract
+
+    Contract <-- HydroClient
     Contract <-- Period
     Contract <-- Event
-    Contract <-- HydroWebClient
     Contract <-- WinterCreditHelper
 
-    WinterCreditHelper <-- HydroWebClient
+    WinterCreditHelper <-- HydroClient
 
-    HydroWebClient <-- Services
-    HydroWebClient <-- Auth
 
-    class HydroWebClient{
+    HydroClient <-- Authenticator
+
+    class HydroClient{
 
     }
-    class WinterCreditHelper{   
-        -HydroWebClient api_client
+    class WinterCreditHelper{
+    }
+    
+    class WebUser{
+        -HydroClient _hydro_client
+        +List~Customer~ customers
+        +get_contracts()
     }
 
-    class Account{ 
-        -HydroWebClient api_client
+    class Customer{
+        -HydroClient _hydro_client
+        +List~Account~ accounts
+    }
+
+    class Account{
+        -HydroClient _hydro_client
         +List~Contract~ contracts
-        +Config config
-        +fetch_contracts()
     }
 
     class Config{
@@ -121,14 +141,14 @@ classDiagram
     }
 
     class Contract{
-        -HydroWebClient api_client
-        +int customer_id
-        +int account_id
+        -HydroClient _hydro_client
+        -int customer_id
+        -int webuser_id
         +string subscription_type
         +float balance
         +list~Period~ periods
         +list~Event~ events
-        +fetch_events()
+        +get_winter_credit()
         +fetch_periods()
         +fetch_summary()
     }
