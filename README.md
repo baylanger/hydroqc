@@ -29,7 +29,7 @@ Make it easy to fetch and manipulate data from Hydro-Quebec, especially the wint
 
 ## Example folder
 
-Two example scripts are provided in the example folder. One to fetch the raw data and return it to json with some debug and the other to publish to mqtt.
+An example script that extracts the data available from Hydro-Quebec is available in the examples folder.
 
 ### Basic setup
 
@@ -57,21 +57,6 @@ This uses python 3 (tested with 3.8)
    ```bash
    examples/hydro.py
    ```
-
-### Basic MQTT publisher
-
-**We provide a full hydroqc2mqtt project here : [hydroqc2mqtt](https://gitlab.com/hydroqc/hydroqc2mqtt)**
-
-Configure the MQTT server information in the mqtt.py file and run it.
-
-Will publish next winter peak event and current status to the winterpeaks topic
-winterpeaks/next -> next event
-winterpeaks/state -> current state
-winterpeaks/today -> periods for the current day
-
-datetime format is YYYY-MM-DD HH:MM:SS (can be configured) and {field}_ts is unix epoch
-
-Feel free to tinker with it to suit your needs !
 
 ## Available features
 
