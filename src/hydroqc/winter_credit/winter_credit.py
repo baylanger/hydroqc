@@ -4,6 +4,7 @@ import logging
 import time
 
 from dateutil import parser
+import pytz
 
 from hydroqc.winter_credit.event import Event
 from hydroqc.winter_credit.period import Period
@@ -19,6 +20,7 @@ DEFAULT_ANCHOR_DURATION = 3
 DEFAULT_EVENT_REFRESH_SECONDS = 300
 DEFAULT_PRE_HEAT_START_OFFSET = 3
 DEFAULT_PRE_HEAT_END_OFFSET = 0
+EST_TIMEZONE = "Canada/Eastern"
 
 
 def _date_time_from_string(date_string):
@@ -158,10 +160,10 @@ class WinterCreditHandler:
     async def refresh_data(self, full_refresh=True):
         """Refresh data if data is older than the config event_refresh_seconds parameter."""
         # DATES
-        self.dates["ref_date"] = datetime.datetime.now()
+        self.dates["ref_date"] = pytz.timezone(EST_TIMEZONE).localize(datetime.datetime.now())
         # To test the date can be modified artificially here.
         # self.dates['ref_date'] = _date_time_from_string("2022-01-18 00:00:00")
-        self.dates["today"] = datetime.datetime.now()
+        self.dates["today"] = pytz.timezone(EST_TIMEZONE).localize(datetime.datetime.now())
         self.dates["today_date"] = self.dates["today"].strftime("%Y-%m-%d")
         self.dates["today_noon_ts"] = _timestamp_from_string(
             self.dates["today_date"] + " 12:00:00"
