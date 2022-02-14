@@ -1,6 +1,8 @@
 """Class describing an interval of time."""
 import pytz
 
+EST_TIMEZONE = "Canada/Eastern"
+
 
 class Interval:
     """This class describe an interval of time."""
@@ -40,9 +42,9 @@ class Interval:
     @property
     def start_iso(self):
         """Give period start time as isoformat."""
-        return pytz.timezone("Canada/Eastern").localize(self.start_dt).isoformat()
+        return pytz.timezone(EST_TIMEZONE).localize(self.start_dt).isoformat()
 
     @property
     def end_iso(self):
         """Give period end time as isoformat."""
-        return pytz.timezone("Canada/Eastern").localize(self.end_dt).isoformat()
+        return pytz.timezone(EST_TIMEZONE).localize(self.end_dt).isoformat()
