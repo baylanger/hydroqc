@@ -1,5 +1,6 @@
 """Class describing an interval of time."""
 
+
 class Interval:
     """This class describe an interval of time."""
 
@@ -43,4 +44,4 @@ class Interval:
     @property
     def end_iso(self):
         """Give period end time as isoformat."""
-        return self.stop_dt.isoformat()
+        return self.end_dt.isoformat()
