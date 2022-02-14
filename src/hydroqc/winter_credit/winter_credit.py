@@ -32,7 +32,8 @@ def _date_time_from_string(date_string):
 
     :rtype: datetime
     """
-    return datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
+    return pytz.timezone(EST_TIMEZONE).localize(
+            datetime.datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S"))
 
 
 def _timestamp_from_string(date_string):
