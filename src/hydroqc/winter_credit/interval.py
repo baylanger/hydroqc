@@ -43,4 +43,4 @@ class Interval:
     @property
     def end_iso(self):
         """Give period end time as isoformat."""
-        return self.stop_dt.isoformat()
+        return self.end_dt.isoformat()
