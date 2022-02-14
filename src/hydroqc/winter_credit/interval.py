@@ -1,5 +1,6 @@
 """Class describing an interval of time."""
 
+
 class Interval:
     """This class describe an interval of time."""
 
