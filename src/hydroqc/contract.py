@@ -133,7 +133,7 @@ class Contract:
     # Current period properties
     # CP == Current period
     @property
-    def cp_current_days(self):  # TODO find a better naming
+    def cp_current_day(self):
         """Get number of days since the current period started."""
         return self._all_period_data[0]["nbJourLecturePeriode"]
 
@@ -190,7 +190,9 @@ class Contract:
     @property
     def cp_kwh_cost_mean(self):
         """Mean cost of a kWh since the current period started."""
-        return self._all_period_data[0]["coutCentkWh"] / 100
+        if self._all_period_data[0]["coutCentkWh"] is not None:
+            return self._all_period_data[0]["coutCentkWh"] / 100
+        return None
 
     @property
     def cp_rate(self):
