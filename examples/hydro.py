@@ -25,11 +25,14 @@ async def async_func():
     print(data)
 
     # Can still access events but probably unnecessary
-    data = await contract.winter_credit.get_future_events()
+    await contract.winter_credit.refresh_data()
+    data = contract.winter_credit.next_anchor
     print(data)
-    data = await contract.winter_credit.get_all_events()
+    data = contract.winter_credit.next_peak
     print(data)
-    data = await contract.winter_credit.get_next_event()
+    data = contract.winter_credit.next_peak.is_critical
+    print(data)
+    data = contract.winter_credit.cumulated_credit
     print(data)
 
     # Need to call refresh_data before accessing attributes
@@ -41,7 +44,7 @@ async def async_func():
         else:
             print(k + ' : ' + str(wc[k]))
     # Still accessible through the data property
-    print (contract.winter_credit.data)
+    data = contract.winter_credit.raw_data
     print(data)
     data = await contract.get_hourly_consumption("2022-01-20")
     print(data)

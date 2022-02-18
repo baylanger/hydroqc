@@ -1,7 +1,7 @@
 """Hydroquebec contract module."""
 from datetime import date, timedelta
 
-from hydroqc.winter_credit.winter_credit import WinterCreditHandler
+from hydroqc.winter_credit.handler import WinterCreditHandler
 from hydroqc.logger import get_logger
 
 
@@ -31,8 +31,13 @@ class Contract:
         self._no_compte_contrat = account_id
         self._no_contrat = contract_id
         self._hydro_client = hydro_client
+        wch_logger = self._logger.getChild("wch")
         self._wch = WinterCreditHandler(
-            self.webuser_id, self.customer_id, self.contract_id, hydro_client
+            self.webuser_id,
+            self.customer_id,
+            self.contract_id,
+            hydro_client,
+            wch_logger,
         )
         self._address = ""
         self._mve_activated = None
@@ -185,7 +190,7 @@ class Contract:
     @property
     def cp_kwh_cost_mean(self):
         """Mean cost of a kWh since the current period started."""
-        return self._all_period_data[0]["coutCentkWh"]
+        return self._all_period_data[0]["coutCentkWh"] / 100
 
     @property
     def cp_rate(self):
