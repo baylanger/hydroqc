@@ -11,3 +11,7 @@ class HydroQcHTTPError(HydroQcError):
 
 class HydroQcAnnualError(HydroQcError):
     """Annual HydroQc Error."""
+
+
+class HydroQcWinterCreditError(HydroQcError):
+    """Winter Credit HydroQc Error."""
