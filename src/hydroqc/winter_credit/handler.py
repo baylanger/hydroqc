@@ -229,7 +229,6 @@ class WinterCreditHandler:
 
         Returns True if we have a preheat period is in progress.
         """
-        # TODO validate this processing
         now = _now()
         return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
 
@@ -258,10 +257,15 @@ class WinterCreditHandler:
         """Return True if the following next peak is critical.
 
         This method is quite useless because, to call this attribute
-        we need to write:
-          contract.winter_credit.next_peak_is_critical
-        but it equivalent to:
-          contract.winter_credit.next_peak.is_critical
+
+        * we need to write::
+
+            contract.winter_credit.next_peak_is_critical
+
+        * but it equivalent to::
+
+            contract.winter_credit.next_peak.is_critical
+
         """
         return self.next_peak.is_critical
 
@@ -269,7 +273,6 @@ class WinterCreditHandler:
     def next_critical_peak(self):
         """Get next peak or current peak."""
         now = _now()
-        # TODO which one do we want ?
         peaks = [p for p in self.critical_peaks if now < p.end_date]
         if not peaks:
             return None

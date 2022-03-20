@@ -12,7 +12,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../src'))
+sys.path.insert(0, os.path.abspath('../../src'))
 
 
 # -- Project information -----------------------------------------------------
@@ -33,7 +33,11 @@ release = 'latest'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
+    'sphinx.ext.todo',
+    'sphinx.ext.graphviz',
     'sphinx.ext.githubpages',
+    'sphinx.ext.inheritance_diagram',
+    'sphinx.ext.doctest',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -59,3 +63,8 @@ html_static_path = ['_static']
 
 
 # -- Extension configuration -------------------------------------------------
+
+html_css_files = ['custom.css',]
+html_logo = "_static/hydroqc-logo-128.png"
+
+todo_include_todos = True
