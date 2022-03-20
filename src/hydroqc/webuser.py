@@ -39,7 +39,16 @@ class WebUser:
         if self._logger is None:
             self._logger = get_logger(f"w-{self.webuser_id}", self._log_level)
         self._logger.info("Got webuser info")
-        # TODO ensure to noPartenaireDemandeur,nom1Demandeur,nom2Demandeur
+
+        if (
+            not user_info
+            or "nom1Demandeur" not in user_info[0]
+            or "nom2Demandeur" not in user_info[0]
+        ):
+            msg = f"Can not find customer name: {user_info}"
+            self._logger.error(msg)
+            raise HydroQcError(msg)
+
         # is the same accross contracts
         self._nom1_demandeur = user_info[0]["nom1Demandeur"]
         self._nom2_demandeur = user_info[0]["nom2Demandeur"]

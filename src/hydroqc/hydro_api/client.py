@@ -191,7 +191,6 @@ class HydroClient:
 
             data = json_dumps(data)
 
-            # TODO catch error
             try:
                 res = await self.http_request(
                     AUTH_URL, "post", data=data, headers=headers
@@ -220,7 +219,11 @@ class HydroClient:
         return True
 
     async def _get_oauth2_token(self, refresh=False):
-        """Retrieve a oauth2 token."""
+        """Retrieve a oauth2 token.
+
+        .. todo::
+            Explain where 'id_token token' response type comes from
+        """
         # Find settings for the authorize
         res = await self.http_request(SECURITY_URL, "get")
 
@@ -311,7 +314,11 @@ class HydroClient:
         self._logger.info("Customer %s selected", customer_id)
 
     async def get_user_info(self):
-        """Fetch user ids and customer ids."""
+        """Fetch user ids and customer ids.
+
+        .. todo::
+            Handle json load error
+        """
         self._logger.info("Fetching webuser info")
         headers = {
             "Content-Type": "application/json",
@@ -413,6 +420,9 @@ class HydroClient:
     ):
         """Return hourly consumption for a specific day.
 
+        .. todo::
+            Use decorator for self._select_customer
+
         :param: date: YYYY-MM-DD string to pass to API
 
         :return: raw JSON from hydro QC API
@@ -434,6 +444,9 @@ class HydroClient:
         self, webuser_id, customer_id, contract_id, start_date, end_date
     ):
         """Return hourly consumption for a specific day.
+
+        .. todo::
+            Use decorator for self._select_customer
 
         :param: start_date: YYYY-MM-DD string to pass to API
         :param: end_date: YYYY-MM-DD string to pass to API
@@ -457,6 +470,9 @@ class HydroClient:
 
     async def get_monthly_consumption(self, webuser_id, customer_id, contract_id):
         """Fetch data of the current year.
+
+        .. todo::
+            Use decorator for self._select_customer
 
         API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
         portrait-de-consommation/resourceObtenirDonneesConsommationMensuelles

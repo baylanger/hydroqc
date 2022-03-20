@@ -1,4 +1,9 @@
-"""Hydroqc API Consts."""
+"""Hydroqc API Consts.
+
+.. todo::
+
+    avoid all the /portail/ URLs
+"""
 # Always get the time using HydroQuebec Local Time
 REQUESTS_TIMEOUT = 30
 REQUESTS_TTL = 1

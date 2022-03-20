@@ -87,7 +87,11 @@ class Contract:
         )
 
     async def get_today_daily_consumption(self):
-        """TODO ????."""
+        """TODO ????.
+
+        .. todo::
+            document this method
+        """
         yesterday = date.today() - timedelta(days=1)
         today = date.today()
         start_date = yesterday.strftime("%Y-%m-%d")
