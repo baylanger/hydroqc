@@ -13,10 +13,10 @@ from hydroqc.error import HydroQcWinterCreditError
 def _winter_credit_enabled(func):
     """Decorate any methods that use self.data to avoid useless calls."""
 
-    async def myfunction(self):
+    def myfunction(self):
         if self.is_enabled:
-            return await func(self)
-        self.logger.info("Winter credit not enabled.")
+            return func(self)
+        self._logger.info("Winter credit not enabled.")
         return None
 
     return myfunction
@@ -123,6 +123,7 @@ class WinterCreditHandler:
 
     # general data
     @property
+    @_winter_credit_enabled
     def winter_start_date(self):
         """Get start date of the winter credits."""
         return datetime.datetime.strptime(
@@ -131,6 +132,7 @@ class WinterCreditHandler:
         )
 
     @property
+    @_winter_credit_enabled
     def winter_end_date(self):
         """Get end date of the winter credits."""
         return datetime.datetime.strptime(
@@ -139,12 +141,14 @@ class WinterCreditHandler:
         )
 
     @property
+    @_winter_credit_enabled
     def cumulated_credit(self):
         """Get cumulated credits."""
         return float(self._raw_data["montantEffaceProjete"])
 
     # Peaks data
     @property
+    @_winter_credit_enabled
     def peaks(self):
         """Get all peaks of the current winter."""
         current_date = self.winter_start_date
@@ -165,17 +169,20 @@ class WinterCreditHandler:
         return peak_list
 
     @property
+    @_winter_credit_enabled
     def sonic(self):
         """Piaf's joke."""
         return self.peaks
 
     @property
+    @_winter_credit_enabled
     def critical_peaks(self):
         """Get all critical peaks of the current credits."""
         return [p for p in self.peaks if p.is_critical]
 
     # Current peak
     @property
+    @_winter_credit_enabled
     def current_peak(self):
         """Get current peak.
 
@@ -191,6 +198,7 @@ class WinterCreditHandler:
         return None
 
     @property
+    @_winter_credit_enabled
     def current_peak_is_critical(self):
         """Return True if the current peak is critical."""
         if self.current_peak:
@@ -199,6 +207,7 @@ class WinterCreditHandler:
 
     # In progress
     @property
+    @_winter_credit_enabled
     def current_state(self):
         """Get the current state of the winter credit handler.
 
@@ -224,16 +233,20 @@ class WinterCreditHandler:
         return "normal"
 
     @property
+    @_winter_credit_enabled
     def preheat_in_progress(self):
         """Get the preheat state.
 
         Returns True if we have a preheat period is in progress.
         """
         now = _now()
+        if self.next_peak is None:
+            return False
         return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
 
     # Upcoming
     @property
+    @_winter_credit_enabled
     def is_any_critical_peak_coming(self):
         """Get critical state of the upcoming events.
 
@@ -245,15 +258,19 @@ class WinterCreditHandler:
 
     # Next peak
     @property
+    @_winter_credit_enabled
     def next_peak(self):
         """Get next peak or current peak."""
         now = _now()
         peaks = [p for p in self.peaks if now < p.end_date]
+        if not peaks:
+            return None
         next_peak = min(peaks, key=lambda x: x.start_date)
         return next_peak
 
     @property
-    def next_peak_is_critical(self):
+    @_winter_credit_enabled
+    def next_peak_is_critical(self) -> bool:
         """Return True if the following next peak is critical.
 
         This method is quite useless because, to call this attribute
@@ -267,9 +284,12 @@ class WinterCreditHandler:
             contract.winter_credit.next_peak.is_critical
 
         """
+        if self.next_peak is None:
+            return False
         return self.next_peak.is_critical
 
     @property
+    @_winter_credit_enabled
     def next_critical_peak(self):
         """Get next peak or current peak."""
         now = _now()
@@ -281,6 +301,7 @@ class WinterCreditHandler:
 
     # Today peaks
     @property
+    @_winter_credit_enabled
     def today_morning_peak(self):
         """Get the peak of today morning."""
         now = _now()
@@ -294,6 +315,7 @@ class WinterCreditHandler:
         return None
 
     @property
+    @_winter_credit_enabled
     def today_evening_peak(self):
         """Get the peak of today evening."""
         now = _now()
@@ -308,6 +330,7 @@ class WinterCreditHandler:
 
     # Tomorrow Peaks
     @property
+    @_winter_credit_enabled
     def tomorrow_morning_peak(self):
         """Get the peak of tomorrow morning."""
         now = _now()
@@ -325,6 +348,7 @@ class WinterCreditHandler:
         return None
 
     @property
+    @_winter_credit_enabled
     def tomorrow_evening_peak(self):
         """Get the peak of tomorrow evening."""
         now = _now()
@@ -343,6 +367,7 @@ class WinterCreditHandler:
 
     # Yesterday peaks
     @property
+    @_winter_credit_enabled
     def yesterday_morning_peak(self):
         """Get the peak of yesterday morning."""
         now = _now()
@@ -360,6 +385,7 @@ class WinterCreditHandler:
         return None
 
     @property
+    @_winter_credit_enabled
     def yesterday_evening_peak(self):
         """Get the peak of yesterday evening."""
         now = _now()
@@ -378,9 +404,12 @@ class WinterCreditHandler:
 
     # Anchors
     @property
+    @_winter_credit_enabled
     def next_anchor(self):
         """Next or current anchor."""
         now = _now()
         anchors = [p.anchor for p in self.peaks if now < p.anchor.end_date]
-        next_anchor = min(anchors, key=lambda x: x.start_date)
-        return next_anchor
+        if anchors:
+            next_anchor = min(anchors, key=lambda x: x.start_date)
+            return next_anchor
+        return None
