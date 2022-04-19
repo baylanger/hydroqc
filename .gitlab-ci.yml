@@ -3,19 +3,117 @@ variables:
 
 stages:
 - test
+- private_tests
+- private_tests_done
 - pypi
 
 test:
-  image: python:3.9-bullseye
   stage: test
-  before_script:
-    - pip install -r requirements.txt
-    - pip install -r test_requirements.txt
+  tags:
+  - hydroqc
+  image: python:3.9-bullseye
   script:
-    # TODO use tox
-    - pylint --rcfile=.pylintrc src/
-    - flake8 src/ --max-line-length 100
-    - pydocstyle src/
+    - pip install tox
+    - tox -e pylint,flake8,pydocstyle
+
+
+.private_test_script: &private_test_script
+  stage: private_tests
+  tags:
+  - hydroqc
+  image: python:3.9-bullseye
+  script:
+    - apt update && apt install -y jq unzip
+    - >  
+      OUTPUT=$(curl 
+      --globoff
+      --request POST
+      --header "Content-Type: application/json"
+      --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}"
+      https://gitlab.com/api/v4/projects/${PROJECT_ID}/pipeline
+      --data '{ "ref": "main", "variables": [{ "key": "UPSTREAM_BRANCH", "value": "'${CI_COMMIT_REF_NAME}'" }, { "key": "UPSTREAM_COMMIT_SHA", "value": "'${CI_COMMIT_SHA}'" }, { "key": "UPSTREAM_REPO", "value": "'${CI_REPOSITORY_URL}'" }] }')
+    - echo ${OUTPUT}
+    - PIPELINE_ID=$(echo ${OUTPUT} | jq -r .id)
+    - echo ${PIPELINE_ID}
+    - sleep 5
+    - >
+      OUTPUT=$(curl
+      --globoff
+      --header "Content-Type: application/json"
+      --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}"
+      "https://gitlab.com/api/v4/projects/${PROJECT_ID}/pipelines/${PIPELINE_ID}/jobs")
+    - echo ${OUTPUT}
+    - JOB_ID=$(echo ${OUTPUT} | jq -r .[0].id)
+    - JOB_STATUS=$(echo ${OUTPUT} | jq -r .[0].status)
+    - |
+      while [ "${JOB_STATUS}" == "pending" ] || [ "${JOB_STATUS}" == "running" ]
+      do
+        echo "Waiting for pipeline ends"
+        sleep 10
+        OUTPUT=$(curl --globoff --header "Content-Type: application/json" --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/pipelines/${PIPELINE_ID}/jobs")
+        JOB_STATUS=$(echo ${OUTPUT} | jq -r .[0].status)
+        echo ${JOB_STATUS}
+      done
+    - sleep 5
+    - |
+      echo -e "\n\n\n"
+      echo '######################'
+      echo '###PRIVATE JOB LOGS###'
+      echo '######################'
+    - |
+      curl --location --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/jobs/${JOB_ID}/trace"
+    - |
+      echo -e "\n"
+      echo '##########################'
+      echo '###END PRIVATE JOB LOGS###'
+      echo '##########################'
+      echo -e "\n"
+    - |
+      curl --location --output artifacts.zip --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/jobs/${JOB_ID}/artifacts"
+    - unzip artifacts.zip
+    - if [ "${JOB_STATUS}" != "success" ] ; then exit 1 ; fi
+  artifacts:
+    when: always
+    paths:
+      - hydroqc/tests_result_junit.*.xml
+      - hydroqc/.coverage.*.dat
+    reports:
+      junit: hydroqc/tests_result_junit.*.xml
+
+private_test_titilambert:
+  variables:
+    PROJECT_ID: 35085986
+  <<: *private_test_script
+
+private_test_mdallaire:
+  variables:
+    PROJECT_ID: 35331048
+  <<: *private_test_script
+
+private_test_done:
+  stage: private_tests_done
+  tags:
+  - hydroqc
+  image: python:3.9-bullseye
+  script:
+    - echo "Private Tests done"
+    - pip install tox
+    - find .
+    - mv -v hydroqc/.coverage* .
+    - mv -v hydroqc/*.xml .
+    - tox -e cov-combine,cov-report
+    - ls -al
+  needs:
+  - job: private_test_mdallaire
+  - job: private_test_titilambert
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    paths:
+      - htmlcov
+      - coverage.xml
 
 package:
   image: python:3.9-bullseye

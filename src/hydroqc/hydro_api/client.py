@@ -3,7 +3,7 @@ import importlib.resources
 import json
 import uuid
 import time
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 import random
 import string
 from json import dumps as json_dumps, loads as json_loads
@@ -32,6 +32,7 @@ from hydroqc.hydro_api.consts import (
     CUSTOMER_INFO_URL,
     PERIOD_DATA_URL,
 )
+from hydroqc.winter_credit.consts import EST_TIMEZONE
 
 
 class HydroClient:
@@ -405,13 +406,14 @@ class HydroClient:
 
         :return: raw JSON from hydro QC API for current day (not officially supported, data delayed)
         """
-        today = date.today().strftime("%Y-%m-%d")
-        yesterday = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+        today = datetime.today().astimezone(EST_TIMEZONE)
+        today_str = today.strftime("%Y-%m-%d")
+        yesterday_str = (today - timedelta(days=1)).strftime("%Y-%m-%d")
         # We need to call a valid date first as theoretically today is invalid
         # and the api will not respond if called directly
-        await self.get_hourly_consumption(webuser, customer_id, contract_id, yesterday)
+        await self.get_hourly_consumption(webuser, customer_id, contract_id, yesterday_str)
         res = await self.get_hourly_consumption(
-            webuser, customer_id, contract_id, today
+            webuser, customer_id, contract_id, today_str
         )
         return res
 

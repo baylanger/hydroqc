@@ -1,8 +1,20 @@
 """Hydroquebec contract module."""
-from datetime import date, timedelta
+from datetime import timedelta, datetime
 
 from hydroqc.winter_credit.handler import WinterCreditHandler
 from hydroqc.logger import get_logger
+from hydroqc.winter_credit.consts import EST_TIMEZONE
+
+
+def _check_data_present(method):
+    """Check if contract's data are present."""
+    def wrapper(contract):
+        if len(contract._all_period_data):
+            return method(contract)
+
+        contract._logger.warning("You need to call get_latest_period_info method first")
+        return None
+    return wrapper
 
 
 class Contract:
@@ -92,8 +104,8 @@ class Contract:
         .. todo::
             document this method
         """
-        yesterday = date.today() - timedelta(days=1)
-        today = date.today()
+        today = datetime.today().astimezone(EST_TIMEZONE)
+        yesterday = today - timedelta(days=1)
         start_date = yesterday.strftime("%Y-%m-%d")
         end_date = today.strftime("%Y-%m-%d")
         return await self.get_daily_consumption(start_date, end_date)
@@ -128,7 +140,7 @@ class Contract:
         )
         return self._all_period_data
 
-    async def get_latest_period_info(self):
+    def get_latest_period_info(self):
         """Fetch latest period info."""
         if len(self._all_period_data):
             return self._all_period_data[0]
@@ -137,61 +149,73 @@ class Contract:
     # Current period properties
     # CP == Current period
     @property
+    @_check_data_present
     def cp_current_day(self):
         """Get number of days since the current period started."""
         return self._all_period_data[0]["nbJourLecturePeriode"]
 
     @property
+    @_check_data_present
     def cp_duration(self):
         """Get current period duration in days."""
         return self._all_period_data[0]["nbJourPrevuPeriode"]
 
     @property
+    @_check_data_present
     def cp_current_bill(self):
         """Get current bill since the current period started."""
         return self._all_period_data[0]["montantFacturePeriode"]
 
     @property
+    @_check_data_present
     def cp_projected_bill(self):
         """Projected bill of the current period."""
         return self._all_period_data[0]["montantProjetePeriode"]
 
     @property
+    @_check_data_present
     def cp_daily_bill_mean(self):
         """Daily bill mean since the current period started."""
         return self._all_period_data[0]["moyenneDollarsJourPeriode"]
 
     @property
+    @_check_data_present
     def cp_daily_consumption_mean(self):
         """Daily consumption mean since the current period started."""
         return self._all_period_data[0]["moyenneKwhJourPeriode"]
 
     @property
+    @_check_data_present
     def cp_total_consumption(self):
         """Total consumption since the current period started."""
         return self._all_period_data[0]["consoTotalPeriode"]
 
     @property
+    @_check_data_present
     def cp_projected_total_consumption(self):
         """Projected consumption of the current period started."""
         return self._all_period_data[0]["consoTotalProjetePeriode"]
 
     @property
+    @_check_data_present
     def cp_lower_price_consumption(self):
         """Total lower priced consumption since the current period started."""
         return self._all_period_data[0]["consoRegPeriode"]
 
     @property
+    @_check_data_present
     def cp_higher_price_consumption(self):
         """Total higher priced consumption since the current period started."""
         return self._all_period_data[0]["consoHautPeriode"]
 
     @property
+    @_check_data_present
     def cp_average_temperature(self):
         """Average temperature since the current period started."""
         return self._all_period_data[0]["tempMoyennePeriode"]
 
     @property
+    @_check_data_present
     def cp_kwh_cost_mean(self):
         """Mean cost of a kWh since the current period started."""
         if self._all_period_data[0]["coutCentkWh"] is not None:
@@ -199,11 +223,13 @@ class Contract:
         return None
 
     @property
+    @_check_data_present
     def cp_rate(self):
         """Get current period rate name."""
         return self._all_period_data[0]["dernierTarif"]
 
     @property
+    @_check_data_present
     def cp_epp_enabled(self):
         """Is EPP enabled for the current period.
 
