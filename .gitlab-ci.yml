@@ -116,8 +116,10 @@ private_test_done:
       - coverage.xml
 
 package:
-  image: python:3.9-bullseye
   stage: test
+  tags:
+  - hydroqc
+  image: python:3.9-bullseye
   script:
     - rm -rf dist
     - mkdir -p dist
@@ -134,8 +136,10 @@ package:
   - main
 
 promote2pypi:
-  image: python:3.9-bullseye
   stage: pypi
+  tags:
+  - hydroqc
+  image: python:3.9-bullseye
   script:
     # TODO: try to pull the good package from gitlab pypi repo
     #       then change the version (promote)
