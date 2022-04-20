@@ -24,6 +24,13 @@ test:
   image: python:3.9-bullseye
   script:
     - apt update && apt install -y jq unzip
+    - >
+      OUTPUT=$(curl
+      --globoff
+      --header "Content-Type: application/json"
+      --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}"
+      "https://gitlab.com/api/v4/projects/${PROJECT_ID}")
+    - PROJECT_PATH=$(echo ${OUTPUT} | jq -r .path_with_namespace)
     - >  
       OUTPUT=$(curl 
       --globoff
@@ -55,6 +62,7 @@ test:
         echo ${JOB_STATUS}
       done
     - sleep 5
+    - JOB_END_DATE=$(echo ${OUTPUT}| jq -r .[0].finished_at)
     - |
       echo -e "\n\n\n"
       echo '######################'
@@ -71,12 +79,36 @@ test:
     - |
       curl --location --output artifacts.zip --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}" "https://gitlab.com/api/v4/projects/${PROJECT_ID}/jobs/${JOB_ID}/artifacts"
     - unzip artifacts.zip
+    - COLOR=yellow
+    - |
+      if [ "${JOB_STATUS}" == "success" ]
+      then
+        export PIPELINE_COLOR=green
+      fi
+    - |
+      if [ "${JOB_STATUS}" == "failed" ]
+      then
+        export PIPELINE_COLOR=red
+      fi
+    - >
+      curl
+      --location
+      --output ${PROJECT_ID}-badge.svg
+      https://badgen.net/badge/scenario/${PROJECT_ID}/${PIPELINE_COLOR}
+    - echo https://badgen.net/badge/scenario/${PROJECT_ID}/${PIPELINE_COLOR}
+    - >
+      curl
+      --location
+      --output ${PROJECT_ID}-job-end-date.svg
+      https://badgen.net/badge/last%20run/${JOB_END_DATE}/blue
     - if [ "${JOB_STATUS}" != "success" ] ; then exit 1 ; fi
   artifacts:
     when: always
     paths:
       - hydroqc/tests_result_junit.*.xml
       - hydroqc/.coverage.*.dat
+      - "*-badge.svg"
+      - "*-job-end-date.svg"
     reports:
       junit: hydroqc/tests_result_junit.*.xml
 
@@ -114,6 +146,8 @@ private_test_done:
     paths:
       - htmlcov
       - coverage.xml
+      - "*-badge.svg"
+      - "*-job-end-date.svg"
 
 package:
   stage: test
