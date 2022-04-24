@@ -1,13 +1,16 @@
 """Winter credit processing."""
 import datetime
+import logging
+from typing import Optional
 
-from hydroqc.winter_credit.peak import Peak
+from hydroqc.winter_credit.peak import Peak, Anchor
 from hydroqc.winter_credit.consts import (
     EST_TIMEZONE,
     DEFAULT_MORNING_PEAK_START,
     DEFAULT_EVENING_PEAK_START,
 )
 from hydroqc.error import HydroQcWinterCreditError
+from hydroqc.hydro_api.client import HydroClient
 
 
 def _winter_credit_enabled(func):
@@ -22,7 +25,7 @@ def _winter_credit_enabled(func):
     return myfunction
 
 
-def _now():
+def _now() -> datetime.datetime:
     """Get EST localized now datetime."""
     return EST_TIMEZONE.localize(datetime.datetime.now())
 
@@ -34,41 +37,43 @@ class WinterCreditHandler:
     anchor period detection as well as next event information.
     """
 
+    peaks: list[Peak]
+
     def __init__(
         self,
-        webuser_id,
-        customer_id,
-        contract_id,
-        hydro_client,
-        logger,
+        webuser_id: str,
+        customer_id: str,
+        contract_id: str,
+        hydro_client: HydroClient,
+        logger: logging.Logger,
     ):
         """Winter Credit constructor."""
-        self._no_partenaire_demandeur = webuser_id
-        self._no_partenaire_titulaire = customer_id
-        self._no_contrat = contract_id
-        self._hydro_client = hydro_client
-        self._logger = logger
+        self._no_partenaire_demandeur: str = webuser_id
+        self._no_partenaire_titulaire: str = customer_id
+        self._no_contrat: str = contract_id
+        self._hydro_client: HydroClient = hydro_client
+        self._logger: logging.Logger = logger
 
-        self._raw_data = {}
+        self._raw_data: dict = {}
 
     # Basics
-    @property
-    def webuser_id(self):
+    @property  # type: ignore
+    def webuser_id(self) -> str:
         """Get webuser id."""
         return self._no_partenaire_demandeur
 
-    @property
-    def customer_id(self):
+    @property  # type: ignore
+    def customer_id(self) -> str:
         """Get customer id."""
         return self._no_partenaire_titulaire
 
-    @property
-    def contract_id(self):
+    @property  # type: ignore
+    def contract_id(self) -> str:
         """Get contract id."""
         return self._no_contrat
 
-    @property
-    def is_enabled(self):
+    @property  # type: ignore
+    def is_enabled(self) -> bool:
         """Is winter credit mode actived."""
         if "optionTarifActuel" not in self._raw_data:
             # If we don't know, let's try to get the information
@@ -76,7 +81,7 @@ class WinterCreditHandler:
         return self._raw_data["optionTarifActuel"] == "CPC"
 
     # Fetch raw data
-    async def refresh_data(self):
+    async def refresh_data(self) -> None:
         """Get data from HydroQuebec web site."""
         self._logger.debug("Fetching data from HydroQuebec...")
         self._raw_data = await self._hydro_client.get_winter_credit(
@@ -85,22 +90,22 @@ class WinterCreditHandler:
         self._logger.debug("Data fetched from HydroQuebec...")
         # Ensure that peaks are sorted by date
         if self._raw_data["periodesEffacementsHivers"]:
-            self._raw_data["periodesEffacementsHivers"][0]["periodesEffacementHiver"].sort(
-                key=lambda x: (x["dateEffacement"], x["heureDebut"])
-            )
+            self._raw_data["periodesEffacementsHivers"][0][
+                "periodesEffacementHiver"
+            ].sort(key=lambda x: (x["dateEffacement"], x["heureDebut"]))
 
-    @property
-    def raw_data(self):
+    @property  # type: ignore
+    def raw_data(self) -> dict:
         """Return raw collected data."""
         return self._raw_data
 
     # Internals
-    @property
-    def _raw_critical_peaks(self):
+    @property  # type: ignore
+    def _raw_critical_peaks(self) -> list:
         """Shortcut to get quickly critical peaks."""
         return self._raw_data["periodesEffacementsHivers"][0]["periodesEffacementHiver"]
 
-    def _set_peak_critical(self, peak):
+    def _set_peak_critical(self, peak: Peak) -> None:
         """Determine if the passed peak is critical or not, and save it to the object."""
         if peak.morning_evening.upper() == "EVENING":
             default_start_time_str = DEFAULT_EVENING_PEAK_START.strftime("%H:%M:%S")
@@ -122,7 +127,7 @@ class WinterCreditHandler:
                 return
 
     # general data
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
     def winter_start_date(self):
         """Get start date of the winter credits."""
@@ -131,25 +136,25 @@ class WinterCreditHandler:
             "%Y-%m-%dT%H:%M:%S.%f%z",
         )
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def winter_end_date(self):
+    def winter_end_date(self) -> datetime.datetime:
         """Get end date of the winter credits."""
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateFinPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
         )
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def cumulated_credit(self):
+    def cumulated_credit(self) -> float:
         """Get cumulated credits."""
         return float(self._raw_data["montantEffaceProjete"])
 
     # Peaks data
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def peaks(self):
+    def peaks(self) -> list[Peak]:
         """Get all peaks of the current winter."""
         current_date = self.winter_start_date
         delta = datetime.timedelta(days=1)
@@ -168,22 +173,22 @@ class WinterCreditHandler:
         peak_list.sort(key=lambda x: x.start_date)
         return peak_list
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def sonic(self):
+    def sonic(self) -> list[Peak]:
         """Piaf's joke."""
         return self.peaks
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def critical_peaks(self):
+    def critical_peaks(self) -> list[Peak]:
         """Get all critical peaks of the current credits."""
         return [p for p in self.peaks if p.is_critical]
 
     # Current peak
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def current_peak(self):
+    def current_peak(self) -> Optional[Peak]:
         """Get current peak.
 
         Return None if no peak is currently running
@@ -197,18 +202,18 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def current_peak_is_critical(self):
+    def current_peak_is_critical(self) -> Optional[bool]:
         """Return True if the current peak is critical."""
         if self.current_peak:
             return bool(self.current_peak.is_critical)
         return None
 
     # In progress
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def current_state(self):
+    def current_state(self) -> str:
         """Get the current state of the winter credit handler.
 
         It returns critical_anchor, anchor, critical_peak, peak or normal
@@ -232,9 +237,9 @@ class WinterCreditHandler:
             return "peak"
         return "normal"
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def preheat_in_progress(self):
+    def preheat_in_progress(self) -> bool:
         """Get the preheat state.
 
         Returns True if we have a preheat period is in progress.
@@ -245,9 +250,9 @@ class WinterCreditHandler:
         return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
 
     # Upcoming
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def is_any_critical_peak_coming(self):
+    def is_any_critical_peak_coming(self) -> bool:
         """Get critical state of the upcoming events.
 
         It will return True if one of the "not completed yet" peak is critical.
@@ -257,9 +262,9 @@ class WinterCreditHandler:
         return bool(self.next_critical_peak)
 
     # Next peak
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def next_peak(self):
+    def next_peak(self) -> Optional[Peak]:
         """Get next peak or current peak."""
         now = _now()
         peaks = [p for p in self.peaks if now < p.end_date]
@@ -268,7 +273,7 @@ class WinterCreditHandler:
         next_peak = min(peaks, key=lambda x: x.start_date)
         return next_peak
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
     def next_peak_is_critical(self) -> bool:
         """Return True if the following next peak is critical.
@@ -288,9 +293,9 @@ class WinterCreditHandler:
             return False
         return self.next_peak.is_critical
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def next_critical_peak(self):
+    def next_critical_peak(self) -> Optional[Peak]:
         """Get next peak or current peak."""
         now = _now()
         peaks = [p for p in self.critical_peaks if now < p.end_date]
@@ -300,9 +305,9 @@ class WinterCreditHandler:
         return next_peak
 
     # Today peaks
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def today_morning_peak(self):
+    def today_morning_peak(self) -> Optional[Peak]:
         """Get the peak of today morning."""
         now = _now()
         peaks = [p for p in self.peaks if p.day == now.date() and p.is_morning]
@@ -314,9 +319,9 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def today_evening_peak(self):
+    def today_evening_peak(self) -> Optional[Peak]:
         """Get the peak of today evening."""
         now = _now()
         peaks = [p for p in self.peaks if p.day == now.date() and p.is_evening]
@@ -329,9 +334,9 @@ class WinterCreditHandler:
         return None
 
     # Tomorrow Peaks
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def tomorrow_morning_peak(self):
+    def tomorrow_morning_peak(self) -> Optional[Peak]:
         """Get the peak of tomorrow morning."""
         now = _now()
         peaks = [
@@ -347,9 +352,9 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def tomorrow_evening_peak(self):
+    def tomorrow_evening_peak(self) -> Optional[Peak]:
         """Get the peak of tomorrow evening."""
         now = _now()
         peaks = [
@@ -366,9 +371,9 @@ class WinterCreditHandler:
         return None
 
     # Yesterday peaks
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def yesterday_morning_peak(self):
+    def yesterday_morning_peak(self) -> Optional[Peak]:
         """Get the peak of yesterday morning."""
         now = _now()
         peaks = [
@@ -384,9 +389,9 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def yesterday_evening_peak(self):
+    def yesterday_evening_peak(self) -> Optional[Peak]:
         """Get the peak of yesterday evening."""
         now = _now()
         peaks = [
@@ -403,9 +408,9 @@ class WinterCreditHandler:
         return None
 
     # Anchors
-    @property
+    @property  # type: ignore
     @_winter_credit_enabled
-    def next_anchor(self):
+    def next_anchor(self) -> Optional[Anchor]:
         """Next or current anchor."""
         now = _now()
         anchors = [p.anchor for p in self.peaks if now < p.anchor.end_date]

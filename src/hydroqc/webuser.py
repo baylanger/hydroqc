@@ -1,4 +1,7 @@
 """Hydroquebec webuser module."""
+import logging
+from typing import Optional, Union
+
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.customer import Customer
 from hydroqc.logger import get_logger
@@ -11,24 +14,30 @@ class WebUser:
     Represents a login/password web account (Demandeur)
     """
 
+    _no_partenaire_demandeur: str
+
     def __init__(
-        self, username, password, verify_ssl, log_level=None, http_log_level=None
+        self,
+        username: str,
+        password: str,
+        verify_ssl: bool,
+        log_level: Optional[str] = None,
+        http_log_level: Optional[str] = None,
     ):
         """Create a new Hydroquebec webuser."""
         self._hydro_client = HydroClient(
             username, password, verify_ssl, log_level=http_log_level
         )
-        self._username = username
-        self._no_partenaire_demandeur = None
-        self._log_level = log_level
-        self._logger = None
-        self.customers = []
+        self._username: str = username
+        self._log_level: Optional[str] = log_level
+        self.customers: list[Customer] = []
+        self._logger: Union[None, logging.Logger] = None
 
-    async def login(self):
+    async def login(self) -> bool:
         """Login to Hydroquebec website."""
         return await self._hydro_client.login()
 
-    async def get_info(self):
+    async def get_info(self) -> None:
         """Fetch data about this webuser.
 
         Retrieve customers, accounts and contracts.
@@ -77,41 +86,41 @@ class WebUser:
             await customer.get_info()
 
     @property
-    def webuser_id(self):
+    def webuser_id(self) -> str:
         """Get webuser id."""
         return self._no_partenaire_demandeur
 
     @property
-    def first_name(self):
+    def first_name(self) -> str:
         """Get webuser firstname."""
         return self._nom1_demandeur
 
     @property
-    def last_name(self):
+    def last_name(self) -> str:
         """Get webuser lastname."""
         return self._nom2_demandeur
 
     @property
-    def session_expired(self):
+    def session_expired(self) -> bool:
         """Is the current session expired or not."""
         return self._hydro_client.session_expired
 
-    async def refresh_session(self):
+    async def refresh_session(self) -> None:
         """Refresh the current session."""
-        return await self._hydro_client.refresh_session()
+        await self._hydro_client.refresh_session()
 
-    def get_customer(self, customer_id):
+    def get_customer(self, customer_id: str) -> Customer:
         """Find customer by id."""
         customers = [c for c in self.customers if c.customer_id == customer_id]
         if not customers:
             raise HydroQcError(f"Customer {customer_id} not found")
         return customers[0]
 
-    async def close_session(self):
+    async def close_session(self) -> None:
         """Close http sessions."""
         await self._hydro_client.close_session()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent object."""
         if not self._no_partenaire_demandeur:
             return f"""<Webuser - {self._username}>"""
