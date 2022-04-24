@@ -5,11 +5,13 @@ import datetime
 class TimeRange:
     """This class describe an interval of time."""
 
-    def __init__(self, start: datetime.datetime, end: datetime.datetime, is_critical: bool):
+    def __init__(
+        self, start: datetime.datetime, end: datetime.datetime, is_critical: bool
+    ):
         """Period constructor."""
-        self._start_date = start
-        self._end_date = end
-        self._is_critical = is_critical
+        self._start_date: datetime.datetime = start
+        self._end_date: datetime.datetime = end
+        self._is_critical: bool = is_critical
 
     @property
     def start_date(self) -> datetime.datetime:

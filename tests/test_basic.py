@@ -46,8 +46,13 @@ class TestBase:
     async def test_base(self):  # pylint: disable=too-many-statements
         """Test all main features."""
         # Webuser
-        self.webuser = WebUser(HYDROQC_USERNAME, HYDROQC_PASSWORD, verify_ssl=True,
-                               log_level="ERROR", http_log_level="ERROR")
+        self.webuser = WebUser(
+            HYDROQC_USERNAME,
+            HYDROQC_PASSWORD,
+            verify_ssl=True,
+            log_level="ERROR",
+            http_log_level="ERROR",
+        )
         assert self.webuser.session_expired is True, "The session should be expired"
 
         connected = await self.webuser.login()
@@ -64,8 +69,9 @@ class TestBase:
         # Customer
         assert len(self.webuser.customers) > 0, "No customer found"
         customer = self.webuser.customers[HYDROQC_ACCOUNT_ID]
-        assert self.webuser.get_customer(customer.customer_id) == customer, (
-                "Can not retrieve the same customer with webuser.get_customer method")
+        assert (
+            self.webuser.get_customer(customer.customer_id) == customer
+        ), "Can not retrieve the same customer with webuser.get_customer method"
         with pytest.raises(HydroQcError):
             self.webuser.get_customer("bad customer id")
         assert customer.names != "", "Bad customer name"
@@ -76,8 +82,9 @@ class TestBase:
         assert len(customer.accounts) > 0, "No account found"
         account = customer.accounts[0]
         assert account.account_id is not None, "No account id found"
-        assert customer.get_account(account.account_id) == account, (
-                "Can not retrieve the same account with customer.get_account method")
+        assert (
+            customer.get_account(account.account_id) == account
+        ), "Can not retrieve the same account with customer.get_account method"
         with pytest.raises(HydroQcError):
             customer.get_account("bad account id")
         assert account.balance >= 0
@@ -87,52 +94,70 @@ class TestBase:
         assert len(account.contracts) > 0, "No contract found"
         contract = account.contracts[0]
         assert contract.contract_id is not None, "No contract id found"
-        assert account.get_contract(contract.contract_id) == contract, (
-                "Can not retrieve the same contract with account.get_contract method")
+        assert (
+            account.get_contract(contract.contract_id) == contract
+        ), "Can not retrieve the same contract with account.get_contract method"
         with pytest.raises(HydroQcError):
             account.get_contract("bad contract id")
         assert contract.account_id == account.account_id, "Bad account id in contract"
         assert contract.__repr__().startswith("<Contract - ")
 
         today_hourly_consumption = await contract.get_today_hourly_consumption()
-        assert today_hourly_consumption.get('success') is True
-        assert today_hourly_consumption.get('results', {}).get('dateJour') in \
-               (today_str, yesterday_str)
+        assert today_hourly_consumption.get("success") is True
+        assert today_hourly_consumption.get("results", {}).get("dateJour") in (
+            today_str,
+            yesterday_str,
+        )
 
         hourly_consumption = await contract.get_hourly_consumption(yesterday_str)
-        assert hourly_consumption.get('success') is True
-        assert hourly_consumption.get('results', {}).get('dateJour') == yesterday_str
+        assert hourly_consumption.get("success") is True
+        assert hourly_consumption.get("results", {}).get("dateJour") == yesterday_str
 
-        daily_consumption = await contract.get_daily_consumption(lastweekday_str, yesterday_str)
-        assert daily_consumption.get('success') is True
-        assert len(daily_consumption.get('results', [])) == 7
-        assert daily_consumption['results'][-1]['courant']['dateJourConso'] == lastweekday_str
+        daily_consumption = await contract.get_daily_consumption(
+            lastweekday_str, yesterday_str
+        )
+        assert daily_consumption.get("success") is True
+        assert len(daily_consumption.get("results", [])) == 7
+        assert (
+            daily_consumption["results"][-1]["courant"]["dateJourConso"]
+            == lastweekday_str
+        )
 
         today_daily_consumption = await contract.get_today_daily_consumption()
-        assert today_daily_consumption.get('success') is True
+        assert today_daily_consumption.get("success") is True
 
-        assert len(today_daily_consumption.get('results', [])) == 1
-        assert today_daily_consumption['results'][-1]['courant']['dateJourConso'] == yesterday_str
+        assert len(today_daily_consumption.get("results", [])) == 1
+        assert (
+            today_daily_consumption["results"][-1]["courant"]["dateJourConso"]
+            == yesterday_str
+        )
 
         monthly_consumption = await contract.get_monthly_consumption()
-        assert monthly_consumption.get('success') is True
-        assert len(monthly_consumption.get('results', [])) == 12
+        assert monthly_consumption.get("success") is True
+        assert len(monthly_consumption.get("results", [])) == 12
 
         annual_consumption = await contract.get_annual_consumption()
-        assert annual_consumption.get('success') is True
-        assert len(annual_consumption.get('results', [])) == 1
-        assert annual_consumption['results'][0].get('courant', {})\
-               .get('dateFinAnnee', '').startswith(str(today.year))
+        assert annual_consumption.get("success") is True
+        assert len(annual_consumption.get("results", [])) == 1
+        assert (
+            annual_consumption["results"][0]
+            .get("courant", {})
+            .get("dateFinAnnee", "")
+            .startswith(str(today.year))
+        )
 
-        assert contract.cp_current_day is None, (
-                "Method get_latest_period_info is already called but it should not")
-        assert not contract.get_latest_period_info(), (
-                "Method get_latest_period_info is already called but it should not")
+        assert (
+            contract.cp_current_day is None
+        ), "Method get_latest_period_info is already called but it should not"
+        assert (
+            not contract.get_latest_period_info()
+        ), "Method get_latest_period_info is already called but it should not"
 
         # Fetch contract info
         await contract.get_periods_info()
-        assert contract._hydro_client.selected_customer == contract.customer_id, (
-                "Bad selected customer")
+        assert (
+            contract._hydro_client.selected_customer == contract.customer_id
+        ), "Bad selected customer"
 
         assert len(contract.get_latest_period_info()) > 0, "No period info found"
         assert contract.cp_current_day >= 0
@@ -149,10 +174,12 @@ class TestBase:
         assert contract.cp_average_temperature >= -30
         assert contract.cp_average_temperature <= 50
         assert contract.cp_kwh_cost_mean >= 0
-        assert contract.cp_rate == HYDROQC_RATE, (
-                "Bad rate status, please check the value of HYDROQC_RATE")
-        assert contract.cp_epp_enabled == HYDROQC_EPP_ENABLED, (
-                "Bad EPP status, please check the value of HYDROQC_EPP_ENABLED")
+        assert (
+            contract.cp_rate == HYDROQC_RATE
+        ), "Bad rate status, please check the value of HYDROQC_RATE"
+        assert (
+            contract.cp_epp_enabled == HYDROQC_EPP_ENABLED
+        ), "Bad EPP status, please check the value of HYDROQC_EPP_ENABLED"
 
         # Winter credit
         winter_credit = contract.winter_credit
@@ -160,11 +187,14 @@ class TestBase:
         assert winter_credit.customer_id == account.customer_id
         assert winter_credit.contract_id == contract.contract_id
 
-        assert len(winter_credit.raw_data) == 0, "Raw data should be empty, data not fetched yet"
+        assert (
+            len(winter_credit.raw_data) == 0
+        ), "Raw data should be empty, data not fetched yet"
 
         await winter_credit.refresh_data()
-        assert winter_credit.is_enabled == HYDROQC_WC_ENABLED, (
-                "Bad winter credit status, please check the value of HYDROQC_WC_ENABLED")
+        assert (
+            winter_credit.is_enabled == HYDROQC_WC_ENABLED
+        ), "Bad winter credit status, please check the value of HYDROQC_WC_ENABLED"
         assert len(winter_credit.raw_data) > 0
         if winter_credit.is_enabled:
             assert winter_credit.winter_start_date.month == 12
@@ -179,18 +209,28 @@ class TestBase:
             assert winter_credit.current_peak in [None] + winter_credit.peaks
             assert winter_credit.current_peak_is_critical in (None, True, False)
             assert winter_credit.current_state in (
-                    "critical_anchor", "anchor", "critical_peak", "peak", "normal")
+                "critical_anchor",
+                "anchor",
+                "critical_peak",
+                "peak",
+                "normal",
+            )
             assert isinstance(winter_credit.preheat_in_progress, bool)
             assert isinstance(winter_credit.is_any_critical_peak_coming, bool)
             assert isinstance(winter_credit.next_peak_is_critical, bool)
-            assert winter_credit.next_critical_peak in [None] + winter_credit.critical_peaks
+            assert (
+                winter_credit.next_critical_peak
+                in [None] + winter_credit.critical_peaks
+            )
             assert winter_credit.today_morning_peak in [None] + winter_credit.peaks
             assert winter_credit.today_evening_peak in [None] + winter_credit.peaks
             assert winter_credit.tomorrow_morning_peak in [None] + winter_credit.peaks
             assert winter_credit.tomorrow_evening_peak in [None] + winter_credit.peaks
             assert winter_credit.yesterday_morning_peak in [None] + winter_credit.peaks
             assert winter_credit.yesterday_evening_peak in [None] + winter_credit.peaks
-            assert winter_credit.next_anchor in [None] + [p.anchor for p in winter_credit.peaks]
+            assert winter_credit.next_anchor in [None] + [
+                p.anchor for p in winter_credit.peaks
+            ]
         else:
             assert winter_credit.winter_start_date is None
             assert winter_credit.winter_end_date is None

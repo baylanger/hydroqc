@@ -1,8 +1,12 @@
 """Hydroquebec customer module."""
+import logging
+from typing import Optional
+
 from hydroqc.account import Account
 from hydroqc.contract import Contract
 from hydroqc.logger import get_logger
 from hydroqc.error import HydroQcError
+from hydroqc.hydro_api.client import HydroClient
 
 
 class Customer:
@@ -12,24 +16,29 @@ class Customer:
     """
 
     def __init__(
-        self, webuser_id, customer_id, customer_names, hydro_client, log_level=None
+        self,
+        webuser_id: str,
+        customer_id: str,
+        customer_names: list[str],
+        hydro_client: HydroClient,
+        log_level: Optional[str] = None,
     ):
         """Create a new customer."""
-        self._logger = get_logger(
+        self._logger: logging.Logger = get_logger(
             f"c-{customer_id}", log_level, parent=f"w-{webuser_id}"
         )
-        self._log_level = log_level
-        self._no_partenaire_demandeur = webuser_id
-        self._no_partenaire_titulaire = customer_id
-        self._nom_titulaires = customer_names
-        self._hydro_client = hydro_client
-        self.accounts = []
-        self._firstname = ""
-        self._lastname = ""
-        self._language = ""
-        self._id_technique = ""
+        self._log_level: Optional[str] = log_level
+        self._no_partenaire_demandeur: str = webuser_id
+        self._no_partenaire_titulaire: str = customer_id
+        self._nom_titulaires: list[str] = customer_names
+        self._hydro_client: HydroClient = hydro_client
+        self.accounts: list[Account] = []
+        self._firstname: str = ""
+        self._lastname: str = ""
+        self._language: str = ""
+        self._id_technique: str = ""
 
-    async def get_info(self):
+    async def get_info(self) -> None:
         """Retrieve account id, customer id and contract id."""
         self._logger.info("Get customer info")
         customer_data = await self._hydro_client.get_customer_info(
@@ -87,27 +96,27 @@ class Customer:
                 await contract.get_info()
 
     @property
-    def webuser_id(self):
+    def webuser_id(self) -> str:
         """Get webuser id."""
         return self._no_partenaire_demandeur
 
     @property
-    def customer_id(self):
+    def customer_id(self) -> str:
         """Get customer id."""
         return self._no_partenaire_titulaire
 
     @property
-    def names(self):
+    def names(self) -> list[str]:
         """Could be ["firstname", "lastname"] or ["fullname1", "fullname2"]."""
         return self._nom_titulaires
 
-    def get_account(self, account_id):
+    def get_account(self, account_id: str) -> Account:
         """Find account by id."""
         accounts = [c for c in self.accounts if c.account_id == account_id]
         if not accounts:
             raise HydroQcError(f"Account {account_id} not found")
         return accounts[0]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Represent object."""
         return f"""<Customer - {self.webuser_id} - {self.customer_id}>"""

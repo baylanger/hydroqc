@@ -13,9 +13,17 @@ test:
   - hydroqc
   image: python:3.9-bullseye
   script:
+    - apt-get update && apt-get install -y graphviz
     - pip install tox
-    - tox -e pylint,flake8,pydocstyle
-
+    - tox -e pylint,flake8,pydocstyle,mypy,black
+  artifacts:
+    paths:
+      - classes.png
+      - classes.mmd
+      - classes.html
+      - packages.png
+      - packages.mmd
+      - packages.html
 
 .private_test_script: &private_test_script
   stage: private_tests

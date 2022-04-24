@@ -51,13 +51,13 @@ def test_peak():
 
     evening_peak = Peak(start_date, "evening")
     stats = {
-            "montantEffacee": 4,
-            "consoReference": 1000,
-            "consoReelle": 800,
-            "consoEffacee": 200,
-            "codeConso": "D",
-            "indFacture": False,
-            }
+        "montantEffacee": 4,
+        "consoReference": 1000,
+        "consoReelle": 800,
+        "consoEffacee": 200,
+        "codeConso": "D",
+        "indFacture": False,
+    }
     evening_peak.set_critical(stats)
     assert evening_peak.is_critical is True
     assert evening_peak.is_morning is False
