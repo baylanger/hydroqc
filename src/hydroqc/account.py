@@ -1,4 +1,6 @@
 """Hydroquebec Account Module."""
+from typing import Optional, Any
+
 from hydroqc.logger import get_logger
 from hydroqc.contract import Contract
 from hydroqc.error import HydroQcError
@@ -12,6 +14,7 @@ class Account:
     """
 
     _balance: float
+    contracts: list[Contract]
 
     def __init__(
         self,
@@ -20,7 +23,7 @@ class Account:
         account_id: str,
         contracts: list[Contract],
         hydro_client: HydroClient,
-        log_level: str = None,
+        log_level: Optional[str] = None,
     ):
         """Create an Hydroquebec account."""
         self._logger = get_logger(
@@ -53,7 +56,7 @@ class Account:
         """Get account id."""
         return self._no_compte_contrat
 
-    async def get_info(self) -> dict:
+    async def get_info(self) -> dict[str, Any]:
         """Fetch latest data of this account."""
         self._logger.info("Get account info")
         data = await self._hydro_client.get_account_info(

@@ -15,6 +15,8 @@ class WebUser:
     """
 
     _no_partenaire_demandeur: str
+    _nom1_demandeur: str
+    _nom2_demandeur: str
 
     def __init__(
         self,

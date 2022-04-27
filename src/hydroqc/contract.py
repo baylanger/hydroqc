@@ -1,7 +1,7 @@
 """Hydroquebec contract module."""
 from datetime import timedelta, datetime
 import logging
-from typing import Optional
+from typing import Optional, Any, Callable, Union
 
 from hydroqc.winter_credit.handler import WinterCreditHandler
 from hydroqc.logger import get_logger
@@ -9,10 +9,10 @@ from hydroqc.winter_credit.consts import EST_TIMEZONE
 from hydroqc.hydro_api.client import HydroClient
 
 
-def _check_data_present(method):
+def check_data_present(method: Callable[..., Any]) -> Callable[..., Any]:
     """Check if contract's data are present."""
-
-    def wrapper(contract):
+    # def wrapper(contract: Contract) -> Optional[Any]:
+    def wrapper(contract: Any) -> Optional[Any]:
         if len(contract._all_period_data):
             return method(contract)
 
@@ -37,7 +37,7 @@ class Contract:
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
-        log_level: str = None,
+        log_level: Optional[str] = None,
     ):
         """Create a new Hydroquebec contract."""
         self._logger: logging.Logger = get_logger(
@@ -59,7 +59,7 @@ class Contract:
             wch_logger,
         )
         self._address: str = ""
-        self._all_period_data: dict = {}
+        self._all_period_data: list[dict[str, Any]] = []
 
     @property
     def webuser_id(self) -> str:
@@ -86,25 +86,27 @@ class Contract:
         """Get winter credit helper object."""
         return self._wch
 
-    async def get_today_hourly_consumption(self) -> dict:
+    async def get_today_hourly_consumption(self) -> dict[str, Any]:
         """Fetch hourly consumption for today."""
         return await self._hydro_client.get_today_hourly_consumption(
             self.webuser_id, self.customer_id, self.contract_id
         )
 
-    async def get_hourly_consumption(self, date_wanted: str) -> dict:
+    async def get_hourly_consumption(self, date_wanted: str) -> dict[str, Any]:
         """Fetch hourly consumption for a date."""
         return await self._hydro_client.get_hourly_consumption(
             self.webuser_id, self.customer_id, self.contract_id, date_wanted
         )
 
-    async def get_daily_consumption(self, start_date: str, end_date: str) -> dict:
+    async def get_daily_consumption(
+        self, start_date: str, end_date: str
+    ) -> dict[str, Any]:
         """Fetch daily consumption."""
         return await self._hydro_client.get_daily_consumption(
             self.webuser_id, self.customer_id, self.contract_id, start_date, end_date
         )
 
-    async def get_today_daily_consumption(self) -> dict:
+    async def get_today_daily_consumption(self) -> dict[str, Any]:
         """TODO ????.
 
         .. todo::
@@ -116,19 +118,19 @@ class Contract:
         end_date = today.strftime("%Y-%m-%d")
         return await self.get_daily_consumption(start_date, end_date)
 
-    async def get_monthly_consumption(self) -> dict:
+    async def get_monthly_consumption(self) -> dict[str, Any]:
         """Fetch monthly consumption."""
         return await self._hydro_client.get_monthly_consumption(
             self.webuser_id, self.customer_id, self.contract_id
         )
 
-    async def get_annual_consumption(self) -> dict:
+    async def get_annual_consumption(self) -> dict[str, Any]:
         """Fetch annual consumption."""
         return await self._hydro_client.get_annual_consumption(
             self.webuser_id, self.customer_id, self.contract_id
         )
 
-    async def get_info(self) -> dict:
+    async def get_info(self) -> dict[str, Any]:
         """Fetch info about this contract."""
         self._logger.info("Get contract info")
         data = await self._hydro_client.get_contract_info(
@@ -139,89 +141,89 @@ class Contract:
         self._mve_activated = data["indicateurMVE"]
         return data
 
-    async def get_periods_info(self):
+    async def get_periods_info(self) -> list[dict[str, Union[str, int, float, bool]]]:
         """Fetch periods info."""
         self._all_period_data = await self._hydro_client.get_periods_info(
             self.webuser_id, self.customer_id, self.contract_id
         )
         return self._all_period_data
 
-    def get_latest_period_info(self):
+    def get_latest_period_info(self) -> dict[str, Union[str, int, float, bool]]:
         """Fetch latest period info."""
-        if len(self._all_period_data):
+        if self._all_period_data:
             return self._all_period_data[0]
-        return []
+        return {}
 
     # Current period properties
     # CP == Current period
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_current_day(self) -> int:
         """Get number of days since the current period started."""
         return self._all_period_data[0]["nbJourLecturePeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_duration(self) -> int:
         """Get current period duration in days."""
         return self._all_period_data[0]["nbJourPrevuPeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_current_bill(self) -> float:
         """Get current bill since the current period started."""
         return self._all_period_data[0]["montantFacturePeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_projected_bill(self) -> float:
         """Projected bill of the current period."""
         return self._all_period_data[0]["montantProjetePeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_daily_bill_mean(self) -> float:
         """Daily bill mean since the current period started."""
         return self._all_period_data[0]["moyenneDollarsJourPeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_daily_consumption_mean(self) -> float:
         """Daily consumption mean since the current period started."""
         return self._all_period_data[0]["moyenneKwhJourPeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_total_consumption(self) -> float:
         """Total consumption since the current period started."""
         return self._all_period_data[0]["consoTotalPeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_projected_total_consumption(self) -> float:
         """Projected consumption of the current period started."""
         return self._all_period_data[0]["consoTotalProjetePeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_lower_price_consumption(self) -> float:
         """Total lower priced consumption since the current period started."""
         return self._all_period_data[0]["consoRegPeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
         return self._all_period_data[0]["consoHautPeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_average_temperature(self) -> float:
         """Average temperature since the current period started."""
         return self._all_period_data[0]["tempMoyennePeriode"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_kwh_cost_mean(self) -> Optional[float]:
         """Mean cost of a kWh since the current period started."""
         if self._all_period_data[0]["coutCentkWh"] is not None:
@@ -229,13 +231,13 @@ class Contract:
         return None
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_rate(self) -> str:
         """Get current period rate name."""
         return self._all_period_data[0]["dernierTarif"]
 
     @property  # type: ignore
-    @_check_data_present
+    @check_data_present
     def cp_epp_enabled(self) -> bool:
         """Is EPP enabled for the current period.
 
