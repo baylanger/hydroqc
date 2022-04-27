@@ -7,7 +7,7 @@ from hydroqc.consts import LOGGING_LEVELS
 
 
 def get_logger(
-    name, log_level: Optional[str] = "INFO", parent: Optional[str] = None
+    name: str, log_level: Optional[str] = "INFO", parent: Optional[str] = None
 ) -> logging.Logger:
     """Build logger."""
     if log_level is None:

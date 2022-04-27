@@ -7,8 +7,8 @@ from distutils.util import convert_path
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
-if sys.version_info < (3, 7):
-    sys.exit("Sorry, Python < 3.7 is not supported")
+if sys.version_info < (3, 9):
+    sys.exit("Sorry, Python < 3.9 is not supported")
 
 install_requires = list(val.strip() for val in open("requirements.txt"))
 tests_require = list(val.strip() for val in open("test_requirements.txt"))

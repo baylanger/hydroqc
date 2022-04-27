@@ -10,7 +10,7 @@ import string
 from json import dumps as json_dumps, loads as json_loads
 import base64
 import ssl
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import aiohttp
 
@@ -43,7 +43,7 @@ class HydroClient:
     _id_token: str
     access_token: str
     _selected_customer: str
-    cookies: dict
+    cookies: dict[str, Any]
 
     def __init__(
         self,
@@ -82,12 +82,12 @@ class HydroClient:
         self,
         url: str,
         method: str,
-        params: dict = None,
-        data: dict = None,
-        headers: dict = None,
-        verify_ssl: bool = None,
-        cookies: dict = None,
-        status: int = 200,
+        params: Optional[dict[str, Any]] = None,
+        data: Optional[Union[str, dict[str, Any]]] = None,
+        headers: Optional[dict[str, str]] = None,
+        verify_ssl: Optional[bool] = None,
+        cookies: Optional[dict[str, Any]] = None,
+        status: Optional[int] = 200,
     ) -> aiohttp.ClientResponse:
         """Prepare and run HTTP/S request."""
         site = url.split("/")[2]
@@ -143,7 +143,7 @@ class HydroClient:
         # In some cases padding get lost, adding it to avoid issues with base64 decode
         raw_token_data += "=" * ((4 - len(raw_token_data) % 4) % 4)
         token_data = json_loads(base64.b64decode(raw_token_data))
-        return time.time() > token_data["exp"]
+        return bool(time.time() > token_data["exp"])
 
     def _get_httpsession(self) -> None:
         """Set http session."""
@@ -152,7 +152,9 @@ class HydroClient:
                 requote_redirect_url=False,
             )
 
-    def _get_customer_http_headers(self, webuser_id: str, customer_id: str) -> dict:
+    def _get_customer_http_headers(
+        self, webuser_id: str, customer_id: str
+    ) -> dict[str, str]:
         """Prepare http headers for customer url queries."""
         headers = {
             "Content-Type": "application/json",
@@ -298,7 +300,7 @@ class HydroClient:
         return self._selected_customer
 
     async def _select_customer(
-        self, webuser_id: str, customer_id: str, force=False
+        self, webuser_id: str, customer_id: str, force: bool = False
     ) -> None:
         """Select a customer on the Home page.
 
@@ -326,7 +328,7 @@ class HydroClient:
         self._selected_customer = customer_id
         self._logger.info("Customer %s selected", customer_id)
 
-    async def get_user_info(self) -> dict:
+    async def get_user_info(self) -> list[dict[str, Any]]:
         """Fetch user ids and customer ids.
 
         .. todo::
@@ -342,7 +344,9 @@ class HydroClient:
         data = await res.json()
         return data
 
-    async def get_customer_info(self, webuser_id: str, customer_id: str) -> dict:
+    async def get_customer_info(
+        self, webuser_id: str, customer_id: str
+    ) -> dict[str, Any]:
         """Fetch customer data."""
         self._logger.info("Fetching customer info: c-%s", customer_id)
         headers = self._get_customer_http_headers(webuser_id, customer_id)
@@ -372,7 +376,7 @@ class HydroClient:
 
     async def get_account_info(
         self, webuser_id: str, customer_id: str, account_id: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Fetch account data."""
         self._logger.info("Fetching account info: c-%s - a-%s", customer_id, account_id)
         data = await self.get_customer_info(webuser_id, customer_id)
@@ -386,7 +390,7 @@ class HydroClient:
 
     async def get_contract_info(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Fetch contract data."""
         self._logger.info(
             "Fetching contract info: c-%s - a-%s - c-%s",
@@ -402,7 +406,7 @@ class HydroClient:
 
     async def get_winter_credit(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Return information about the winter credit.
 
         :return: raw JSON from hydro QC API
@@ -423,7 +427,7 @@ class HydroClient:
 
     async def get_today_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Return latest consumption info (about 2h delay it seems).
 
         :return: raw JSON from hydro QC API for current day (not officially supported, data delayed)
@@ -443,7 +447,7 @@ class HydroClient:
 
     async def get_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str, date_wanted: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Return hourly consumption for a specific day.
 
         .. todo::
@@ -473,7 +477,7 @@ class HydroClient:
         contract_id: str,
         start_date: str,
         end_date: str,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Return hourly consumption for a specific day.
 
         .. todo::
@@ -501,7 +505,7 @@ class HydroClient:
 
     async def get_monthly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Fetch data of the current year.
 
         .. todo::
@@ -525,7 +529,7 @@ class HydroClient:
 
     async def get_annual_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Fetch data of the current year.
 
         API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/

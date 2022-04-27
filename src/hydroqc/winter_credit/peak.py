@@ -1,6 +1,6 @@
 """Class describing a period."""
 import datetime
-from typing import Union
+from typing import Union, Any
 
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.winter_credit.timerange import TimeRange
@@ -16,6 +16,8 @@ from hydroqc.winter_credit.consts import (
     DEFAULT_PRE_HEAT_START_OFFSET,
     DEFAULT_PRE_HEAT_END_OFFSET,
 )
+
+__all__ = ["Anchor", "PreHeat", "Peak"]
 
 
 class Anchor(TimeRange):
@@ -47,8 +49,9 @@ class PreHeat(TimeRange):
 class Peak(TimeRange):
     """This class describe a period object."""
 
-    preheat: PreHeat
-    anchor: Anchor
+    # preheat: PreHeat
+    # anchor: Anchor
+    _is_critical: bool
 
     def __init__(
         self,
@@ -63,7 +66,7 @@ class Peak(TimeRange):
         self._morning_evening: str = morning_evening
         self._date: datetime.datetime = date.astimezone(EST_TIMEZONE)
         super().__init__(self.start_date, self.end_date, is_critical=False)
-        self._raw_stats: dict = {}
+        self._raw_stats: dict[str, Any] = {}
 
     @property
     def is_morning(self) -> bool:
@@ -85,7 +88,7 @@ class Peak(TimeRange):
         """Return True peak is critical."""
         return self._is_critical
 
-    def set_critical(self, stats: dict) -> None:
+    def set_critical(self, stats: dict[str, Any]) -> None:
         """Save critical stats in the peak and set it as critical."""
         self._is_critical = True
         self._raw_stats = stats
@@ -95,7 +98,7 @@ class Peak(TimeRange):
         """Get the day, without time, of the peak."""
         return self._date.date()
 
-    @property  # type: ignore[no-redef]
+    @property
     def anchor(self) -> Anchor:
         """Get the anchor period of the peak."""
         anchor_start_date = self.start_date - datetime.timedelta(
@@ -106,7 +109,7 @@ class Peak(TimeRange):
         )
         return Anchor(anchor_start_date, anchor_end_date, self.is_critical)
 
-    @property  # type: ignore[no-redef]
+    @property
     def preheat(self) -> PreHeat:
         """Get the preheat period of the peak."""
         preheat_start_date = self.start_date - datetime.timedelta(
@@ -120,13 +123,17 @@ class Peak(TimeRange):
     @property
     def start_date(self) -> datetime.datetime:
         """Get the start date of the peak."""
+        if self._morning_evening not in ("morning", "evening"):
+            msg = f"Peak type {self._morning_evening} needs be one of {MORNING_EVENING}"
+            raise HydroQcWinterCreditError(msg)
         if self._morning_evening == "morning":
             start_date = self._date.replace(
                 hour=DEFAULT_MORNING_PEAK_START.hour,
                 minute=DEFAULT_MORNING_PEAK_START.minute,
                 second=DEFAULT_MORNING_PEAK_START.second,
             )
-        elif self._morning_evening == "evening":
+        else:
+            # evening
             start_date = self._date.replace(
                 hour=DEFAULT_EVENING_PEAK_START.hour,
                 minute=DEFAULT_EVENING_PEAK_START.minute,
@@ -137,13 +144,17 @@ class Peak(TimeRange):
     @property
     def end_date(self) -> datetime.datetime:
         """Get the end date of the peak."""
+        if self._morning_evening not in ("morning", "evening"):
+            msg = f"Peak type {self._morning_evening} needs be one of {MORNING_EVENING}"
+            raise HydroQcWinterCreditError(msg)
         if self._morning_evening == "morning":
             end_date = self._date.replace(
                 hour=DEFAULT_MORNING_PEAK_END.hour,
                 minute=DEFAULT_MORNING_PEAK_END.minute,
                 second=DEFAULT_MORNING_PEAK_END.second,
             )
-        elif self._morning_evening == "evening":
+        else:
+            # evening
             end_date = self._date.replace(
                 hour=DEFAULT_EVENING_PEAK_END.hour,
                 minute=DEFAULT_EVENING_PEAK_END.minute,

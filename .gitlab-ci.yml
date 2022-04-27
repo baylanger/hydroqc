@@ -15,9 +15,14 @@ test:
   script:
     - apt-get update && apt-get install -y graphviz
     - pip install tox
-    - tox -e pylint,flake8,pydocstyle,mypy,black
+    - tox -e pylint,flake8,pydocstyle,typing,black
+    - cat mypy-txt-report/index.txt
   artifacts:
+    reports:
+      junit: mypy-junit.xml
     paths:
+      - mypy-txt-report/
+      - mypy-html-report/
       - classes.png
       - classes.mmd
       - classes.html

@@ -1,4 +1,5 @@
 """Constants module for winter credits."""
+# from typing import Literal
 import datetime
 
 import pytz
@@ -13,6 +14,7 @@ DEFAULT_MORNING_PEAK_START = datetime.time(6, 0, 0)
 DEFAULT_MORNING_PEAK_END = datetime.time(9, 0, 0)
 DEFAULT_EVENING_PEAK_START = datetime.time(16, 0, 0)
 DEFAULT_EVENING_PEAK_END = datetime.time(20, 0, 0)
+# MORNING_EVENING: tuple[Literal["morning"], Literal["evening"]] = ("morning", "evening")
 MORNING_EVENING = ("morning", "evening")
 
 EST_TIMEZONE = pytz.timezone("Canada/Eastern")
