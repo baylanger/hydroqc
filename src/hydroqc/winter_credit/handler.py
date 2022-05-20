@@ -149,7 +149,12 @@ class WinterCreditHandler:
     @winter_credit_enabled
     def cumulated_credit(self) -> float:
         """Get cumulated credits."""
-        return float(self._raw_data["montantEffaceProjete"])
+        if self._raw_data["montantEffaceProjete"] == "":
+            return 0.0
+        try:
+            return float(self._raw_data["montantEffaceProjete"])
+        except ValueError as exp:
+            raise HydroQcWinterCreditError("Bad cumulated credit raw value") from exp
 
     # Peaks data
     @property  # type: ignore[misc]
