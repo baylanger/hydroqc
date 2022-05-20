@@ -14,7 +14,6 @@ class Account:
     """
 
     _balance: float
-    contracts: list[Contract]
 
     def __init__(
         self,
