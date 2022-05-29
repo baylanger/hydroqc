@@ -13,7 +13,8 @@ test:
   - hydroqc
   image: python:3.9-bullseye
   script:
-    - apt-get update && apt-get install -y graphviz
+    - apt-get update && apt-get install -y graphviz jq
+    - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
     - pip install tox
     - tox -e pylint,flake8,pydocstyle,typing,black
     - cat mypy-txt-report/index.txt
@@ -164,6 +165,7 @@ private_tests_done:
   needs:
   - job: private_test_mdallaire
   - job: private_test_titilambert
+  coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     reports:
       coverage_report:

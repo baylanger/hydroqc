@@ -33,8 +33,8 @@ repos:
   hooks:
   - id: doc8
 
-#- repo: https://github.com/pre-commit/mirrors-mypy
-#  rev: v0.740
-#  hooks:
-#  - id: mypy
-#    args: [--no-strict-optional, --ignore-missing-imports]
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v0.950
+  hooks:
+  - id: mypy
+    args: [--strict, --pretty, --show-error-codes, --disable-error-code, no-any-return]
