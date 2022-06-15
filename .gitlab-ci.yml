@@ -192,7 +192,7 @@ package:
     - rm -rf dist
     - mkdir -p dist
     # Build a package with a version based on the commmit short sha
-    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i src/hydroqc/__version__.py
+    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i hydroqc/__version__.py
     - pip install --upgrade pip
     - pip install --upgrade build setuptools wheel twine
     - python setup.py develop
@@ -230,7 +230,7 @@ promote2pypi:
     # TODO: open archives edit versions and rebuild archive
     #- cd ..
     # Build package that could be promoted
-    - CURRENT_VERSION=$(grep VERSION src/hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
+    - CURRENT_VERSION=$(grep VERSION hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
     - |
       if [ "${CURRENT_VERSION}" != "${CI_COMMIT_TAG}" ]
       then
