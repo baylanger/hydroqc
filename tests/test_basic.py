@@ -4,10 +4,9 @@ import os
 
 import pytest
 
-from hydroqc.webuser import WebUser
 from hydroqc.error import HydroQcError
+from hydroqc.webuser import WebUser
 from hydroqc.winter_credit.consts import EST_TIMEZONE
-
 
 HYDROQC_USERNAME = os.environ["HYDROQC_USERNAME"]
 HYDROQC_PASSWORD = os.environ["HYDROQC_PASSWORD"]
@@ -28,14 +27,14 @@ class TestBase:
     """Base test class."""
 
     @pytest.mark.asyncio
-    async def teardown_ends(self):
+    async def teardown_ends(self) -> None:
         """Run all needed steps to ends tests."""
         print("teardown")
         # Close session
         await self.webuser.close_session()
 
     @pytest.mark.asyncio
-    async def test_bad_credentials(self):
+    async def test_bad_credentials(self) -> None:
         """Test bad credentials management."""
         # Webuser
         self.webuser = WebUser("bad_username", "bad_password", verify_ssl=True)
@@ -43,7 +42,7 @@ class TestBase:
         assert connected is False, "Login should not work"
 
     @pytest.mark.asyncio
-    async def test_base(self):  # pylint: disable=too-many-statements
+    async def test_base(self) -> None:  # pylint: disable=too-many-statements
         """Test all main features."""
         # Webuser
         self.webuser = WebUser(
@@ -207,14 +206,14 @@ class TestBase:
             assert len(winter_credit.critical_peaks) <= len(winter_credit.peaks)
             assert winter_credit.cumulated_credit >= 0
             assert winter_credit.current_peak in [None] + winter_credit.peaks
-            assert winter_credit.current_peak_is_critical in (None, True, False)
-            assert winter_credit.current_state in (
+            assert winter_credit.current_peak_is_critical in {None, True, False}
+            assert winter_credit.current_state in {
                 "critical_anchor",
                 "anchor",
                 "critical_peak",
                 "peak",
                 "normal",
-            )
+            }
             assert isinstance(winter_credit.preheat_in_progress, bool)
             assert isinstance(winter_credit.is_any_critical_peak_coming, bool)
             assert isinstance(winter_credit.next_peak_is_critical, bool)

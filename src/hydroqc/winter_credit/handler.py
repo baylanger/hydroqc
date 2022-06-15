@@ -1,16 +1,18 @@
 """Winter credit processing."""
 import datetime
 import logging
-from typing import Optional, Callable, Any
+from collections.abc import Callable
+from typing import Any, Optional, Union
 
-from hydroqc.winter_credit.peak import Peak, Anchor
-from hydroqc.winter_credit.consts import (
-    EST_TIMEZONE,
-    DEFAULT_MORNING_PEAK_START,
-    DEFAULT_EVENING_PEAK_START,
-)
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.hydro_api.client import HydroClient
+from hydroqc.types import CriticalPeakDataTyping, WinterCreditDataTyping
+from hydroqc.winter_credit.consts import (
+    DEFAULT_EVENING_PEAK_START,
+    DEFAULT_MORNING_PEAK_START,
+    EST_TIMEZONE,
+)
+from hydroqc.winter_credit.peak import Anchor, Peak
 
 
 def winter_credit_enabled(func: Callable[..., Any]) -> Callable[..., Any]:
@@ -54,7 +56,7 @@ class WinterCreditHandler:
         self._hydro_client: HydroClient = hydro_client
         self._logger: logging.Logger = logger
 
-        self._raw_data: dict[str, Any] = {}
+        self._raw_data: WinterCreditDataTyping = {}
 
     # Basics
     @property
@@ -95,13 +97,13 @@ class WinterCreditHandler:
             ].sort(key=lambda x: (x["dateEffacement"], x["heureDebut"]))
 
     @property
-    def raw_data(self) -> dict[str, Any]:
+    def raw_data(self) -> WinterCreditDataTyping:
         """Return raw collected data."""
         return self._raw_data
 
     # Internals
     @property
-    def _raw_critical_peaks(self) -> list[dict[str, Any]]:
+    def _raw_critical_peaks(self) -> list[CriticalPeakDataTyping]:
         """Shortcut to get quickly critical peaks."""
         return self._raw_data["periodesEffacementsHivers"][0]["periodesEffacementHiver"]
 
@@ -160,10 +162,14 @@ class WinterCreditHandler:
     @property  # type: ignore[misc]
     @winter_credit_enabled
     def peaks(self) -> list[Peak]:
+        """List all peaks of the current winter."""
+        return self._get_peaks()
+
+    def _get_peaks(self) -> list[Peak]:
         """Get all peaks of the current winter."""
         current_date = self.winter_start_date
         delta = datetime.timedelta(days=1)
-        peak_list = []
+        peak_list: list[Peak] = []
         while current_date < self.winter_end_date:
             # Morning
             peak = Peak(current_date, "morning")
@@ -182,7 +188,7 @@ class WinterCreditHandler:
     @winter_credit_enabled
     def sonic(self) -> list[Peak]:
         """Piaf's joke."""
-        return self.peaks
+        return self._get_peaks()
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
@@ -193,14 +199,14 @@ class WinterCreditHandler:
     # Current peak
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def current_peak(self) -> Optional[Peak]:
+    def current_peak(self) -> Union[Peak, None]:
         """Get current peak.
 
         Return None if no peak is currently running
         FIXME This could be USELESS
         """
         now = _now()
-        peaks = [p for p in self.peaks if p.start_date < now < p.end_date]
+        peaks: list[Peak] = [p for p in self.peaks if p.start_date < now < p.end_date]
         if len(peaks) > 1:
             raise HydroQcWinterCreditError("There is more than one current peak !")
         if len(peaks) == 1:
@@ -269,11 +275,15 @@ class WinterCreditHandler:
     # Next peak
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def next_peak(self) -> Optional[Peak]:
+    def next_peak(self) -> Union[Peak, None]:
+        """Get next peak or current peak."""
+        return self._get_next_peak()
+
+    def _get_next_peak(self) -> Union[Peak, None]:
         """Get next peak or current peak."""
         now = _now()
-        peaks = [p for p in self.peaks if now < p.end_date]
-        if not peaks:
+        peaks: list[Peak] = [p for p in self.peaks if now < p.end_date]
+        if not peaks:  # pylint: disable=consider-using-assignment-expr
             return None
         next_peak = min(peaks, key=lambda x: x.start_date)
         return next_peak
@@ -294,17 +304,17 @@ class WinterCreditHandler:
             contract.winter_credit.next_peak.is_critical
 
         """
-        if self.next_peak is None:
+        if (next_peak := self._get_next_peak()) is None:
             return False
-        return self.next_peak.is_critical
+        return next_peak.is_critical
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def next_critical_peak(self) -> Optional[Peak]:
+    def next_critical_peak(self) -> Union[Peak, None]:
         """Get next peak or current peak."""
         now = _now()
-        peaks = [p for p in self.critical_peaks if now < p.end_date]
-        if not peaks:
+        peaks: list[Peak] = [p for p in self.critical_peaks if now < p.end_date]
+        if not peaks:  # pylint: disable=consider-using-assignment-expr
             return None
         next_peak = min(peaks, key=lambda x: x.start_date)
         return next_peak
@@ -312,10 +322,12 @@ class WinterCreditHandler:
     # Today peaks
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def today_morning_peak(self) -> Optional[Peak]:
+    def today_morning_peak(self) -> Union[Peak, None]:
         """Get the peak of today morning."""
         now = _now()
-        peaks = [p for p in self.peaks if p.day == now.date() and p.is_morning]
+        peaks: list[Peak] = [
+            p for p in self.peaks if p.day == now.date() and p.is_morning
+        ]
         if len(peaks) > 1:
             raise HydroQcWinterCreditError(
                 "There is more than one morning peak today !"
@@ -326,10 +338,12 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def today_evening_peak(self) -> Optional[Peak]:
+    def today_evening_peak(self) -> Union[Peak, None]:
         """Get the peak of today evening."""
         now = _now()
-        peaks = [p for p in self.peaks if p.day == now.date() and p.is_evening]
+        peaks: list[Peak] = [
+            p for p in self.peaks if p.day == now.date() and p.is_evening
+        ]
         if len(peaks) > 1:
             raise HydroQcWinterCreditError(
                 "There is more than one evening peak today !"
@@ -341,10 +355,10 @@ class WinterCreditHandler:
     # Tomorrow Peaks
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def tomorrow_morning_peak(self) -> Optional[Peak]:
+    def tomorrow_morning_peak(self) -> Union[Peak, None]:
         """Get the peak of tomorrow morning."""
         now = _now()
-        peaks = [
+        peaks: list[Peak] = [
             p
             for p in self.peaks
             if p.day == now.date() + datetime.timedelta(days=1) and p.is_morning
@@ -359,10 +373,10 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def tomorrow_evening_peak(self) -> Optional[Peak]:
+    def tomorrow_evening_peak(self) -> Union[Peak, None]:
         """Get the peak of tomorrow evening."""
         now = _now()
-        peaks = [
+        peaks: list[Peak] = [
             p
             for p in self.peaks
             if p.day == now.date() + datetime.timedelta(days=1) and p.is_evening
@@ -378,10 +392,10 @@ class WinterCreditHandler:
     # Yesterday peaks
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def yesterday_morning_peak(self) -> Optional[Peak]:
+    def yesterday_morning_peak(self) -> Union[Peak, None]:
         """Get the peak of yesterday morning."""
         now = _now()
-        peaks = [
+        peaks: list[Peak] = [
             p
             for p in self.peaks
             if p.day == now.date() - datetime.timedelta(days=1) and p.is_morning
@@ -396,10 +410,10 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def yesterday_evening_peak(self) -> Optional[Peak]:
+    def yesterday_evening_peak(self) -> Union[Peak, None]:
         """Get the peak of yesterday evening."""
         now = _now()
-        peaks = [
+        peaks: list[Peak] = [
             p
             for p in self.peaks
             if p.day == now.date() - datetime.timedelta(days=1) and p.is_evening
@@ -415,11 +429,13 @@ class WinterCreditHandler:
     # Anchors
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def next_anchor(self) -> Optional[Anchor]:
+    def next_anchor(self) -> Union[Anchor, None]:
         """Next or current anchor."""
         now = _now()
-        anchors = [p.anchor for p in self.peaks if now < p.anchor.end_date]
+        anchors: list[Anchor] = [
+            p.anchor for p in self.peaks if now < p.anchor.end_date
+        ]
         if anchors:
-            next_anchor = min(anchors, key=lambda x: x.start_date)
+            next_anchor: Anchor = min(anchors, key=lambda x: x.start_date)
             return next_anchor
         return None

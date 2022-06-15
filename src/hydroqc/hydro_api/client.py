@@ -1,38 +1,51 @@
 """HydroQc Client Module."""
+import base64
 import importlib.resources
 import json
-import uuid
-import time
-from datetime import datetime, timedelta
-import random
 import logging
-import string
-from json import dumps as json_dumps, loads as json_loads
-import base64
+import random
 import ssl
+import string
+import time
+import uuid
+from datetime import datetime, timedelta
+from json import dumps as json_dumps
+from json import loads as json_loads
 from typing import Any, Optional, Union
 
 import aiohttp
 
-from hydroqc.error import HydroQcHTTPError, HydroQcError
-from hydroqc.logger import get_logger
+from hydroqc.error import HydroQcError, HydroQcHTTPError
 from hydroqc.hydro_api.consts import (
-    REQUESTS_TIMEOUT,
-    SESSION_URL,
-    SESSION_REFRESH_URL,
-    PORTRAIT_URL,
-    AUTH_URL,
-    SECURITY_URL,
-    AUTHORIZE_URL,
-    LOGIN_URL_6,
-    RELATION_URL,
-    HOURLY_CONSUMPTION_API_URL,
-    DAILY_CONSUMPTION_API_URL,
-    MONTHLY_DATA_URL,
     ANNUAL_DATA_URL,
-    GET_WINTER_CREDIT_API_URL,
+    AUTH_URL,
+    AUTHORIZE_URL,
     CUSTOMER_INFO_URL,
+    DAILY_CONSUMPTION_API_URL,
+    GET_WINTER_CREDIT_API_URL,
+    HOURLY_CONSUMPTION_API_URL,
+    LOGIN_URL_6,
+    MONTHLY_DATA_URL,
     PERIOD_DATA_URL,
+    PORTRAIT_URL,
+    RELATION_URL,
+    REQUESTS_TIMEOUT,
+    SECURITY_URL,
+    SESSION_REFRESH_URL,
+    SESSION_URL,
+)
+from hydroqc.logger import get_logger
+from hydroqc.types import (
+    ComptesTyping,
+    ConsoAnnualTyping,
+    ConsoDailyResultTyping,
+    ConsoHourlyResultTyping,
+    ConsoMonthlyTyping,
+    InfoCompteTyping,
+    PeriodDataTyping,
+    WinterCreditDataTyping,
+    listeComptesContratsTyping,
+    listeContratModelTyping,
 )
 from hydroqc.winter_credit.consts import EST_TIMEZONE
 
@@ -108,7 +121,7 @@ class HydroClient:
             ssl_context = self._sslcontext
 
         self._logger.debug("HTTP query %s to %s", url, method)
-        raw_res = await getattr(self._session, method)(
+        raw_res: aiohttp.ClientResponse = await getattr(self._session, method)(
             url,
             params=params,
             data=data,
@@ -137,7 +150,7 @@ class HydroClient:
 
         returns True if the session has expired.
         """
-        if self._id_token in ("", None):
+        if self._id_token in {"", None}:
             return True
         raw_token_data = self._id_token.split(".")[1]
         # In some cases padding get lost, adding it to avoid issues with base64 decode
@@ -202,11 +215,11 @@ class HydroClient:
             data["callbacks"][0]["input"][0]["value"] = self.username
             data["callbacks"][1]["input"][0]["value"] = self.password
 
-            data = json_dumps(data)
+            data_str = json_dumps(data)
 
             try:
                 res = await self.http_request(
-                    AUTH_URL, "post", data=data, headers=headers
+                    AUTH_URL, "post", data=data_str, headers=headers
                 )
             except HydroQcHTTPError:
                 self._logger.critical("Unable to connect. Check your credentials")
@@ -328,7 +341,7 @@ class HydroClient:
         self._selected_customer = customer_id
         self._logger.info("Customer %s selected", customer_id)
 
-    async def get_user_info(self) -> list[dict[str, Any]]:
+    async def get_user_info(self) -> list[ComptesTyping]:
         """Fetch user ids and customer ids.
 
         .. todo::
@@ -341,12 +354,12 @@ class HydroClient:
         }
         res = await self.http_request(RELATION_URL, "get", headers=headers)
         # TODO http errors
-        data = await res.json()
+        data: list[ComptesTyping] = await res.json()
         return data
 
     async def get_customer_info(
         self, webuser_id: str, customer_id: str
-    ) -> dict[str, Any]:
+    ) -> InfoCompteTyping:
         """Fetch customer data."""
         self._logger.info("Fetching customer info: c-%s", customer_id)
         headers = self._get_customer_http_headers(webuser_id, customer_id)
@@ -357,26 +370,28 @@ class HydroClient:
             headers=headers,
             params=params,
         )
-        data = await api_call_response.json()
+        data: InfoCompteTyping = await api_call_response.json()
         return data
 
     async def get_periods_info(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> list[Any]:
+    ) -> list[PeriodDataTyping]:
         """Fetch all periods info."""
         await self._select_customer(webuser_id, customer_id)
         headers = self._get_customer_http_headers(webuser_id, customer_id)
         res = await self.http_request(PERIOD_DATA_URL, "get", headers=headers)
         data = json.loads(await res.text())
 
-        periods = [p for p in data["results"] if p["numeroContrat"] == contract_id]
+        periods: list[PeriodDataTyping] = [
+            p for p in data["results"] if p["numeroContrat"] == contract_id
+        ]
         if not periods:
             raise HydroQcError(f"No period found for contract {contract_id}")
         return periods
 
     async def get_account_info(
         self, webuser_id: str, customer_id: str, account_id: str
-    ) -> dict[str, Any]:
+    ) -> listeComptesContratsTyping:
         """Fetch account data."""
         self._logger.info("Fetching account info: c-%s - a-%s", customer_id, account_id)
         data = await self.get_customer_info(webuser_id, customer_id)
@@ -390,7 +405,7 @@ class HydroClient:
 
     async def get_contract_info(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict[str, Any]:
+    ) -> listeContratModelTyping:
         """Fetch contract data."""
         self._logger.info(
             "Fetching contract info: c-%s - a-%s - c-%s",
@@ -406,7 +421,7 @@ class HydroClient:
 
     async def get_winter_credit(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict[str, Any]:
+    ) -> WinterCreditDataTyping:
         """Return information about the winter credit.
 
         :return: raw JSON from hydro QC API
@@ -422,12 +437,12 @@ class HydroClient:
             headers=headers,
             params=params,
         )
-        data = await api_call_response.json()
+        data: WinterCreditDataTyping = await api_call_response.json()
         return data
 
     async def get_today_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict[str, Any]:
+    ) -> ConsoHourlyResultTyping:
         """Return latest consumption info (about 2h delay it seems).
 
         :return: raw JSON from hydro QC API for current day (not officially supported, data delayed)
@@ -440,14 +455,14 @@ class HydroClient:
         await self.get_hourly_consumption(
             webuser_id, customer_id, contract_id, yesterday_str
         )
-        res = await self.get_hourly_consumption(
+        res: ConsoHourlyResultTyping = await self.get_hourly_consumption(
             webuser_id, customer_id, contract_id, today_str
         )
         return res
 
     async def get_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str, date_wanted: str
-    ) -> dict[str, Any]:
+    ) -> ConsoHourlyResultTyping:
         """Return hourly consumption for a specific day.
 
         .. todo::
@@ -467,7 +482,7 @@ class HydroClient:
             HOURLY_CONSUMPTION_API_URL, "get", params=params
         )
         # We can not use res.json() because the response header are not application/json
-        data = json.loads(await api_call_response.text())
+        data: ConsoHourlyResultTyping = json.loads(await api_call_response.text())
         return data
 
     async def get_daily_consumption(
@@ -477,7 +492,7 @@ class HydroClient:
         contract_id: str,
         start_date: str,
         end_date: str,
-    ) -> dict[str, Any]:
+    ) -> ConsoDailyResultTyping:
         """Return hourly consumption for a specific day.
 
         .. todo::
@@ -500,12 +515,12 @@ class HydroClient:
             params=params,
         )
         # We can not use res.json() because the response header are not application/json
-        data = json.loads(await api_call_response.text())
+        data: ConsoDailyResultTyping = json.loads(await api_call_response.text())
         return data
 
     async def get_monthly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict[str, Any]:
+    ) -> ConsoMonthlyTyping:
         """Fetch data of the current year.
 
         .. todo::
@@ -524,12 +539,12 @@ class HydroClient:
             MONTHLY_DATA_URL, "get", headers=headers
         )
         # We can not use res.json() because the response header are not application/json
-        data = json.loads(await api_call_response.text())
+        data: ConsoMonthlyTyping = json.loads(await api_call_response.text())
         return data
 
     async def get_annual_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> dict[str, Any]:
+    ) -> ConsoAnnualTyping:
         """Fetch data of the current year.
 
         API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
@@ -544,5 +559,5 @@ class HydroClient:
             ANNUAL_DATA_URL, "get", headers=headers
         )
         # We can not use res.json() because the response header are not application/json
-        data = json.loads(await api_call_response.text())
+        data: ConsoAnnualTyping = json.loads(await api_call_response.text())
         return data

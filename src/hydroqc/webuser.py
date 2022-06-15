@@ -2,10 +2,10 @@
 import logging
 from typing import Optional, Union
 
-from hydroqc.hydro_api.client import HydroClient
 from hydroqc.customer import Customer
-from hydroqc.logger import get_logger
 from hydroqc.error import HydroQcError
+from hydroqc.hydro_api.client import HydroClient
+from hydroqc.logger import get_logger
 
 
 class WebUser:
@@ -65,7 +65,7 @@ class WebUser:
         self._nom2_demandeur = user_info[0]["nom2Demandeur"]
         for customer_data in user_info:
             customer_names = [
-                v
+                str(v)
                 for k, v in customer_data.items()
                 if k.startswith("nom") and k.endswith("Titulaire")
             ]
@@ -113,8 +113,9 @@ class WebUser:
 
     def get_customer(self, customer_id: str) -> Customer:
         """Find customer by id."""
-        customers = [c for c in self.customers if c.customer_id == customer_id]
-        if not customers:
+        if not (
+            customers := [c for c in self.customers if c.customer_id == customer_id]
+        ):
             raise HydroQcError(f"Customer {customer_id} not found")
         return customers[0]
 

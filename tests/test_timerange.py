@@ -3,13 +3,14 @@ import datetime
 
 import pytest
 
-from hydroqc.winter_credit.timerange import TimeRange
-from hydroqc.winter_credit.peak import Anchor, PreHeat, Peak
 from hydroqc.error import HydroQcWinterCreditError
+from hydroqc.types import CriticalPeakDataTyping
 from hydroqc.winter_credit.consts import EST_TIMEZONE
+from hydroqc.winter_credit.peak import Anchor, Peak, PreHeat
+from hydroqc.winter_credit.timerange import TimeRange
 
 
-def test_timerange():
+def test_timerange() -> None:
     """Test timerange features."""
     end_date = datetime.datetime.now().astimezone(EST_TIMEZONE)
     start_date = end_date - datetime.timedelta(days=7)
@@ -20,7 +21,7 @@ def test_timerange():
     assert time_range.__repr__().startswith("<TimeRange - ")
 
 
-def test_anchor():
+def test_anchor() -> None:
     """Test all anchor features."""
     end_date = datetime.datetime.now().astimezone(EST_TIMEZONE)
     start_date = end_date - datetime.timedelta(days=7)
@@ -31,7 +32,7 @@ def test_anchor():
     assert anchor.__repr__().startswith("<Anchor - ")
 
 
-def test_preheat():
+def test_preheat() -> None:
     """Test all preheat features."""
     end_date = datetime.datetime.now().astimezone(EST_TIMEZONE)
     start_date = end_date - datetime.timedelta(days=7)
@@ -42,7 +43,7 @@ def test_preheat():
     assert pre_heat.__repr__().startswith("<PreHeat - ")
 
 
-def test_peak():
+def test_peak() -> None:
     """Test all peak features."""
     tmp_date = datetime.datetime.now().astimezone(EST_TIMEZONE)
     start_date = tmp_date - datetime.timedelta(days=7)
@@ -50,7 +51,7 @@ def test_peak():
         evening_peak = Peak(start_date, "bad_value")
 
     evening_peak = Peak(start_date, "evening")
-    stats = {
+    stats: CriticalPeakDataTyping = {
         "montantEffacee": 4,
         "consoReference": 1000,
         "consoReelle": 800,
