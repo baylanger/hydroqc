@@ -2,12 +2,12 @@
 import datetime
 
 import pytest
-
 from hydroqc.error import HydroQcWinterCreditError
-from hydroqc.types import CriticalPeakDataTyping
 from hydroqc.winter_credit.consts import EST_TIMEZONE
 from hydroqc.winter_credit.peak import Anchor, Peak, PreHeat
 from hydroqc.winter_credit.timerange import TimeRange
+
+from hydroqc.types import CriticalPeakDataTyping
 
 
 def test_timerange() -> None:
@@ -18,7 +18,7 @@ def test_timerange() -> None:
     assert time_range.is_critical is False
     assert time_range.start_date == start_date
     assert time_range.end_date == end_date
-    assert time_range.__repr__().startswith("<TimeRange - ")
+    assert repr(time_range).startswith("<TimeRange - ")
 
 
 def test_anchor() -> None:
@@ -29,7 +29,7 @@ def test_anchor() -> None:
     assert anchor.is_critical is True
     assert anchor.start_date == start_date
     assert anchor.end_date == end_date
-    assert anchor.__repr__().startswith("<Anchor - ")
+    assert repr(anchor).startswith("<Anchor - ")
 
 
 def test_preheat() -> None:
@@ -40,7 +40,7 @@ def test_preheat() -> None:
     assert pre_heat.is_critical is False
     assert pre_heat.start_date == start_date
     assert pre_heat.end_date == end_date
-    assert pre_heat.__repr__().startswith("<PreHeat - ")
+    assert repr(pre_heat).startswith("<PreHeat - ")
 
 
 def test_peak() -> None:

@@ -3,7 +3,6 @@ import datetime
 import os
 
 import pytest
-
 from hydroqc.error import HydroQcError
 from hydroqc.webuser import WebUser
 from hydroqc.winter_credit.consts import EST_TIMEZONE
@@ -61,7 +60,7 @@ class TestBase:
         assert self.webuser.first_name != "", "No webuser's firstname found"
         assert self.webuser.last_name != "", "No webuser's lastname found"
         assert self.webuser.session_expired is False, "Session expired"
-        assert self.webuser.__repr__().startswith("<Webuser - ")
+        assert repr(self.webuser).startswith("<Webuser - ")
 
         await self.webuser.refresh_session()
 
@@ -74,7 +73,7 @@ class TestBase:
         with pytest.raises(HydroQcError):
             self.webuser.get_customer("bad customer id")
         assert customer.names != "", "Bad customer name"
-        assert customer.__repr__().startswith("<Customer - ")
+        assert repr(customer).startswith("<Customer - ")
         assert customer.customer_id is not None, "No customer id found"
 
         # Account
@@ -87,7 +86,7 @@ class TestBase:
         with pytest.raises(HydroQcError):
             customer.get_account("bad account id")
         assert isinstance(account.balance, float)
-        assert account.__repr__().startswith("<Account - ")
+        assert repr(account).startswith("<Account - ")
 
         # Contract
         assert len(account.contracts) > 0, "No contract found"
@@ -99,7 +98,7 @@ class TestBase:
         with pytest.raises(HydroQcError):
             account.get_contract("bad contract id")
         assert contract.account_id == account.account_id, "Bad account id in contract"
-        assert contract.__repr__().startswith("<Contract - ")
+        assert repr(contract).startswith("<Contract - ")
 
         today_hourly_consumption = await contract.get_today_hourly_consumption()
         assert today_hourly_consumption.get("success") is True
