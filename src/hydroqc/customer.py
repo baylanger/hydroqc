@@ -112,8 +112,7 @@ class Customer:
 
     def get_account(self, account_id: str) -> Account:
         """Find account by id."""
-        accounts = [c for c in self.accounts if c.account_id == account_id]
-        if not accounts:
+        if not (accounts := [c for c in self.accounts if c.account_id == account_id]):
             raise HydroQcError(f"Account {account_id} not found")
         return accounts[0]
 

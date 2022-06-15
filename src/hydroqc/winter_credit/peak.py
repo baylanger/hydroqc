@@ -1,21 +1,22 @@
 """Class describing a period."""
 import datetime
-from typing import Union, Any
+from typing import Union
 
 from hydroqc.error import HydroQcWinterCreditError
-from hydroqc.winter_credit.timerange import TimeRange
+from hydroqc.types import CriticalPeakDataTyping
 from hydroqc.winter_credit.consts import (
+    DEFAULT_ANCHOR_DURATION,
+    DEFAULT_ANCHOR_START_OFFSET,
+    DEFAULT_EVENING_PEAK_END,
+    DEFAULT_EVENING_PEAK_START,
+    DEFAULT_MORNING_PEAK_END,
+    DEFAULT_MORNING_PEAK_START,
+    DEFAULT_PRE_HEAT_END_OFFSET,
+    DEFAULT_PRE_HEAT_START_OFFSET,
     EST_TIMEZONE,
     MORNING_EVENING,
-    DEFAULT_MORNING_PEAK_START,
-    DEFAULT_MORNING_PEAK_END,
-    DEFAULT_EVENING_PEAK_START,
-    DEFAULT_EVENING_PEAK_END,
-    DEFAULT_ANCHOR_START_OFFSET,
-    DEFAULT_ANCHOR_DURATION,
-    DEFAULT_PRE_HEAT_START_OFFSET,
-    DEFAULT_PRE_HEAT_END_OFFSET,
 )
+from hydroqc.winter_credit.timerange import TimeRange
 
 __all__ = ["Anchor", "PreHeat", "Peak"]
 
@@ -51,7 +52,7 @@ class Peak(TimeRange):
 
     # preheat: PreHeat
     # anchor: Anchor
-    _is_critical: bool
+    # _is_critical: bool
 
     def __init__(
         self,
@@ -66,7 +67,7 @@ class Peak(TimeRange):
         self._morning_evening: str = morning_evening
         self._date: datetime.datetime = date.astimezone(EST_TIMEZONE)
         super().__init__(self.start_date, self.end_date, is_critical=False)
-        self._raw_stats: dict[str, Any] = {}
+        self._raw_stats: CriticalPeakDataTyping = {}
 
     @property
     def is_morning(self) -> bool:
@@ -88,7 +89,7 @@ class Peak(TimeRange):
         """Return True peak is critical."""
         return self._is_critical
 
-    def set_critical(self, stats: dict[str, Any]) -> None:
+    def set_critical(self, stats: CriticalPeakDataTyping) -> None:
         """Save critical stats in the peak and set it as critical."""
         self._is_critical = True
         self._raw_stats = stats

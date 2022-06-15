@@ -1,10 +1,11 @@
 """Hydroquebec Account Module."""
-from typing import Optional, Any
+from typing import Optional
 
-from hydroqc.logger import get_logger
 from hydroqc.contract import Contract
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
+from hydroqc.logger import get_logger
+from hydroqc.types import listeComptesContratsTyping
 
 
 class Account:
@@ -14,6 +15,8 @@ class Account:
     """
 
     _balance: float
+    _balance_unpaid: float
+    _last_bill: float
 
     def __init__(
         self,
@@ -34,8 +37,6 @@ class Account:
         self._hydro_client: HydroClient = hydro_client
         self.contracts: list[Contract] = contracts
         self._address: str = ""
-        self._balance_unpaid: str = ""
-        self._last_bill: str = ""
         self._bill_date_create: str = ""
         self._bill_date_due: str = ""
         self._bill_date_next: str = ""
@@ -55,7 +56,7 @@ class Account:
         """Get account id."""
         return self._no_compte_contrat
 
-    async def get_info(self) -> dict[str, Any]:
+    async def get_info(self) -> listeComptesContratsTyping:
         """Fetch latest data of this account."""
         self._logger.info("Get account info")
         data = await self._hydro_client.get_account_info(
@@ -77,8 +78,9 @@ class Account:
 
     def get_contract(self, contract_id: str) -> Contract:
         """Find contract by id."""
-        contracts = [c for c in self.contracts if c.contract_id == contract_id]
-        if not contracts:
+        if not (
+            contracts := [c for c in self.contracts if c.contract_id == contract_id]
+        ):
             raise HydroQcError(f"Contract {contract_id} not found")
         return contracts[0]
 
