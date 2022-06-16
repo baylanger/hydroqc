@@ -23,6 +23,7 @@
     },
     {
       "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
+      "matchFiles": ["setup.cfg"],
       "matchUpdateTypes": ["minor", "patch", "pin", "pinDigest", "digest", "lockFileMaintenance", "rollback", "bump"],
       "groupName": "Python dependencies - non-major",
       "groupSlug": "python-deps-nonmajor",
@@ -30,6 +31,7 @@
     },
     {
       "matchManagers": ["pip-compile", "pip_requirements", "pip_setup", "pipenv", "poetry", "pyenv", "setup-cfg"],
+      "matchFiles": ["setup.cfg"],
       "matchUpdateTypes": ["major"],
       "groupName": "Python dependencies - major",
       "groupSlug": "python-deps-major",
