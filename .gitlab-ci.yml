@@ -11,9 +11,9 @@ test:
   stage: test
   tags:
   - hydroqc
-  image: python:3.9-bullseye
+  image: debian:testing-20220527-slim
   script:
-    - apt-get update && apt-get install -y graphviz jq
+    - apt-get update && apt-get install -y graphviz jq python3.10 python3-venv python3-pip
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
     - pip install tox
     - tox -e pylint,flake8,pydocstyle,typing,black
@@ -41,9 +41,9 @@ test:
   stage: private_tests
   tags:
   - hydroqc
-  image: python:3.9-bullseye
+  image: debian:testing-20220527-slim
   script:
-    - apt update && apt install -y jq unzip
+    - apt update && apt install -y jq unzip curl
     - >
       OUTPUT=$(curl
       --globoff
@@ -155,6 +155,7 @@ private_tests_done:
   - hydroqc
   image: python:3.9-bullseye
   script:
+    - apt-get update && apt-get install -y python3.10 python3-venv python3-pip
     - echo "Private Tests done"
     - pip install tox
     - find .
@@ -195,13 +196,13 @@ package:
     - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i hydroqc/__version__.py
     - pip install --upgrade pip
     - pip install --upgrade build setuptools wheel twine
-    - python setup.py develop
+    - python3 setup.py develop
     - ls -l
     - pwd
     - python3 -m build
     - pip install -r requirements.txt
-    - python setup.py sdist bdist_wheel
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+    - python3 setup.py sdist bdist_wheel
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   rules:
     - if: '$CI_COMMIT_TAG'
       when: never
@@ -213,7 +214,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: python:3.9-bullseye
+  image: debian:testing-20220527-slim
   script:
     # TODO: try to pull the good package from gitlab pypi repo
     #       then change the version (promote)
@@ -229,6 +230,7 @@ promote2pypi:
     #  pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple --no-deps
     # TODO: open archives edit versions and rebuild archive
     #- cd ..
+    - apt-get update && apt-get install -y python3.10 python3-venv python3-pip
     # Build package that could be promoted
     - CURRENT_VERSION=$(grep VERSION hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
     - |
@@ -241,7 +243,7 @@ promote2pypi:
     - python3 -m build
     - pip install twine
     - pip install -r requirements.txt
-    - python setup.py sdist bdist_wheel
+    - pythoa3n setup.py sdist bdist_wheel
     - twine upload --non-interactive --repository pypi dist/*
   rules:
     - if: '$CI_COMMIT_TAG'

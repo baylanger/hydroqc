@@ -1,12 +1,11 @@
 """Hydroquebec customer module."""
 import logging
-from typing import Optional
 
 from hydroqc.account import Account
 from hydroqc.contract import Contract
-from hydroqc.logger import get_logger
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
+from hydroqc.logger import get_logger
 
 
 class Customer:
@@ -21,13 +20,13 @@ class Customer:
         customer_id: str,
         customer_names: list[str],
         hydro_client: HydroClient,
-        log_level: Optional[str] = None,
+        log_level: str | None = None,
     ):
         """Create a new customer."""
         self._logger: logging.Logger = get_logger(
             f"c-{customer_id}", log_level, parent=f"w-{webuser_id}"
         )
-        self._log_level: Optional[str] = log_level
+        self._log_level: str | None = log_level
         self._no_partenaire_demandeur: str = webuser_id
         self._no_partenaire_titulaire: str = customer_id
         self._nom_titulaires: list[str] = customer_names

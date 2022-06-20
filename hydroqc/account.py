@@ -1,10 +1,9 @@
 """Hydroquebec Account Module."""
-from typing import Optional
-
 from hydroqc.contract import Contract
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
+
 from hydroqc.types import listeComptesContratsTyping
 
 
@@ -25,7 +24,7 @@ class Account:
         account_id: str,
         contracts: list[Contract],
         hydro_client: HydroClient,
-        log_level: Optional[str] = None,
+        log_level: str | None = None,
     ):
         """Create an Hydroquebec account."""
         self._logger = get_logger(

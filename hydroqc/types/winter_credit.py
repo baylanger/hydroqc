@@ -1,5 +1,5 @@
 """Hydroqc custom types."""
-from typing import TypedDict, Union
+from typing import TypedDict
 
 
 class PeriodDataTyping(TypedDict, total=True):
@@ -16,7 +16,7 @@ class PeriodDataTyping(TypedDict, total=True):
     consoRegPeriode: float
     consoHautPeriode: float
     tempMoyennePeriode: float
-    coutCentkWh: Union[float, None]
+    coutCentkWh: float | None
     dernierTarif: str
     indMVEPeriode: bool
 

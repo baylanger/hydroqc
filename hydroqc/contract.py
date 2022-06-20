@@ -2,10 +2,12 @@
 import logging
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Optional, Union
 
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
+from hydroqc.winter_credit.consts import EST_TIMEZONE
+from hydroqc.winter_credit.handler import WinterCreditHandler
+
 from hydroqc.types import (
     ConsoAnnualTyping,
     ConsoDailyResultTyping,
@@ -14,16 +16,14 @@ from hydroqc.types import (
     PeriodDataTyping,
     listeContratModelTyping,
 )
-from hydroqc.winter_credit.consts import EST_TIMEZONE
-from hydroqc.winter_credit.handler import WinterCreditHandler
 
 
 def check_data_present(
-    method: Callable[..., Union[None, str, bool, float]]
-) -> Callable[..., Union[None, str, bool, float]]:
+    method: Callable[..., None | str | bool | float]
+) -> Callable[..., None | str | bool | float]:
     """Check if contract's data are present."""
 
-    def wrapper(contract: "Contract") -> Union[None, str, bool, float]:
+    def wrapper(contract: "Contract") -> None | str | bool | float:
         if len(contract._all_period_data):
             return method(contract)
 
@@ -48,7 +48,7 @@ class Contract:
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
-        log_level: Optional[str] = None,
+        log_level: str | None = None,
     ):
         """Create a new Hydroquebec contract."""
         self._logger: logging.Logger = get_logger(
@@ -159,7 +159,7 @@ class Contract:
         )
         return self._all_period_data
 
-    def get_latest_period_info(self) -> Union[PeriodDataTyping, dict[None, None]]:
+    def get_latest_period_info(self) -> PeriodDataTyping | dict[None, None]:
         """Fetch latest period info."""
         if self._all_period_data:
             return self._all_period_data[0]
@@ -235,7 +235,7 @@ class Contract:
 
     @property  # type: ignore
     @check_data_present
-    def cp_kwh_cost_mean(self) -> Union[float, None]:
+    def cp_kwh_cost_mean(self) -> float | None:
         """Mean cost of a kWh since the current period started."""
         if self._all_period_data[0]["coutCentkWh"] is not None:
             return self._all_period_data[0]["coutCentkWh"] / 100
