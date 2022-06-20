@@ -1,13 +1,12 @@
 """Logging module."""
 import logging
-from typing import Optional
 
-from hydroqc.error import HydroQcError
 from hydroqc.consts import LOGGING_LEVELS
+from hydroqc.error import HydroQcError
 
 
 def get_logger(
-    name: str, log_level: Optional[str] = "INFO", parent: Optional[str] = None
+    name: str, log_level: str | None = "INFO", parent: str | None = None
 ) -> logging.Logger:
     """Build logger."""
     if log_level is None:

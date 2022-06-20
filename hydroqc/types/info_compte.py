@@ -1,6 +1,6 @@
 """Info compte json output formats."""
 # pylint: disable=invalid-name
-from typing import Any, TypedDict, Union
+from typing import Any, TypedDict
 
 
 # https://cl-services.idp.hydroquebec.com/cl/prive/api/v1_0/relations
@@ -17,9 +17,9 @@ class ComptesTyping(TypedDict, total=True):
     indEcActif: bool
     indFavori: bool
     nickname: str
-    actif: Union[bool, None]  # Could be not present
-    dateDebutRelation: Union[str, None]  # Could be not present
-    dateFinRelation: Union[str, None]  # Could be not present
+    actif: bool | None  # Could be not present
+    dateDebutRelation: str | None  # Could be not present
+    dateFinRelation: str | None  # Could be not present
 
 
 # .../cl/prive/api/v3_0/partenaires/infoCompte
@@ -46,10 +46,10 @@ class listeComptesContratsTyping(TypedDict, total=True):
     indDonneesErreur: bool
     factureIXOSID: str
     documentArchivelinkID: str
-    dateFin: Union[str, None]
-    dateDebug: Union[str, None]
+    dateFin: str | None
+    dateDebug: str | None
     indicateurPA: bool
-    compteBancaire: Union[str, None]
+    compteBancaire: str | None
     adresseFacturation: str
     regroupement: str
     listePaiements: list[str]
@@ -68,10 +68,10 @@ class listeComptesContratsTyping(TypedDict, total=True):
     sousConsommationMVE: bool
     surConsommationMVE: bool
     revisionAnnuelleMVE: bool
-    infoEligibiliteConfirmationPaiement: Union[str, None]
-    noPartenaireMandataire: Union[str, None]
-    infoEligibiliteEntentePaiement: Union[str, None]
-    infoEligibiliteConfirmPaiementOuEntente: Union[str, None]
+    infoEligibiliteConfirmationPaiement: str | None
+    noPartenaireMandataire: str | None
+    infoEligibiliteEntentePaiement: str | None
+    infoEligibiliteConfirmPaiementOuEntente: str | None
     indProjection: bool
     typeEntenteSansProjection: str
     gereDansEspaceClient: bool
@@ -109,7 +109,7 @@ class infoCockpitPourPartenaireModelTyping(TypedDict, total=True):
 class listeContratModelTyping(TypedDict, total=True):
     """Info compte json output formats."""
 
-    codeResponsabilite: Union[str, None]
+    codeResponsabilite: str | None
     noContrat: str
     adresseConsommation: str
     idLieuConsommation: str
@@ -140,7 +140,7 @@ class listeContratModelTyping(TypedDict, total=True):
     ville: str
     codePostal: str
     dateDebutContrat: str
-    dateFinContrat: Union[str, None]
+    dateFinContrat: str | None
     contratAvecArriveePrevue: bool
     contratAvecArriveePrevueDansLePasse: bool
     contratAvecDepartPrevu: bool
@@ -150,12 +150,12 @@ class listeContratModelTyping(TypedDict, total=True):
     posteTelephone: str
     indPuissance: bool
     codeAdhesionCPC: str
-    codeEligibiliteCPC: Union[str, None]
-    codeEligibiliteCLT: Union[str, None]
+    codeEligibiliteCPC: str | None
+    codeEligibiliteCLT: str | None
     tarifActuel: str
     optionTarifActuel: str
     codeEligibiliteDRCV: str
-    dateDebutEligibiliteDRCV: Union[str, None]
+    dateDebutEligibiliteDRCV: str | None
     indEligibiliteDRCV: bool
 
 

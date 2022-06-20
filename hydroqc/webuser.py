@@ -1,6 +1,5 @@
 """Hydroquebec webuser module."""
 import logging
-from typing import Optional, Union
 
 from hydroqc.customer import Customer
 from hydroqc.error import HydroQcError
@@ -23,17 +22,17 @@ class WebUser:
         username: str,
         password: str,
         verify_ssl: bool,
-        log_level: Optional[str] = None,
-        http_log_level: Optional[str] = None,
+        log_level: str | None = None,
+        http_log_level: str | None = None,
     ):
         """Create a new Hydroquebec webuser."""
         self._hydro_client = HydroClient(
             username, password, verify_ssl, log_level=http_log_level
         )
         self._username: str = username
-        self._log_level: Optional[str] = log_level
+        self._log_level: str | None = log_level
         self.customers: list[Customer] = []
-        self._logger: Union[None, logging.Logger] = None
+        self._logger: None | logging.Logger = None
 
     async def login(self) -> bool:
         """Login to Hydroquebec website."""

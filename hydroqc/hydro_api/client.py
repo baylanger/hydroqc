@@ -11,10 +11,9 @@ import uuid
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
 from json import loads as json_loads
-from typing import Any, Optional, Union
+from typing import Any
 
 import aiohttp
-
 from hydroqc.error import HydroQcError, HydroQcHTTPError
 from hydroqc.hydro_api.consts import (
     ANNUAL_DATA_URL,
@@ -35,6 +34,8 @@ from hydroqc.hydro_api.consts import (
     SESSION_URL,
 )
 from hydroqc.logger import get_logger
+from hydroqc.winter_credit.consts import EST_TIMEZONE
+
 from hydroqc.types import (
     ComptesTyping,
     ConsoAnnualTyping,
@@ -47,7 +48,6 @@ from hydroqc.types import (
     listeComptesContratsTyping,
     listeContratModelTyping,
 )
-from hydroqc.winter_credit.consts import EST_TIMEZONE
 
 
 class HydroClient:
@@ -64,14 +64,14 @@ class HydroClient:
         password: str,
         timeout: int = REQUESTS_TIMEOUT,
         verify_ssl: bool = True,
-        session: Optional[aiohttp.ClientSession] = None,
-        log_level: Optional[str] = "INFO",
+        session: aiohttp.ClientSession | None = None,
+        log_level: str | None = "INFO",
     ):
         """Initialize the client object."""
         self.username: str = username
         self.password: str = password
         self._timeout: int = timeout
-        self._session: Optional[aiohttp.ClientSession] = session
+        self._session: aiohttp.ClientSession | None = session
         self._verify_ssl: bool = verify_ssl
         with importlib.resources.path(
             __package__, "hydro-chain.pem"
@@ -95,12 +95,12 @@ class HydroClient:
         self,
         url: str,
         method: str,
-        params: Optional[dict[str, Any]] = None,
-        data: Optional[Union[str, dict[str, Any]]] = None,
-        headers: Optional[dict[str, str]] = None,
-        verify_ssl: Optional[bool] = None,
-        cookies: Optional[dict[str, Any]] = None,
-        status: Optional[int] = 200,
+        params: dict[str, Any] | None = None,
+        data: str | dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
+        verify_ssl: bool | None = None,
+        cookies: dict[str, Any] | None = None,
+        status: int | None = 200,
     ) -> aiohttp.ClientResponse:
         """Prepare and run HTTP/S request."""
         site = url.split("/")[2]

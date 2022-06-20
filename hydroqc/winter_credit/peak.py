@@ -1,9 +1,7 @@
 """Class describing a period."""
 import datetime
-from typing import Union
 
 from hydroqc.error import HydroQcWinterCreditError
-from hydroqc.types import CriticalPeakDataTyping
 from hydroqc.winter_credit.consts import (
     DEFAULT_ANCHOR_DURATION,
     DEFAULT_ANCHOR_START_OFFSET,
@@ -17,6 +15,8 @@ from hydroqc.winter_credit.consts import (
     MORNING_EVENING,
 )
 from hydroqc.winter_credit.timerange import TimeRange
+
+from hydroqc.types import CriticalPeakDataTyping
 
 __all__ = ["Anchor", "PreHeat", "Peak"]
 
@@ -164,7 +164,7 @@ class Peak(TimeRange):
         return end_date
 
     @property
-    def credit(self) -> Union[float, None]:
+    def credit(self) -> float | None:
         """Get credit save during this peak.
 
         Return None if the peak is not critical.
@@ -172,7 +172,7 @@ class Peak(TimeRange):
         return self._raw_stats.get("montantEffacee")
 
     @property
-    def ref_consumption(self) -> Union[float, None]:
+    def ref_consumption(self) -> float | None:
         """Get reference consumption during this peak.
 
         Return None if the peak is not critical.
@@ -180,7 +180,7 @@ class Peak(TimeRange):
         return self._raw_stats.get("consoReference")
 
     @property
-    def actual_consumption(self) -> Union[float, None]:
+    def actual_consumption(self) -> float | None:
         """Get actual consumption during this peak.
 
         Return None if the peak is not critical.
@@ -188,7 +188,7 @@ class Peak(TimeRange):
         return self._raw_stats.get("consoReelle")
 
     @property
-    def saved_consumption(self) -> Union[float, None]:
+    def saved_consumption(self) -> float | None:
         """Get saved consumption during this peak.
 
         Return None if the peak is not critical.
@@ -196,7 +196,7 @@ class Peak(TimeRange):
         return self._raw_stats.get("consoEffacee")
 
     @property
-    def consumption_code(self) -> Union[str, None]:
+    def consumption_code(self) -> str | None:
         """Get code consumption during this peak.
 
         Return None if the peak is not critical.
@@ -204,7 +204,7 @@ class Peak(TimeRange):
         return self._raw_stats.get("codeConso")
 
     @property
-    def is_billed(self) -> Union[bool, None]:
+    def is_billed(self) -> bool | None:
         """Return True if the winter credit was billed.
 
         Return None if the peak is not critical.

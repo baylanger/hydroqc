@@ -2,11 +2,10 @@
 import datetime
 import logging
 from collections.abc import Callable
-from typing import Any, Optional, Union
+from typing import Any
 
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.hydro_api.client import HydroClient
-from hydroqc.types import CriticalPeakDataTyping, WinterCreditDataTyping
 from hydroqc.winter_credit.consts import (
     DEFAULT_EVENING_PEAK_START,
     DEFAULT_MORNING_PEAK_START,
@@ -14,11 +13,13 @@ from hydroqc.winter_credit.consts import (
 )
 from hydroqc.winter_credit.peak import Anchor, Peak
 
+from hydroqc.types import CriticalPeakDataTyping, WinterCreditDataTyping
+
 
 def winter_credit_enabled(func: Callable[..., Any]) -> Callable[..., Any]:
     """Decorate any methods that use self.data to avoid useless calls."""
-    # def myfunction(self: WinterCreditHandler) -> Optional[Any]:
-    def myfunction(self: Any) -> Optional[Any]:
+
+    def myfunction(self: "WinterCreditHandler") -> Any | None:
         if self.is_enabled:
             return func(self)
         self._logger.info("Winter credit not enabled.")
@@ -199,7 +200,7 @@ class WinterCreditHandler:
     # Current peak
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def current_peak(self) -> Union[Peak, None]:
+    def current_peak(self) -> Peak | None:
         """Get current peak.
 
         Return None if no peak is currently running
@@ -215,7 +216,7 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def current_peak_is_critical(self) -> Optional[bool]:
+    def current_peak_is_critical(self) -> bool | None:
         """Return True if the current peak is critical."""
         if self.current_peak:
             return bool(self.current_peak.is_critical)
@@ -275,11 +276,11 @@ class WinterCreditHandler:
     # Next peak
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def next_peak(self) -> Union[Peak, None]:
+    def next_peak(self) -> Peak | None:
         """Get next peak or current peak."""
         return self._get_next_peak()
 
-    def _get_next_peak(self) -> Union[Peak, None]:
+    def _get_next_peak(self) -> Peak | None:
         """Get next peak or current peak."""
         now = _now()
         peaks: list[Peak] = [p for p in self.peaks if now < p.end_date]
@@ -310,7 +311,7 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def next_critical_peak(self) -> Union[Peak, None]:
+    def next_critical_peak(self) -> Peak | None:
         """Get next peak or current peak."""
         now = _now()
         peaks: list[Peak] = [p for p in self.critical_peaks if now < p.end_date]
@@ -322,7 +323,7 @@ class WinterCreditHandler:
     # Today peaks
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def today_morning_peak(self) -> Union[Peak, None]:
+    def today_morning_peak(self) -> Peak | None:
         """Get the peak of today morning."""
         now = _now()
         peaks: list[Peak] = [
@@ -338,7 +339,7 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def today_evening_peak(self) -> Union[Peak, None]:
+    def today_evening_peak(self) -> Peak | None:
         """Get the peak of today evening."""
         now = _now()
         peaks: list[Peak] = [
@@ -355,7 +356,7 @@ class WinterCreditHandler:
     # Tomorrow Peaks
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def tomorrow_morning_peak(self) -> Union[Peak, None]:
+    def tomorrow_morning_peak(self) -> Peak | None:
         """Get the peak of tomorrow morning."""
         now = _now()
         peaks: list[Peak] = [
@@ -373,7 +374,7 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def tomorrow_evening_peak(self) -> Union[Peak, None]:
+    def tomorrow_evening_peak(self) -> Peak | None:
         """Get the peak of tomorrow evening."""
         now = _now()
         peaks: list[Peak] = [
@@ -392,7 +393,7 @@ class WinterCreditHandler:
     # Yesterday peaks
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def yesterday_morning_peak(self) -> Union[Peak, None]:
+    def yesterday_morning_peak(self) -> Peak | None:
         """Get the peak of yesterday morning."""
         now = _now()
         peaks: list[Peak] = [
@@ -410,7 +411,7 @@ class WinterCreditHandler:
 
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def yesterday_evening_peak(self) -> Union[Peak, None]:
+    def yesterday_evening_peak(self) -> Peak | None:
         """Get the peak of yesterday evening."""
         now = _now()
         peaks: list[Peak] = [
@@ -429,7 +430,7 @@ class WinterCreditHandler:
     # Anchors
     @property  # type: ignore[misc]
     @winter_credit_enabled
-    def next_anchor(self) -> Union[Anchor, None]:
+    def next_anchor(self) -> Anchor | None:
         """Next or current anchor."""
         now = _now()
         anchors: list[Anchor] = [

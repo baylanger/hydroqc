@@ -1,6 +1,6 @@
 """Hydroqc custom types."""
 # pylint: disable=invalid-name
-from typing import TypedDict, Union
+from typing import TypedDict
 
 
 # API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
@@ -14,7 +14,7 @@ class ConsoHourlyResultTyping(TypedDict, total=True):
     consoTotal: float
     codeConso: str
     codeEvemenentEnergie: str
-    zoneMessageHTMLEnergie: Union[str, None]
+    zoneMessageHTMLEnergie: str | None
 
 
 class ConsoHourlyResultsTyping(TypedDict, total=True):
@@ -25,8 +25,8 @@ class ConsoHourlyResultsTyping(TypedDict, total=True):
     dateJour: str
     echelleMinKwhHeureParJour: int
     echelleMaxKwhHeureParJour: int
-    zoneMsgHTMLNonDispEnergie: Union[str, None]
-    zoneMsgHTMLNonDispPuissance: Union[str, None]
+    zoneMsgHTMLNonDispEnergie: str | None
+    zoneMsgHTMLNonDispPuissance: str | None
     indErreurJourneeEnergie: bool
     indErreurJourneePuissance: bool
     listeDonneesConsoEnergieHoraire: list[ConsoHourlyResultTyping]
@@ -45,7 +45,7 @@ class ConsoDailyResultTyping(TypedDict, total=True):
     """Consumption Daily json sub output format."""
 
     dateJourConso: str
-    zoneMessageHTMLQuot: Union[str, None]
+    zoneMessageHTMLQuot: str | None
     consoRegQuot: float
     consoHautQuot: float
     consoTotalQuot: float
@@ -86,7 +86,7 @@ class ConsoMonthlyResultTyping(TypedDict, total=True):
     consoRegMois: int
     consoHautMois: int
     consoTotalMois: int
-    zoneMessageHTMLMois: Union[str, None]
+    zoneMessageHTMLMois: str | None
     indPresenceCodeEvenementMois: bool
 
 
@@ -132,8 +132,8 @@ class ConsoAnnualCurrentTyping(ConsoAnnualCompareTyping, total=True):
     """Consumption Annual json sub output format."""
 
     zoneMsgHTMLAnneeSuiviDT: str
-    texteValeurChauffage: Union[str, None]
-    texteValeurClimatisation: Union[str, None]
+    texteValeurChauffage: str | None
+    texteValeurClimatisation: str | None
     tooltipIdChauffage: str
     tooltipIdClimatisation: str
     tooltipIdChauffageComparaison: str
