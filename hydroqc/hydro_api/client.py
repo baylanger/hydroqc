@@ -79,6 +79,7 @@ class HydroClient:
             self._sslcontext: ssl.SSLContext = ssl.create_default_context(
                 cafile=hydro_chain_pem_file
             )
+            self._sslcontext.set_ciphers("DEFAULT")  # Needed for python3.10
         self.guid: str = str(uuid.uuid1())
         self._logger: logging.Logger = get_logger("httpclient", log_level)
         self._logger.debug("HydroQc initialized")
