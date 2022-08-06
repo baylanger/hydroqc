@@ -10,8 +10,8 @@ from hydroqc.winter_credit.handler import WinterCreditHandler
 
 from hydroqc.types import (
     ConsoAnnualTyping,
-    ConsoDailyResultTyping,
-    ConsoHourlyResultTyping,
+    ConsoDailyTyping,
+    ConsoHourlyTyping,
     ConsoMonthlyTyping,
     PeriodDataTyping,
     listeContratModelTyping,
@@ -97,13 +97,13 @@ class Contract:
         """Get winter credit helper object."""
         return self._wch
 
-    async def get_today_hourly_consumption(self) -> ConsoHourlyResultTyping:
+    async def get_today_hourly_consumption(self) -> ConsoHourlyTyping:
         """Fetch hourly consumption for today."""
         return await self._hydro_client.get_today_hourly_consumption(
             self.webuser_id, self.customer_id, self.contract_id
         )
 
-    async def get_hourly_consumption(self, date_wanted: str) -> ConsoHourlyResultTyping:
+    async def get_hourly_consumption(self, date_wanted: str) -> ConsoHourlyTyping:
         """Fetch hourly consumption for a date."""
         return await self._hydro_client.get_hourly_consumption(
             self.webuser_id, self.customer_id, self.contract_id, date_wanted
@@ -111,13 +111,13 @@ class Contract:
 
     async def get_daily_consumption(
         self, start_date: str, end_date: str
-    ) -> ConsoDailyResultTyping:
+    ) -> ConsoDailyTyping:
         """Fetch daily consumption."""
         return await self._hydro_client.get_daily_consumption(
             self.webuser_id, self.customer_id, self.contract_id, start_date, end_date
         )
 
-    async def get_today_daily_consumption(self) -> ConsoDailyResultTyping:
+    async def get_today_daily_consumption(self) -> ConsoDailyTyping:
         """TODO ????.
 
         .. todo::

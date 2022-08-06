@@ -1,8 +1,8 @@
 """Hydroqc custom types."""
 from hydroqc.types.conso import (
     ConsoAnnualTyping,
-    ConsoDailyResultTyping,
-    ConsoHourlyResultTyping,
+    ConsoDailyTyping,
+    ConsoHourlyTyping,
     ConsoMonthlyTyping,
 )
 from hydroqc.types.info_compte import (
@@ -19,8 +19,8 @@ from hydroqc.types.winter_credit import (
 
 __all__ = [
     "InfoCompteTyping",
-    "ConsoHourlyResultTyping",
-    "ConsoDailyResultTyping",
+    "ConsoHourlyTyping",
+    "ConsoDailyTyping",
     "ConsoMonthlyTyping",
     "ConsoAnnualTyping",
     "CriticalPeakDataTyping",
