@@ -39,8 +39,8 @@ from hydroqc.winter_credit.consts import EST_TIMEZONE
 from hydroqc.types import (
     ComptesTyping,
     ConsoAnnualTyping,
-    ConsoDailyResultTyping,
-    ConsoHourlyResultTyping,
+    ConsoDailyTyping,
+    ConsoHourlyTyping,
     ConsoMonthlyTyping,
     InfoCompteTyping,
     PeriodDataTyping,
@@ -443,7 +443,7 @@ class HydroClient:
 
     async def get_today_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
-    ) -> ConsoHourlyResultTyping:
+    ) -> ConsoHourlyTyping:
         """Return latest consumption info (about 2h delay it seems).
 
         :return: raw JSON from hydro QC API for current day (not officially supported, data delayed)
@@ -456,14 +456,14 @@ class HydroClient:
         await self.get_hourly_consumption(
             webuser_id, customer_id, contract_id, yesterday_str
         )
-        res: ConsoHourlyResultTyping = await self.get_hourly_consumption(
+        res: ConsoHourlyTyping = await self.get_hourly_consumption(
             webuser_id, customer_id, contract_id, today_str
         )
         return res
 
     async def get_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str, date_wanted: str
-    ) -> ConsoHourlyResultTyping:
+    ) -> ConsoHourlyTyping:
         """Return hourly consumption for a specific day.
 
         .. todo::
@@ -483,7 +483,7 @@ class HydroClient:
             HOURLY_CONSUMPTION_API_URL, "get", params=params
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsoHourlyResultTyping = json.loads(await api_call_response.text())
+        data: ConsoHourlyTyping = json.loads(await api_call_response.text())
         return data
 
     async def get_daily_consumption(
@@ -493,7 +493,7 @@ class HydroClient:
         contract_id: str,
         start_date: str,
         end_date: str,
-    ) -> ConsoDailyResultTyping:
+    ) -> ConsoDailyTyping:
         """Return hourly consumption for a specific day.
 
         .. todo::
@@ -516,7 +516,7 @@ class HydroClient:
             params=params,
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsoDailyResultTyping = json.loads(await api_call_response.text())
+        data: ConsoDailyTyping = json.loads(await api_call_response.text())
         return data
 
     async def get_monthly_consumption(
