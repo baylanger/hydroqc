@@ -74,8 +74,7 @@ This uses python 3 (tested with 3.8)
    ```bash
    python -m venv env
    . env/bin/activate
-   pip install -r requirements.txt
-   python setup.py develop 
+   python setup.py develop
    ```
 
 3. Enter your hydro account credentials in the examples/hydro.py file (line 6)
@@ -132,7 +131,7 @@ classDiagram
     }
     class WinterCreditHelper{
     }
-    
+
     class WebUser{
         -HydroClient _hydro_client
         +List~Customer~ customers
