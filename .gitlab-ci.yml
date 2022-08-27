@@ -201,7 +201,6 @@ package:
     - ls -l
     - pwd
     - python3 -m build
-    - pip install -r requirements.txt
     - python3 setup.py sdist bdist_wheel
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   rules:
@@ -243,7 +242,6 @@ promote2pypi:
     - pip install --upgrade build
     - python3 -m build
     - pip install twine
-    - pip install -r requirements.txt
     - python3 setup.py sdist bdist_wheel
     - twine upload --non-interactive --repository pypi dist/*
   rules:
