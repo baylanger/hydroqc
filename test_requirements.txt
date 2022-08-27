@@ -1,13 +1,13 @@
 flake8==5.0.4 
 pydocstyle==6.1.1
-pylint==2.14.5
+pylint==2.15.0
 pytest==7.1.2
 pytest-cov==3.0.0
 pytest-asyncio==0.19.0
 black==22.6.0
 mypy==0.971
-types-pytz==2022.1.2
+types-pytz==2022.2.1.0
 types-PyYAML==6.0.11
 types-python-dateutil==2.8.19
-pyright==1.1.263
+pyright==1.1.268
 lxml==4.9.1
