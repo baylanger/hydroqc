@@ -20,10 +20,10 @@ Each account and contracts are different and we do our best to integrate all ava
 
 | Winter Credit | EPP* | Tester | Test result | Last run | Comment |
 | - | - | - | - | - | - |
-| No | No | titilambert | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | **Needed** new tester needed for december 2022 |
+| No | No | **Needed** | | | |
 | No | Yes | **Needed** | | | |
 | Yes | Yes | mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35331048-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35331048-job-end-date.svg?job=private_tests_done) | |
-| Yes | No | **Needed** | | | titilambert starting december 2022 |
+| Yes | No | titilambert |![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | |
 
 *EPP = Equal Payment Plan
 #### Flex D
