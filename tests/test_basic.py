@@ -156,6 +156,9 @@ class TestBase:
         assert (
             contract._hydro_client.selected_customer == contract.customer_id
         ), "Bad selected customer"
+        assert (
+            contract._hydro_client.selected_contract == contract.contract_id
+        ), "Bad selected contract"
 
         assert len(contract.get_latest_period_info()) > 0, "No period info found"
         assert contract.cp_current_day >= 0

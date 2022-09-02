@@ -56,6 +56,7 @@ class HydroClient:
     _id_token: str
     access_token: str
     _selected_customer: str
+    _selected_contract: str
     cookies: dict[str, Any]
 
     def __init__(
@@ -91,6 +92,7 @@ class HydroClient:
         self.access_token = ""
         self.cookies = {}
         self._selected_customer = ""
+        self._selected_contract = ""
 
     async def http_request(
         self,
@@ -313,18 +315,23 @@ class HydroClient:
         """Return the current selected customer."""
         return self._selected_customer
 
-    async def _select_customer(
-        self, webuser_id: str, customer_id: str, force: bool = False
+    @property
+    def selected_contract(self) -> str:
+        """Return the current selected contract."""
+        return self._selected_contract
+
+    async def _select_contract(
+        self, webuser_id: str, customer_id: str, contract_id: str, force: bool = False
     ) -> None:
         """Select a customer on the Home page.
 
         Equivalent to click on the customer box on the Home page.
         """
-        # Do nothing if self._selected_customer is already the good one
-        if self._selected_customer == customer_id and not force:
+        # Do nothing if self._selected_contract is already the good one
+        if self._selected_contract == contract_id and not force:
             return
 
-        self._logger.info("Selecting customer %s", customer_id)
+        self._logger.info("Selecting contract %s", contract_id)
         if force and "cl-ec-spring.hydroquebec.com" in self.cookies:
             del self.cookies["cl-ec-spring.hydroquebec.com"]
 
@@ -337,10 +344,12 @@ class HydroClient:
         # load overview page
         # await self.http_request(CONTRACT_URL_3, "get", headers=headers)
         # load consumption profile page
-        await self.http_request(PORTRAIT_URL, "get", headers=headers)
+        params = {"noContrat": contract_id}
+        await self.http_request(PORTRAIT_URL, "get", params=params, headers=headers)
 
+        self._selected_contract = contract_id
         self._selected_customer = customer_id
-        self._logger.info("Customer %s selected", customer_id)
+        self._logger.info("Contract %s selected", contract_id)
 
     async def get_user_info(self) -> list[ComptesTyping]:
         """Fetch user ids and customer ids.
@@ -378,7 +387,7 @@ class HydroClient:
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> list[PeriodDataTyping]:
         """Fetch all periods info."""
-        await self._select_customer(webuser_id, customer_id)
+        await self._select_contract(webuser_id, customer_id, contract_id)
         headers = self._get_customer_http_headers(webuser_id, customer_id)
         res = await self.http_request(PERIOD_DATA_URL, "get", headers=headers)
         data = json.loads(await res.text())
@@ -467,7 +476,7 @@ class HydroClient:
         """Return hourly consumption for a specific day.
 
         .. todo::
-            Use decorator for self._select_customer
+            Use decorator for self._select_contract
 
         :param: date: YYYY-MM-DD string to pass to API
 
@@ -477,7 +486,7 @@ class HydroClient:
             "Fetching hourly consumption: c-%s c-%s", customer_id, contract_id
         )
         # TODO use decorator
-        await self._select_customer(webuser_id, customer_id)
+        await self._select_contract(webuser_id, customer_id, contract_id)
         params = {"date": date_wanted}
         api_call_response = await self.http_request(
             HOURLY_CONSUMPTION_API_URL, "get", params=params
@@ -497,7 +506,7 @@ class HydroClient:
         """Return hourly consumption for a specific day.
 
         .. todo::
-            Use decorator for self._select_customer
+            Use decorator for self._select_contract
 
         :param: start_date: YYYY-MM-DD string to pass to API
         :param: end_date: YYYY-MM-DD string to pass to API
@@ -508,7 +517,7 @@ class HydroClient:
             "Fetching daily consumption: c-%s c-%s", customer_id, contract_id
         )
         # TODO use decorator
-        await self._select_customer(webuser_id, customer_id)
+        await self._select_contract(webuser_id, customer_id, contract_id)
         params = {"dateDebut": start_date, "dateFin": end_date}
         api_call_response = await self.http_request(
             DAILY_CONSUMPTION_API_URL,
@@ -525,7 +534,7 @@ class HydroClient:
         """Fetch data of the current year.
 
         .. todo::
-            Use decorator for self._select_customer
+            Use decorator for self._select_contract
 
         API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
         portrait-de-consommation/resourceObtenirDonneesConsommationMensuelles
@@ -534,7 +543,7 @@ class HydroClient:
             "Fetching monthly consumption: c-%s c-%s", customer_id, contract_id
         )
         # TODO use decorator
-        await self._select_customer(webuser_id, customer_id)
+        await self._select_contract(webuser_id, customer_id, contract_id)
         headers = {"Content-Type": "application/json"}
         api_call_response = await self.http_request(
             MONTHLY_DATA_URL, "get", headers=headers
@@ -554,7 +563,7 @@ class HydroClient:
         self._logger.info(
             "Fetching annual consumption: c-%s c-%s", customer_id, contract_id
         )
-        await self._select_customer(webuser_id, customer_id)
+        await self._select_contract(webuser_id, customer_id, contract_id)
         headers = {"Content-Type": "application/json"}
         api_call_response = await self.http_request(
             ANNUAL_DATA_URL, "get", headers=headers
