@@ -1,10 +1,16 @@
 """Basics tests for hydroqc."""
+import typing
 import datetime
 import os
 
+import asyncio
 import pytest
 from hydroqc.error import HydroQcError
 from hydroqc.webuser import WebUser
+from hydroqc.customer import Customer
+from hydroqc.account import Account
+from hydroqc.contract import Contract
+from hydroqc.winter_credit.handler import WinterCreditHandler
 from hydroqc.winter_credit.consts import EST_TIMEZONE
 
 HYDROQC_USERNAME = os.environ["HYDROQC_USERNAME"]
@@ -25,60 +31,95 @@ lastweekday_str = lastweekday.strftime("%Y-%m-%d")
 class TestBase:
     """Base test class."""
 
-    @pytest.mark.asyncio
-    async def teardown_ends(self) -> None:
-        """Run all needed steps to ends tests."""
-        print("teardown")
-        # Close session
-        await self.webuser.close_session()
+    @typing.no_type_check
+    @pytest.fixture(scope="module")
+    def event_loop(self):
+        """Override asyncio event_loop to keep the loop
+        running through the whole module"""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+        yield loop
+        loop.close()
 
     @pytest.mark.asyncio
     async def test_bad_credentials(self) -> None:
         """Test bad credentials management."""
         # Webuser
-        self.webuser = WebUser("bad_username", "bad_password", verify_ssl=True)
-        connected = await self.webuser.login()
+        webuser = WebUser("bad_username", "bad_password", verify_ssl=True)
+        connected = await webuser.login()
         assert connected is False, "Login should not work"
 
-    @pytest.mark.asyncio
-    async def test_base(self) -> None:  # pylint: disable=too-many-statements
-        """Test all main features."""
-        # Webuser
-        self.webuser = WebUser(
+    @pytest.fixture(scope="module")
+    def webuser(self) -> WebUser:
+        """Fixture to keep the webuser instance through all tests."""
+        return WebUser(
             HYDROQC_USERNAME,
             HYDROQC_PASSWORD,
             verify_ssl=True,
             log_level="ERROR",
             http_log_level="ERROR",
         )
-        assert self.webuser.session_expired is True, "The session should be expired"
 
-        connected = await self.webuser.login()
+    @pytest.mark.asyncio
+    async def teardown_ends(self, webuser: WebUser) -> None:
+        """Run all needed steps to ends tests."""
+        print("teardown")
+        # Close session
+        await webuser.close_session()
+
+    @pytest.mark.asyncio
+    async def test_good_credentials(self, webuser: WebUser) -> None:
+        """Test credentials main."""
+        assert webuser.session_expired is True, "The session should be expired"
+
+        connected = await webuser.login()
         assert connected is True, "Login should work. Please check your credentials"
-        await self.webuser.get_info()
+        await webuser.get_info()
 
-        assert self.webuser.first_name != "", "No webuser's firstname found"
-        assert self.webuser.last_name != "", "No webuser's lastname found"
-        assert self.webuser.session_expired is False, "Session expired"
-        assert repr(self.webuser).startswith("<Webuser - ")
+    @pytest.mark.asyncio
+    async def test_session(self, webuser: WebUser) -> None:
+        """Test session attributes."""
+        assert webuser.first_name != "", "No webuser's firstname found"
+        assert webuser.last_name != "", "No webuser's lastname found"
+        assert webuser.session_expired is False, "Session expired"
+        assert repr(webuser).startswith("<Webuser - ")
 
-        await self.webuser.refresh_session()
+        await webuser.refresh_session()
 
-        # Customer
-        assert len(self.webuser.customers) > 0, "No customer found"
-        customer = self.webuser.customers[HYDROQC_ACCOUNT_ID]
+    @pytest.fixture(scope="module")
+    def customer(self, webuser: WebUser) -> Customer | None:
+        """Fixture to keep the customer instance through all tests"""
+        if len(webuser.customers) <= HYDROQC_ACCOUNT_ID:
+            return None
+        return webuser.customers[HYDROQC_ACCOUNT_ID]
+
+    @typing.no_type_check
+    @pytest.mark.asyncio
+    async def test_customer(self, webuser: WebUser, customer: Customer) -> None:
+        """Test customer attributes."""
+        assert len(webuser.customers) > 0, "No customer found"
         assert (
-            self.webuser.get_customer(customer.customer_id) == customer
+            webuser.get_customer(customer.customer_id) == customer
         ), "Can not retrieve the same customer with webuser.get_customer method"
         with pytest.raises(HydroQcError):
-            self.webuser.get_customer("bad customer id")
+            webuser.get_customer("bad customer id")
         assert customer.names != "", "Bad customer name"
         assert repr(customer).startswith("<Customer - ")
         assert customer.customer_id is not None, "No customer id found"
 
-        # Account
+    @pytest.fixture(scope="module")
+    def account(self, customer: Customer) -> Account | None:
+        """Fixture to keep the account instance through all tests"""
+        if len(customer.accounts) <= 0:
+            return None
+        return customer.accounts[0]
+
+    @pytest.mark.asyncio
+    async def test_account(self, customer: Customer, account: Account) -> None:
+        """Test account attributes."""
         assert len(customer.accounts) > 0, "No account found"
-        account = customer.accounts[0]
         assert account.account_id is not None, "No account id found"
         assert (
             customer.get_account(account.account_id) == account
@@ -88,9 +129,17 @@ class TestBase:
         assert isinstance(account.balance, float)
         assert repr(account).startswith("<Account - ")
 
-        # Contract
+    @pytest.fixture(scope="module")
+    def contract(self, account: Account) -> Contract | None:
+        """Fixture to keep the contract instance through all tests"""
+        if len(account.contracts) <= 0:
+            return None
+        return account.contracts[0]
+
+    @pytest.mark.asyncio
+    async def test_contract(self, account: Account, contract: Contract) -> None:
+        """Test contract attributes."""
         assert len(account.contracts) > 0, "No contract found"
-        contract = account.contracts[0]
         assert contract.contract_id is not None, "No contract id found"
         assert (
             account.get_contract(contract.contract_id) == contract
@@ -100,6 +149,9 @@ class TestBase:
         assert contract.account_id == account.account_id, "Bad account id in contract"
         assert repr(contract).startswith("<Contract - ")
 
+    @pytest.mark.asyncio
+    async def test_hourly_consumption(self, contract: Contract) -> None:
+        """Test hourly consumption stats."""
         today_hourly_consumption = await contract.get_today_hourly_consumption()
         assert today_hourly_consumption.get("success") is True
         assert today_hourly_consumption.get("results", {}).get("dateJour") in (
@@ -107,10 +159,16 @@ class TestBase:
             yesterday_str,
         )
 
+    @pytest.mark.asyncio
+    async def test_total_hourly_consumption(self, contract: Contract) -> None:
+        """Test total hourly consumption stats."""
         hourly_consumption = await contract.get_hourly_consumption(yesterday_str)
         assert hourly_consumption.get("success") is True
         assert hourly_consumption.get("results", {}).get("dateJour") == yesterday_str
 
+    @pytest.mark.asyncio
+    async def test_daily_consumption(self, contract: Contract) -> None:
+        """Test daily consumption stats."""
         daily_consumption = await contract.get_daily_consumption(
             lastweekday_str, yesterday_str
         )
@@ -121,6 +179,9 @@ class TestBase:
             == lastweekday_str
         )
 
+    @pytest.mark.asyncio
+    async def test_total_daily_consumption(self, contract: Contract) -> None:
+        """Test total hourly consumption stats."""
         today_daily_consumption = await contract.get_today_daily_consumption()
         assert today_daily_consumption.get("success") is True
 
@@ -130,10 +191,16 @@ class TestBase:
             == yesterday_str
         )
 
+    @pytest.mark.asyncio
+    async def test_monthly_consumption(self, contract: Contract) -> None:
+        """Test monthly consumption stats."""
         monthly_consumption = await contract.get_monthly_consumption()
         assert monthly_consumption.get("success") is True
         assert len(monthly_consumption.get("results", [])) == 12
 
+    @pytest.mark.asyncio
+    async def test_annual_consumption(self, contract: Contract) -> None:
+        """Test annual consumption stats."""
         annual_consumption = await contract.get_annual_consumption()
         assert annual_consumption.get("success") is True
         assert len(annual_consumption.get("results", [])) == 1
@@ -144,6 +211,9 @@ class TestBase:
             .startswith(str(today.year))
         )
 
+    @pytest.mark.asyncio
+    async def test_latest_period(self, contract: Contract) -> None:
+        """Test latest_period."""
         assert (
             contract.cp_current_day is None
         ), "Method get_latest_period_info is already called but it should not"
@@ -151,7 +221,10 @@ class TestBase:
             not contract.get_latest_period_info()
         ), "Method get_latest_period_info is already called but it should not"
 
-        # Fetch contract info
+    @typing.no_type_check
+    @pytest.mark.asyncio
+    async def test_contract_info(self, contract: Contract) -> None:
+        """Test contract information validity."""
         await contract.get_periods_info()
         assert (
             contract._hydro_client.selected_customer == contract.customer_id
@@ -182,9 +255,21 @@ class TestBase:
             contract.cp_epp_enabled == HYDROQC_EPP_ENABLED
         ), "Bad EPP status, please check the value of HYDROQC_EPP_ENABLED"
 
-        # Winter credit
-        winter_credit = contract.winter_credit
-        assert winter_credit.webuser_id == self.webuser.webuser_id
+    @pytest.fixture(scope="module")
+    def winter_credit(self, contract: Contract) -> WinterCreditHandler:
+        """Fixture to keep the winter credit instance through all tests"""
+        return contract.winter_credit
+
+    @pytest.mark.asyncio
+    async def test_winter_credit(
+        self,
+        webuser: WebUser,
+        account: Account,
+        contract: Contract,
+        winter_credit: WinterCreditHandler,
+    ) -> None:
+        """Test winter credit information validity."""
+        assert winter_credit.webuser_id == webuser.webuser_id
         assert winter_credit.customer_id == account.customer_id
         assert winter_credit.contract_id == contract.contract_id
 
