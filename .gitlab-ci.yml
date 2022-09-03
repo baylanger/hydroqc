@@ -58,7 +58,7 @@ test:
       --header "Content-Type: application/json"
       --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}"
       https://gitlab.com/api/v4/projects/${PROJECT_ID}/pipeline
-      --data '{ "ref": "main", "variables": [{ "key": "UPSTREAM_BRANCH", "value": "'${CI_COMMIT_REF_NAME}'" }, { "key": "UPSTREAM_COMMIT_SHA", "value": "'${CI_COMMIT_SHA}'" }, { "key": "UPSTREAM_REPO", "value": "'${CI_REPOSITORY_URL}'" }] }')
+      --data '{ "ref": "main", "variables": [{ "key": "UPSTREAM_BRANCH", "value": "'${CI_COMMIT_REF_NAME}'" }, { "key": "UPSTREAM_COMMIT_SHA", "value": "'${CI_COMMIT_SHA}'" }, { "key": "UPSTREAM_REPO", "value": "'${CI_REPOSITORY_URL}'" }, { "key": "PYTEST_ARG", "value": "'${PYTEST_ARG}'" }] }')
     - echo ${OUTPUT}
     - PIPELINE_ID=$(echo ${OUTPUT} | jq -r .id)
     - echo ${PIPELINE_ID}
@@ -149,6 +149,17 @@ private_test_mdallaire:
     PROJECT_ID: 35331048
   <<: *private_test_script
 
+private_test_weimdall:
+  variables:
+    PROJECT_ID: 39038345
+    PYTEST_ARG: "--new-contract"
+  <<: *private_test_script
+
+private_test_zepiaf:
+  variables:
+    PROJECT_ID: 39098670 
+  <<: *private_test_script
+
 private_tests_done:
   stage: private_tests_done
   tags:
@@ -166,6 +177,8 @@ private_tests_done:
   needs:
   - job: private_test_mdallaire
   - job: private_test_titilambert
+  - job: private_test_weimdall
+  - job: private_test_zepiaf
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
     reports:

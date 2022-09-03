@@ -191,6 +191,10 @@ class TestBase:
             == yesterday_str
         )
 
+    @pytest.mark.skipif(
+        "config.getoption('--new-contract')",
+        reason="No history available on new contracts",
+    )
     @pytest.mark.asyncio
     async def test_monthly_consumption(self, contract: Contract) -> None:
         """Test monthly consumption stats."""
@@ -198,6 +202,10 @@ class TestBase:
         assert monthly_consumption.get("success") is True
         assert len(monthly_consumption.get("results", [])) == 12
 
+    @pytest.mark.skipif(
+        "config.getoption('--new-contract')",
+        reason="No history available on new contracts",
+    )
     @pytest.mark.asyncio
     async def test_annual_consumption(self, contract: Contract) -> None:
         """Test annual consumption stats."""
