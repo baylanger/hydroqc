@@ -123,6 +123,14 @@ class HydroClient:
         if verify_ssl:
             ssl_context = self._sslcontext
 
+        # Add mandatory headers
+        headers["User-Agent"] = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/104.0.5112.112 Safari/537.36"
+        )
+        headers["Viewport-Width"] = "1920"
+
         self._logger.debug("HTTP query %s to %s", url, method)
         raw_res: aiohttp.ClientResponse = await getattr(self._session, method)(
             url,
