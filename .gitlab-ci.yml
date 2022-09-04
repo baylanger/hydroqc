@@ -13,7 +13,7 @@ test:
   - hydroqc
   image: debian:testing-20220527-slim
   script:
-    - apt-get update && apt-get install --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip
+    - apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
     - pip install tox
     - tox -e pylint,flake8,pydocstyle,typing,black
@@ -157,7 +157,7 @@ private_test_weimdall:
 
 private_test_zepiaf:
   variables:
-    PROJECT_ID: 39098670 
+    PROJECT_ID: 39098670
   <<: *private_test_script
 
 private_tests_done:
@@ -166,7 +166,7 @@ private_tests_done:
   - hydroqc
   image: debian:testing-20220527-slim
   script:
-    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends
+    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
     - echo "Private Tests done"
     - pip install tox
     - find .
@@ -203,7 +203,7 @@ package:
   - hydroqc
   image: debian:testing-20220527-slim
   script:
-    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip
+    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
     - rm -rf dist
     - mkdir -p dist
     # Build a package with a version based on the commmit short sha
@@ -243,7 +243,7 @@ promote2pypi:
     #  pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple --no-deps
     # TODO: open archives edit versions and rebuild archive
     #- cd ..
-    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip
+    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
     # Build package that could be promoted
     - CURRENT_VERSION=$(grep VERSION hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
     - |
