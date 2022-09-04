@@ -15,6 +15,7 @@ from typing import Any
 
 import aiohttp
 from hydroqc.error import HydroQcError, HydroQcHTTPError
+from hydroqc.hydro_api.cache import CCached
 from hydroqc.hydro_api.consts import (
     ANNUAL_DATA_URL,
     AUTH_URL,
@@ -351,6 +352,7 @@ class HydroClient:
         self._selected_customer = customer_id
         self._logger.info("Contract %s selected", contract_id)
 
+    @CCached(ttl=86400)
     async def get_user_info(self) -> list[ComptesTyping]:
         """Fetch user ids and customer ids.
 
@@ -367,6 +369,7 @@ class HydroClient:
         data: list[ComptesTyping] = await res.json()
         return data
 
+    @CCached(ttl=86400)
     async def get_customer_info(
         self, webuser_id: str, customer_id: str
     ) -> InfoCompteTyping:
@@ -383,6 +386,7 @@ class HydroClient:
         data: InfoCompteTyping = await api_call_response.json()
         return data
 
+    @CCached(ttl=86400)
     async def get_periods_info(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> list[PeriodDataTyping]:
@@ -399,6 +403,7 @@ class HydroClient:
             raise HydroQcError(f"No period found for contract {contract_id}")
         return periods
 
+    @CCached(ttl=86400)
     async def get_account_info(
         self, webuser_id: str, customer_id: str, account_id: str
     ) -> listeComptesContratsTyping:
@@ -413,6 +418,7 @@ class HydroClient:
             raise HydroQcError("Account not found")
         return accounts[account_id]
 
+    @CCached(ttl=86400)
     async def get_contract_info(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> listeContratModelTyping:
@@ -429,6 +435,7 @@ class HydroClient:
             raise HydroQcError("Contract not found")
         return contracts[contract_id]
 
+    @CCached(ttl=3600)
     async def get_winter_credit(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> WinterCreditDataTyping:
@@ -470,6 +477,7 @@ class HydroClient:
         )
         return res
 
+    @CCached(ttl=3600)
     async def get_hourly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str, date_wanted: str
     ) -> ConsoHourlyTyping:
@@ -495,6 +503,7 @@ class HydroClient:
         data: ConsoHourlyTyping = json.loads(await api_call_response.text())
         return data
 
+    @CCached(ttl=43200)
     async def get_daily_consumption(
         self,
         webuser_id: str,
@@ -503,7 +512,7 @@ class HydroClient:
         start_date: str,
         end_date: str,
     ) -> ConsoDailyTyping:
-        """Return hourly consumption for a specific day.
+        """Return daily consumption for a specific day.
 
         .. todo::
             Use decorator for self._select_contract
@@ -528,6 +537,7 @@ class HydroClient:
         data: ConsoDailyTyping = json.loads(await api_call_response.text())
         return data
 
+    @CCached(ttl=86400)
     async def get_monthly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> ConsoMonthlyTyping:
@@ -552,6 +562,7 @@ class HydroClient:
         data: ConsoMonthlyTyping = json.loads(await api_call_response.text())
         return data
 
+    @CCached(ttl=86400)
     async def get_annual_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> ConsoAnnualTyping:

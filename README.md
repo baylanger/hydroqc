@@ -74,7 +74,7 @@ This uses python 3 (tested with 3.8)
    ```bash
    python -m venv env
    . env/bin/activate
-   python setup.py develop
+   pip install --editable .
    ```
 
 3. Enter your hydro account credentials in the examples/hydro.py file (line 6)
