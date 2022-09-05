@@ -11,11 +11,11 @@ test:
   stage: test
   tags:
   - hydroqc
-  image: debian:testing-20220527-slim
+  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220905
   script:
-    - apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
+    #- apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
-    - pip install tox
+    #- pip install tox
     - tox -e pylint,flake8,pydocstyle,typing,black
     - cat mypy-txt-report/index.txt
   artifacts:
@@ -41,9 +41,9 @@ test:
   stage: private_tests
   tags:
   - hydroqc
-  image: debian:testing-20220527-slim
+  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220905
   script:
-    - apt update && apt install -y jq unzip curl
+    #- apt update && apt install -y jq unzip curl
     - >
       OUTPUT=$(curl
       --globoff
@@ -164,11 +164,11 @@ private_tests_done:
   stage: private_tests_done
   tags:
   - hydroqc
-  image: debian:testing-20220527-slim
+  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220905
   script:
-    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
+    #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
     - echo "Private Tests done"
-    - pip install tox
+    #- pip install tox
     - find .
     - mv -v hydroqc/.coverage* .
     - mv -v hydroqc/*.xml .
@@ -201,9 +201,9 @@ package:
   stage: test
   tags:
   - hydroqc
-  image: debian:testing-20220527-slim
+  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220905
   script:
-    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
+    #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
     - rm -rf dist
     - mkdir -p dist
     # Build a package with a version based on the commmit short sha
@@ -227,7 +227,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: debian:testing-20220527-slim
+  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220905
   script:
     # TODO: try to pull the good package from gitlab pypi repo
     #       then change the version (promote)
@@ -243,7 +243,7 @@ promote2pypi:
     #  pip download Hydro-Quebec-API-Wrapper --extra-index-url https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/pypi/simple --no-deps
     # TODO: open archives edit versions and rebuild archive
     #- cd ..
-    - apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
+    #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
     # Build package that could be promoted
     - CURRENT_VERSION=$(grep VERSION hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
     - |
