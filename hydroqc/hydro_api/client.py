@@ -307,6 +307,7 @@ class HydroClient:
         self._id_token = callback_params["id_token"]
         self.access_token = callback_params["access_token"]
 
+    @CCached(ttl=600)
     async def refresh_session(self) -> None:
         """Refresh current session."""
         await self._get_oauth2_token(True)
