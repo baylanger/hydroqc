@@ -1,22 +1,27 @@
 variables:
   TWINE_USERNAME: __token__
-
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 stages:
 - test
 - private_tests
 - private_tests_done
 - pypi
 
+cache:
+  key: pip-cache
+  paths:
+    - .cache/pip
+
 test:
   stage: test
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220907
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container:20220908
   script:
     #- apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
     #- pip install tox
-    - tox -e pylint,flake8,pydocstyle,typing,black
+    - tox -e pylint,flake8,pydocstyle,typing,black --parallel auto
     - cat mypy-txt-report/index.txt
   artifacts:
     reports:
@@ -41,7 +46,7 @@ test:
   stage: private_tests
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220907
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container:20220908
   script:
     #- apt update && apt install -y jq unzip curl
     - >
@@ -164,7 +169,7 @@ private_tests_done:
   stage: private_tests_done
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220907
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container:20220908
   script:
     #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
     - echo "Private Tests done"
@@ -201,7 +206,7 @@ package:
   stage: test
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220907
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container:20220908
   script:
     #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
     - rm -rf dist
@@ -227,7 +232,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-test-container:20220907
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container:20220908
   script:
     # TODO: try to pull the good package from gitlab pypi repo
     #       then change the version (promote)
