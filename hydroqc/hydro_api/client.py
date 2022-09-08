@@ -10,7 +10,6 @@ import time
 import uuid
 from datetime import datetime, timedelta
 from json import dumps as json_dumps
-from json import loads as json_loads
 from typing import Any
 
 import aiohttp
@@ -148,6 +147,14 @@ class HydroClient:
 
         return raw_res
 
+    def _load_json(self, data: str | bytes) -> Any:
+        """Safely read json, raise a HydroQcHTTPError when parsing fails."""
+        try:
+            return json.loads(data)
+        except json.decoder.JSONDecodeError as exp:
+            self._logger.debug("JSON received : ", data)
+            raise HydroQcHTTPError("Bad JSON format") from exp
+
     @property
     def session_expired(self) -> bool:
         """Get Oauth session expired or not.
@@ -159,7 +166,7 @@ class HydroClient:
         raw_token_data = self._id_token.split(".")[1]
         # In some cases padding get lost, adding it to avoid issues with base64 decode
         raw_token_data += "=" * ((4 - len(raw_token_data) % 4) % 4)
-        token_data = json_loads(base64.b64decode(raw_token_data))
+        token_data = self._load_json(base64.b64decode(raw_token_data))
         return bool(time.time() > token_data["exp"])
 
     def _get_httpsession(self) -> None:
@@ -502,7 +509,7 @@ class HydroClient:
             HOURLY_CONSUMPTION_API_URL, "get", params=params
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsoHourlyTyping = json.loads(await api_call_response.text())
+        data: ConsoHourlyTyping = self._load_json(await api_call_response.text())
         return data
 
     @CCached(ttl=43200)
@@ -536,7 +543,7 @@ class HydroClient:
             params=params,
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsoDailyTyping = json.loads(await api_call_response.text())
+        data: ConsoDailyTyping = self._load_json(await api_call_response.text())
         return data
 
     @CCached(ttl=86400)
@@ -561,7 +568,7 @@ class HydroClient:
             MONTHLY_DATA_URL, "get", headers=headers
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsoMonthlyTyping = json.loads(await api_call_response.text())
+        data: ConsoMonthlyTyping = self._load_json(await api_call_response.text())
         return data
 
     @CCached(ttl=86400)
@@ -582,5 +589,5 @@ class HydroClient:
             ANNUAL_DATA_URL, "get", headers=headers
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsoAnnualTyping = json.loads(await api_call_response.text())
+        data: ConsoAnnualTyping = self._load_json(await api_call_response.text())
         return data
