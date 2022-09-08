@@ -1,17 +1,18 @@
 """Basics tests for hydroqc."""
-import typing
+import asyncio
 import datetime
 import os
+import time
+import typing
 
-import asyncio
 import pytest
-from hydroqc.error import HydroQcError
-from hydroqc.webuser import WebUser
-from hydroqc.customer import Customer
 from hydroqc.account import Account
 from hydroqc.contract import Contract
-from hydroqc.winter_credit.handler import WinterCreditHandler
+from hydroqc.customer import Customer
+from hydroqc.error import HydroQcError
+from hydroqc.webuser import WebUser
 from hydroqc.winter_credit.consts import EST_TIMEZONE
+from hydroqc.winter_credit.handler import WinterCreditHandler
 
 HYDROQC_USERNAME = os.environ["HYDROQC_USERNAME"]
 HYDROQC_PASSWORD = os.environ["HYDROQC_PASSWORD"]
@@ -34,8 +35,7 @@ class TestBase:
     @typing.no_type_check
     @pytest.fixture(scope="module")
     def event_loop(self):
-        """Override asyncio event_loop to keep the loop
-        running through the whole module"""
+        """Override asyncio event_loop to keep the loop running through the whole module."""
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
@@ -86,11 +86,22 @@ class TestBase:
         assert webuser.session_expired is False, "Session expired"
         assert repr(webuser).startswith("<Webuser - ")
 
+        # Test caching
+        start_time = time.time()
         await webuser.refresh_session()
+        end_time = time.time()
+        first_refresh = end_time - start_time
+
+        start_time = time.time()
+        await webuser.refresh_session()
+        end_time = time.time()
+        second_refresh = end_time - start_time
+        # Check if second refresh is way quicker than first refresh
+        assert first_refresh > second_refresh * 100
 
     @pytest.fixture(scope="module")
     def customer(self, webuser: WebUser) -> Customer | None:
-        """Fixture to keep the customer instance through all tests"""
+        """Fixture to keep the customer instance through all tests."""
         if len(webuser.customers) <= HYDROQC_ACCOUNT_ID:
             return None
         return webuser.customers[HYDROQC_ACCOUNT_ID]
@@ -111,7 +122,7 @@ class TestBase:
 
     @pytest.fixture(scope="module")
     def account(self, customer: Customer) -> Account | None:
-        """Fixture to keep the account instance through all tests"""
+        """Fixture to keep the account instance through all tests."""
         if len(customer.accounts) <= 0:
             return None
         return customer.accounts[0]
@@ -131,7 +142,7 @@ class TestBase:
 
     @pytest.fixture(scope="module")
     def contract(self, account: Account) -> Contract | None:
-        """Fixture to keep the contract instance through all tests"""
+        """Fixture to keep the contract instance through all tests."""
         if len(account.contracts) <= 0:
             return None
         return account.contracts[0]
@@ -265,7 +276,7 @@ class TestBase:
 
     @pytest.fixture(scope="module")
     def winter_credit(self, contract: Contract) -> WinterCreditHandler:
-        """Fixture to keep the winter credit instance through all tests"""
+        """Fixture to keep the winter credit instance through all tests."""
         return contract.winter_credit
 
     @pytest.mark.asyncio

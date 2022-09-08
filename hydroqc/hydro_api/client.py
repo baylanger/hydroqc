@@ -248,7 +248,7 @@ class HydroClient:
         self._logger.info("Login completed using %s", self.username)
         return True
 
-    async def _get_oauth2_token(self, refresh: bool = False) -> None:
+    async def _get_oauth2_token(self, refresh: bool = False) -> bool:
         """Retrieve a oauth2 token.
 
         .. todo::
@@ -306,11 +306,12 @@ class HydroClient:
 
         self._id_token = callback_params["id_token"]
         self.access_token = callback_params["access_token"]
+        return True
 
     @CCached(ttl=600)
-    async def refresh_session(self) -> None:
+    async def refresh_session(self) -> bool:
         """Refresh current session."""
-        await self._get_oauth2_token(True)
+        return await self._get_oauth2_token(True)
 
     @property
     def selected_customer(self) -> str:
