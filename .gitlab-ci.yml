@@ -149,11 +149,11 @@ private_test_mdallaire:
     PROJECT_ID: 35331048
   <<: *private_test_script
 
-#private_test_weimdall:
-#  variables:
-#    PROJECT_ID: 39038345
-#    PYTEST_ARG: "--new-contract"
-#  <<: *private_test_script
+private_test_weimdall:
+  variables:
+    PROJECT_ID: 39038345
+    PYTEST_ARG: "--new-contract"
+  <<: *private_test_script
 
 private_test_zepiaf:
   variables:
@@ -177,7 +177,7 @@ private_tests_done:
   needs:
   - job: private_test_mdallaire
   - job: private_test_titilambert
-#  - job: private_test_weimdall
+  - job: private_test_weimdall
   - job: private_test_zepiaf
   coverage: '/TOTAL.*\s+(\d+%)$/'
   artifacts:
