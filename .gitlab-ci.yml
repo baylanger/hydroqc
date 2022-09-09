@@ -167,7 +167,6 @@ private_test_mdallaire:
 private_test_weimdall:
   variables:
     PROJECT_ID: 39038345
-    PYTEST_ARG: "--new-contract"
   <<: *private_test_script
   rules:
     - if: '$CI_SKIP =~ /weimdall/'
