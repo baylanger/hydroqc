@@ -29,6 +29,20 @@ lastweekday = today - datetime.timedelta(days=7)
 lastweekday_str = lastweekday.strftime("%Y-%m-%d")
 
 
+async def is_young_contract(contract: Contract) -> bool:
+    """Determine if the contract is young than 1 year."""
+    contract_info = await contract.get_info()
+    # Get contract start date
+    contract_start_date = datetime.date.fromisoformat(contract_info["dateDebutContrat"])
+    # Get one years ago plus few days
+    today = datetime.date.today()
+    one_year_ago = today - datetime.timedelta(days=367)
+    # Get the youngest date between contract start date VS 1 years ago
+    if contract_start_date > one_year_ago:
+        return True
+    return False
+
+
 class TestBase:
     """Base test class."""
 
@@ -211,7 +225,11 @@ class TestBase:
         """Test monthly consumption stats."""
         monthly_consumption = await contract.get_monthly_consumption()
         assert monthly_consumption.get("success") is True
-        assert len(monthly_consumption.get("results", [])) == 12
+        if await is_young_contract(contract):
+            assert len(monthly_consumption.get("results", [])) > 0
+            assert len(monthly_consumption.get("results", [])) < 12
+        else:
+            assert len(monthly_consumption.get("results", [])) == 12
 
     @pytest.mark.skipif(
         "config.getoption('--new-contract')",
@@ -222,13 +240,18 @@ class TestBase:
         """Test annual consumption stats."""
         annual_consumption = await contract.get_annual_consumption()
         assert annual_consumption.get("success") is True
-        assert len(annual_consumption.get("results", [])) == 1
-        assert (
-            annual_consumption["results"][0]
-            .get("courant", {})
-            .get("dateFinAnnee", "")
-            .startswith(str(today.year))
-        )
+
+        if await is_young_contract(contract):
+            # If the contract is too young (less than 1 year) we don't have any data
+            assert len(annual_consumption.get("results", [])) == 0
+        else:
+            assert len(annual_consumption.get("results", [])) == 1
+            assert (
+                annual_consumption["results"][0]
+                .get("courant", {})
+                .get("dateFinAnnee", "")
+                .startswith(str(today.year))
+            )
 
     @pytest.mark.asyncio
     async def test_latest_period(self, contract: Contract) -> None:
