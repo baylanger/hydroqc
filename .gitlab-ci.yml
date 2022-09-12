@@ -182,6 +182,15 @@ private_test_zepiaf:
       when: never
     - !reference [.private_test_script, rules]
 
+private_test_devzwf:
+  variables:
+    PROJECT_ID: 39310934
+  <<: *private_test_script
+  rules:
+    - if: '$CI_SKIP =~ /devzwf/'
+      when: never
+    - !reference [.private_test_script, rules]
+
 private_tests_done:
   stage: private_tests_done
   tags:
