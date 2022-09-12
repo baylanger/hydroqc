@@ -21,7 +21,7 @@ Each account and contracts are different and we do our best to integrate all ava
 | Winter Credit | EPP* | Tester | Test result | Last run | Multi Contract | Multi Customer | Comment |
 | - | - | - | - | - | - | - | - |
 | No | No | @weimdall | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-job-end-date.svg?job=private_tests_done) | Yes | | |
-| No | Yes | **Needed** | | | | | |
+| No | Yes | @devzwf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-job-end-date.svg?job=private_tests_done) | | | |
 | Yes | Yes | @mdallaire1 @zepiaf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35331048-badge.svg?job=private_tests_done) ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39098670-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35331048-job-end-date.svg?job=private_tests_done)  ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39098670-job-end-date.svg?job=private_tests_done)| | | |
 | Yes | No | @titilambert |![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done)  | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | | Yes | |
 
@@ -44,12 +44,6 @@ We don't have anyone to test with. Please reach out to us if you have this plan 
 
 If you need more information about the winter credit, the associated terms, documents, ... :
    [Winter Credit lexicon and concepts](https://hydroqc.readthedocs.io/en/latest/wintercredit/wintercredit.html)
-
-## Credit
-
-- [piaf](https://gitlab.com/zepiaf) who revived the flame for a Hydro-Quebec API component, started this project and uncovered some new Hydro-Quebec APIs that are being used in this project.
-- [titilambert](https://gitlab.com/titilambert) who wrote [pyhydroquebec](https://github.com/titilambert/pyhydroquebec/) and is now actively developping with us on this project.
-- [mdallaire](https://gitlab.com/mdallaire1) helps with the documentation, testing and provides some architecture feedback.
 
 ## Goal
 
