@@ -155,12 +155,12 @@ private_test_titilambert:
       when: never
     - !reference [.private_test_script, rules]
 
-private_test_mdallaire:
+private_test_mdallaire1:
   variables:
-    PROJECT_ID: 35331048
+    PROJECT_ID: 39503160
   <<: *private_test_script
   rules:
-    - if: '$CI_SKIP =~ /mdallaire/'
+    - if: '$CI_SKIP =~ /mdallaire1/'
       when: never
     - !reference [.private_test_script, rules]
 
