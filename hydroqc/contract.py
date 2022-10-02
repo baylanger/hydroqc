@@ -167,73 +167,73 @@ class Contract:
 
     # Current period properties
     # CP == Current period
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_current_day(self) -> int:
         """Get number of days since the current period started."""
         return self._all_period_data[0]["nbJourLecturePeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_duration(self) -> int:
         """Get current period duration in days."""
         return self._all_period_data[0]["nbJourPrevuPeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_current_bill(self) -> float:
         """Get current bill since the current period started."""
         return self._all_period_data[0]["montantFacturePeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_projected_bill(self) -> float:
         """Projected bill of the current period."""
         return self._all_period_data[0]["montantProjetePeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_daily_bill_mean(self) -> float:
         """Daily bill mean since the current period started."""
         return self._all_period_data[0]["moyenneDollarsJourPeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_daily_consumption_mean(self) -> float:
         """Daily consumption mean since the current period started."""
         return self._all_period_data[0]["moyenneKwhJourPeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_total_consumption(self) -> float:
         """Total consumption since the current period started."""
         return self._all_period_data[0]["consoTotalPeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_projected_total_consumption(self) -> float:
         """Projected consumption of the current period started."""
         return self._all_period_data[0]["consoTotalProjetePeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_lower_price_consumption(self) -> float:
         """Total lower priced consumption since the current period started."""
         return self._all_period_data[0]["consoRegPeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
         return self._all_period_data[0]["consoHautPeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_average_temperature(self) -> float:
         """Average temperature since the current period started."""
         return self._all_period_data[0]["tempMoyennePeriode"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_kwh_cost_mean(self) -> float | None:
         """Mean cost of a kWh since the current period started."""
@@ -241,13 +241,13 @@ class Contract:
             return self._all_period_data[0]["coutCentkWh"] / 100
         return None
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_rate(self) -> str:
         """Get current period rate name."""
         return self._all_period_data[0]["dernierTarif"]
 
-    @property  # type: ignore
+    @property
     @check_data_present
     def cp_epp_enabled(self) -> bool:
         """Is EPP enabled for the current period.
