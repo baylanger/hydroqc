@@ -35,7 +35,6 @@ async def is_young_contract(contract: Contract) -> bool:
     # Get contract start date
     contract_start_date = datetime.date.fromisoformat(contract_info["dateDebutContrat"])
     # Get one years ago plus few days
-    today = datetime.date.today()
     one_year_ago = today - datetime.timedelta(days=367)
     # Get the youngest date between contract start date VS 1 years ago
     if contract_start_date > one_year_ago:

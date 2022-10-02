@@ -130,7 +130,7 @@ class WinterCreditHandler:
                 return
 
     # general data
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def winter_start_date(self) -> datetime.datetime:
         """Get start date of the winter credits."""
@@ -139,7 +139,7 @@ class WinterCreditHandler:
             "%Y-%m-%dT%H:%M:%S.%f%z",
         )
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def winter_end_date(self) -> datetime.datetime:
         """Get end date of the winter credits."""
@@ -148,7 +148,7 @@ class WinterCreditHandler:
             "%Y-%m-%dT%H:%M:%S.%f%z",
         )
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def cumulated_credit(self) -> float:
         """Get cumulated credits."""
@@ -160,7 +160,7 @@ class WinterCreditHandler:
             raise HydroQcWinterCreditError("Bad cumulated credit raw value") from exp
 
     # Peaks data
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def peaks(self) -> list[Peak]:
         """List all peaks of the current winter."""
@@ -185,20 +185,20 @@ class WinterCreditHandler:
         peak_list.sort(key=lambda x: x.start_date)
         return peak_list
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def sonic(self) -> list[Peak]:
         """Piaf's joke."""
         return self._get_peaks()
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def critical_peaks(self) -> list[Peak]:
         """Get all critical peaks of the current credits."""
         return [p for p in self.peaks if p.is_critical]
 
     # Current peak
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def current_peak(self) -> Peak | None:
         """Get current peak.
@@ -214,7 +214,7 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def current_peak_is_critical(self) -> bool | None:
         """Return True if the current peak is critical."""
@@ -223,7 +223,7 @@ class WinterCreditHandler:
         return None
 
     # In progress
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def current_state(self) -> str:
         """Get the current state of the winter credit handler.
@@ -249,7 +249,7 @@ class WinterCreditHandler:
             return "peak"
         return "normal"
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def preheat_in_progress(self) -> bool:
         """Get the preheat state.
@@ -262,7 +262,7 @@ class WinterCreditHandler:
         return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
 
     # Upcoming
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def is_any_critical_peak_coming(self) -> bool:
         """Get critical state of the upcoming events.
@@ -274,7 +274,7 @@ class WinterCreditHandler:
         return bool(self.next_critical_peak)
 
     # Next peak
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def next_peak(self) -> Peak | None:
         """Get next peak or current peak."""
@@ -289,7 +289,7 @@ class WinterCreditHandler:
         next_peak = min(peaks, key=lambda x: x.start_date)
         return next_peak
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def next_peak_is_critical(self) -> bool:
         """Return True if the following next peak is critical.
@@ -309,7 +309,7 @@ class WinterCreditHandler:
             return False
         return next_peak.is_critical
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def next_critical_peak(self) -> Peak | None:
         """Get next peak or current peak."""
@@ -321,7 +321,7 @@ class WinterCreditHandler:
         return next_peak
 
     # Today peaks
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def today_morning_peak(self) -> Peak | None:
         """Get the peak of today morning."""
@@ -337,7 +337,7 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def today_evening_peak(self) -> Peak | None:
         """Get the peak of today evening."""
@@ -354,7 +354,7 @@ class WinterCreditHandler:
         return None
 
     # Tomorrow Peaks
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def tomorrow_morning_peak(self) -> Peak | None:
         """Get the peak of tomorrow morning."""
@@ -372,7 +372,7 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def tomorrow_evening_peak(self) -> Peak | None:
         """Get the peak of tomorrow evening."""
@@ -391,7 +391,7 @@ class WinterCreditHandler:
         return None
 
     # Yesterday peaks
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def yesterday_morning_peak(self) -> Peak | None:
         """Get the peak of yesterday morning."""
@@ -409,7 +409,7 @@ class WinterCreditHandler:
             return peaks[0]
         return None
 
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def yesterday_evening_peak(self) -> Peak | None:
         """Get the peak of yesterday evening."""
@@ -428,7 +428,7 @@ class WinterCreditHandler:
         return None
 
     # Anchors
-    @property  # type: ignore[misc]
+    @property
     @winter_credit_enabled
     def next_anchor(self) -> Anchor | None:
         """Next or current anchor."""
