@@ -231,19 +231,12 @@ package:
   - hydroqc
   image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221001
   script:
-    #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
-    - rm -rf dist
-    - mkdir -p dist
     # Build a package with a version based on the commmit short sha
-    - sed 's/^VERSION = "\([^"]*\)"/VERSION = "\1rc'${CI_PIPELINE_ID}'"/' -i hydroqc/__version__.py
     - pip install --upgrade pip
-    - pip install --upgrade build setuptools wheel twine
-    - python3 setup.py develop
-    - ls -l
-    - pwd
-    - python3 -m build
-    - python3 setup.py sdist bdist_wheel
-    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
+    - pip install --upgrade build setuptools wheel twine setuptools_scm
+    - python3 -m build -o dist
+    - python3 -m twine check --strict dist/*
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --verbose --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   rules:
     - if: '$CI_SKIP =~ /package/'
       when: never
@@ -275,18 +268,11 @@ promote2pypi:
     #- cd ..
     #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip git
     # Build package that could be promoted
-    - CURRENT_VERSION=$(grep VERSION hydroqc/__version__.py | sed 's/.*VERSION = "\([^"]*\)"/\1/')
-    - |
-      if [ "${CURRENT_VERSION}" != "${CI_COMMIT_TAG}" ]
-      then
-        echo "Tag '${CI_COMMIT_TAG}' and version '${CURRENT_VERSION}' defined in version.py are different. Please fix it." && exit 1
-      fi
     - pip install --upgrade pip
-    - pip install --upgrade build
-    - python3 -m build
-    - pip install twine
-    - python3 setup.py sdist bdist_wheel
-    - twine upload --non-interactive --repository pypi dist/*
+    - pip install --upgrade build setuptools_scm twine
+    - python3 -m build -o dist
+    - python3 -m twine check --strict dist/*
+    - twine upload --verbose --non-interactive --repository pypi dist/*
   rules:
     - if: '$CI_SKIP =~ /pypi/'
       when: never
