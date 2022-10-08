@@ -30,10 +30,8 @@ Each account and contracts are different and we do our best to integrate all ava
 #### Flex D
 We don't have anyone to test with. Please reach out to us if you have this plan and want to help!
 
-### Other plan (commercial, etc)
+### Other plans (commercial, etc)
 We don't have anyone to test with. Please reach out to us if you have this plan and want to help!
-
-
 
 ## Documentation
 
@@ -43,7 +41,7 @@ We don't have anyone to test with. Please reach out to us if you have this plan 
 
 ### Architecture / concepts
 
-If you need more information about the usage and current integrations of the library please see our website (https://hydroqc.ca)[https://hydroqc.ca]
+If you need more information about the usage and current integrations of the library please see our website [https://hydroqc.ca](https://hydroqc.ca)
 
 ## Goal
 
