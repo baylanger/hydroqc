@@ -12,7 +12,7 @@ dynamic = ["version"]
 description = "A wrapper library to access hydro quebec API and more"
 readme = "README.md"
 authors = [
-    {name = "Hydroqc Team", email = "info@hydroqc.cq"}
+    {name = "Hydroqc Team", email = "info@hydroqc.ca"}
 ]
 license = {text = "Apache-2.0"}
 classifiers = [
