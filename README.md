@@ -43,8 +43,7 @@ We don't have anyone to test with. Please reach out to us if you have this plan 
 
 ### Architecture / concepts
 
-If you need more information about the winter credit, the associated terms, documents, ... :
-   [Winter Credit lexicon and concepts](https://hydroqc.readthedocs.io/en/latest/wintercredit/wintercredit.html)
+If you need more information about the usage and current integrations of the library please see our website (https://hydroqc.ca)[https://hydroqc.ca]
 
 ## Goal
 
@@ -87,8 +86,6 @@ This uses python 3 (tested with 3.8)
 - Services.getHourlyConsumption(date = 'YYYY-MM-DD') to get hourly consumption for specific day
 - Services.getDailyConsumption(start_date = 'YYYY-MM-DD',end_date = 'YYYY-MM-DD') to get a range of daily consumption
 - WinterCredit.getFutureEvents() to get a list of JSON object with future peak events
-
-An incomplete (so far) list of possible values and their meanings are being documented here : [https://hydroqc.readthedocs.io/en/latest/wintercredit/values.html](https://hydroqc.readthedocs.io/en/latest/wintercredit/values.html)
 
 ## NOTES
 
