@@ -21,7 +21,7 @@ test:
     #- apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
     #- pip install tox
-    - tox -e pylint,flake8,pydocstyle,typing,black --parallel auto
+    - tox -e pylint,flake8,pydocstyle,typing,black,deps-conflict --parallel auto
     - cat mypy-txt-report/index.txt
   artifacts:
     reports:
