@@ -9,5 +9,5 @@ mypy==0.982
 types-pytz==2022.4.0.0
 types-PyYAML==6.0.12
 types-python-dateutil==2.8.19
-pyright==1.1.274
+pyright==1.1.275
 lxml==4.9.1
