@@ -361,7 +361,7 @@ class HydroClient:
         self._selected_customer = customer_id
         self._logger.info("Contract %s selected", contract_id)
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_user_info(self) -> list[ComptesTyping]:
         """Fetch user ids and customer ids.
 
@@ -378,7 +378,7 @@ class HydroClient:
         data: list[ComptesTyping] = await res.json()
         return data
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_customer_info(
         self, webuser_id: str, customer_id: str
     ) -> InfoCompteTyping:
@@ -395,7 +395,7 @@ class HydroClient:
         data: InfoCompteTyping = await api_call_response.json()
         return data
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_periods_info(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> list[PeriodDataTyping]:
@@ -412,7 +412,7 @@ class HydroClient:
             raise HydroQcError(f"No period found for contract {contract_id}")
         return periods
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_account_info(
         self, webuser_id: str, customer_id: str, account_id: str
     ) -> listeComptesContratsTyping:
@@ -427,7 +427,7 @@ class HydroClient:
             raise HydroQcError("Account not found")
         return accounts[account_id]
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_contract_info(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> listeContratModelTyping:
@@ -546,7 +546,7 @@ class HydroClient:
         data: ConsoDailyTyping = self._load_json(await api_call_response.text())
         return data
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_monthly_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> ConsoMonthlyTyping:
@@ -571,7 +571,7 @@ class HydroClient:
         data: ConsoMonthlyTyping = self._load_json(await api_call_response.text())
         return data
 
-    @CCached(ttl=86400)
+    @CCached(ttl=21600)
     async def get_annual_consumption(
         self, webuser_id: str, customer_id: str, contract_id: str
     ) -> ConsoAnnualTyping:
