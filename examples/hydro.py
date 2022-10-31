@@ -30,7 +30,7 @@ async def async_func():
     print(data)
     data = contract.winter_credit.next_peak
     print(data)
-    data = contract.winter_credit.next_peak.is_critical
+    data = contract.winter_credit.next_peak_is_critical
     print(data)
     data = contract.winter_credit.cumulated_credit
     print(data)
