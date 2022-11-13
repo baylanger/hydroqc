@@ -310,6 +310,7 @@ class TestBase:
         winter_credit: WinterCreditHandler,
     ) -> None:
         """Test winter credit information validity."""
+        contract.set_preheat_duration(60)
         assert winter_credit.webuser_id == webuser.webuser_id
         assert winter_credit.customer_id == account.customer_id
         assert winter_credit.contract_id == contract.contract_id

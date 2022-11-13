@@ -97,6 +97,10 @@ class Contract:
         """Get winter credit helper object."""
         return self._wch
 
+    def set_preheat_duration(self, duration: int) -> None:
+        """Set preheat duration in minutes."""
+        self._wch.set_preheat_duration(duration)
+
     async def get_today_hourly_consumption(self) -> ConsoHourlyTyping:
         """Fetch hourly consumption for today."""
         return await self._hydro_client.get_today_hourly_consumption(
