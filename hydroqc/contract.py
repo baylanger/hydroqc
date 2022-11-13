@@ -154,6 +154,7 @@ class Contract:
         self._address = data["adresseConsommation"].strip()
         self._meter_id = data["noCompteur"]
         self._mve_activated = data["indicateurMVE"]
+        self._wch.set_enabled(data["optionTarifActuel"] == "CPC")
         return data
 
     async def get_periods_info(self) -> list[PeriodDataTyping]:

@@ -60,6 +60,7 @@ class WinterCreditHandler:
 
         self._raw_data: WinterCreditDataTyping = {}
         self._preheat_duration = DEFAULT_PRE_HEAT_DURATION
+        self._is_enabled: bool = False
 
     # Basics
     @property
@@ -80,10 +81,11 @@ class WinterCreditHandler:
     @property
     def is_enabled(self) -> bool:
         """Is winter credit mode actived."""
-        if "optionTarifActuel" not in self._raw_data:
-            # If we don't know, let's try to get the information
-            return True
-        return self._raw_data["optionTarifActuel"] == "CPC"
+        return self._is_enabled
+
+    def set_enabled(self, state: bool) -> None:
+        """Set is_enabled flag."""
+        self._is_enabled = state
 
     def set_preheat_duration(self, duration: int) -> None:
         """Set preheat duration in minutes."""
