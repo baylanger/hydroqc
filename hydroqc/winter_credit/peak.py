@@ -9,8 +9,7 @@ from hydroqc.winter_credit.consts import (
     DEFAULT_EVENING_PEAK_START,
     DEFAULT_MORNING_PEAK_END,
     DEFAULT_MORNING_PEAK_START,
-    DEFAULT_PRE_HEAT_END_OFFSET,
-    DEFAULT_PRE_HEAT_START_OFFSET,
+    DEFAULT_PRE_HEAT_DURATION,
     EST_TIMEZONE,
     MORNING_EVENING,
 )
@@ -59,6 +58,7 @@ class Peak(TimeRange):
         date: datetime.datetime,
         # TODO: use enum
         morning_evening: str,
+        preheat_duration: int = DEFAULT_PRE_HEAT_DURATION,
     ):
         """Period constructor."""
         if morning_evening not in MORNING_EVENING:
@@ -66,6 +66,7 @@ class Peak(TimeRange):
             raise HydroQcWinterCreditError(msg)
         self._morning_evening: str = morning_evening
         self._date: datetime.datetime = date.astimezone(EST_TIMEZONE)
+        self._preheat_duration: int = preheat_duration
         super().__init__(self.start_date, self.end_date, is_critical=False)
         self._raw_stats: CriticalPeakDataTyping = {}
 
@@ -114,12 +115,9 @@ class Peak(TimeRange):
     def preheat(self) -> PreHeat:
         """Get the preheat period of the peak."""
         preheat_start_date = self.start_date - datetime.timedelta(
-            hours=DEFAULT_PRE_HEAT_START_OFFSET
+            minutes=self._preheat_duration
         )
-        preheat_end_date = preheat_start_date + datetime.timedelta(
-            hours=DEFAULT_PRE_HEAT_END_OFFSET
-        )
-        return PreHeat(preheat_start_date, preheat_end_date, self.is_critical)
+        return PreHeat(preheat_start_date, self.start_date, self.is_critical)
 
     @property
     def start_date(self) -> datetime.datetime:

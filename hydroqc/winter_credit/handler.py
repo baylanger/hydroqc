@@ -9,6 +9,7 @@ from hydroqc.hydro_api.client import HydroClient
 from hydroqc.winter_credit.consts import (
     DEFAULT_EVENING_PEAK_START,
     DEFAULT_MORNING_PEAK_START,
+    DEFAULT_PRE_HEAT_DURATION,
     EST_TIMEZONE,
 )
 from hydroqc.winter_credit.peak import Anchor, Peak
@@ -58,6 +59,7 @@ class WinterCreditHandler:
         self._logger: logging.Logger = logger
 
         self._raw_data: WinterCreditDataTyping = {}
+        self._preheat_duration = DEFAULT_PRE_HEAT_DURATION
 
     # Basics
     @property
@@ -82,6 +84,10 @@ class WinterCreditHandler:
             # If we don't know, let's try to get the information
             return True
         return self._raw_data["optionTarifActuel"] == "CPC"
+
+    def set_preheat_duration(self, duration: int) -> None:
+        """Set preheat duration in minutes."""
+        self._preheat_duration = duration
 
     # Fetch raw data
     async def refresh_data(self) -> None:
@@ -173,11 +179,15 @@ class WinterCreditHandler:
         peak_list: list[Peak] = []
         while current_date < self.winter_end_date:
             # Morning
-            peak = Peak(current_date, "morning")
+            peak = Peak(
+                current_date, "morning", preheat_duration=self._preheat_duration
+            )
             self._set_peak_critical(peak)
             peak_list.append(peak)
             # Evening
-            peak = Peak(current_date, "evening")
+            peak = Peak(
+                current_date, "evening", preheat_duration=self._preheat_duration
+            )
             self._set_peak_critical(peak)
             peak_list.append(peak)
             # Next day
