@@ -14,10 +14,9 @@ readme = "README.md"
 authors = [
     {name = "Hydroqc Team", email = "info@hydroqc.ca"}
 ]
-license = {text = "Apache-2.0"}
+license = {text = "GPL-3.0-or-later"}
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 keywords = ["hydroquebec", "lib"]
