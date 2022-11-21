@@ -58,6 +58,12 @@ test:
       --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}"
       "https://gitlab.com/api/v4/projects/${PROJECT_ID}")
     - PROJECT_PATH=$(echo ${OUTPUT} | jq -r .path_with_namespace)
+    - |
+      if [[ -z "${CI_MERGE_REQUEST_SOURCE_PROJECT_URL}" ]]; then
+        UPSTREAMREPO=${CI_REPOSITORY_URL}
+      else
+        UPSTREAMREPO=${CI_MERGE_REQUEST_SOURCE_PROJECT_URL}
+      fi
     - >
       OUTPUT=$(curl
       --globoff
@@ -65,7 +71,8 @@ test:
       --header "Content-Type: application/json"
       --header "PRIVATE-TOKEN: ${HYDROQC_SA_TOKEN}"
       https://gitlab.com/api/v4/projects/${PROJECT_ID}/pipeline
-      --data '{ "ref": "main", "variables": [{ "key": "UPSTREAM_BRANCH", "value": "'${CI_COMMIT_REF_NAME}'" }, { "key": "UPSTREAM_COMMIT_SHA", "value": "'${CI_COMMIT_SHA}'" }, { "key": "UPSTREAM_REPO", "value": "'${CI_MERGE_REQUEST_SOURCE_PROJECT_URL}'" }, { "key": "PYTEST_ARG", "value": "'${PYTEST_ARG}'" }] }')
+      --data '{ "ref": "main", "variables": [{ "key": "UPSTREAM_BRANCH", "value": "'${CI_COMMIT_REF_NAME}'" }, { "key": "UPSTREAM_COMMIT_SHA", "value": "'${CI_COMMIT_SHA}'" }, { "key": "UPSTREAM_REPO", "value": "'${UPSTREAMREPO}'" }, { "key": "PYTEST_ARG", "value": "'${PYTEST_ARG}'" }] }')
+
     - echo ${OUTPUT}
     - PIPELINE_ID=$(echo ${OUTPUT} | jq -r .id)
     - echo ${PIPELINE_ID}
