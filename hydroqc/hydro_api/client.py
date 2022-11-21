@@ -3,12 +3,14 @@ import base64
 import importlib.resources
 import json
 import logging
+import platform
 import random
 import ssl
 import string
 import time
 import uuid
 from datetime import datetime, timedelta
+from importlib.metadata import PackageNotFoundError, version
 from json import dumps as json_dumps
 from typing import Any
 
@@ -94,6 +96,19 @@ class HydroClient:
         self._selected_customer = ""
         self._selected_contract = ""
 
+    @property
+    def user_agent(self) -> str:
+        """Get http client user_agent."""
+        try:
+            hydroqc_version = version("Hydro_Quebec_API_Wrapper")
+        except PackageNotFoundError as exp:
+            # package is not installed
+            raise HydroQcHTTPError(
+                "Python package `Hydro_Quebec_API_Wrapper` is not installed. Install it using pip"
+            ) from exp
+        os_name = platform.system()
+        return f"Hydroqc/{hydroqc_version} (dev@hydroqc.ca; https://gitlab.com/hydroqc) {os_name}"
+
     async def http_request(
         self,
         url: str,
@@ -113,6 +128,7 @@ class HydroClient:
             data = {}
         if headers is None:
             headers = {}
+        headers["User-Agent"] = self.user_agent
         if verify_ssl is None:
             verify_ssl = self._verify_ssl
         if cookies is None:
