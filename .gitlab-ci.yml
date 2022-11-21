@@ -16,7 +16,7 @@ test:
   stage: test
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221118
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221121
   script:
     #- apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
@@ -48,7 +48,7 @@ test:
   stage: private_tests
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221118
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221121
   script:
     #- apt update && apt install -y jq unzip curl
     - >
@@ -202,7 +202,7 @@ private_tests_done:
   stage: private_tests_done
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221118
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221121
   script:
     #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
     - echo "Private Tests done"
@@ -236,7 +236,7 @@ package:
   stage: test
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221118
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221121
   script:
     # Build a package with a version based on the commmit short sha
     - pip install --upgrade pip
@@ -257,7 +257,7 @@ promote2pypi:
   stage: pypi
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221118
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20221121
   script:
     # TODO: try to pull the good package from gitlab pypi repo
     #       then change the version (promote)
