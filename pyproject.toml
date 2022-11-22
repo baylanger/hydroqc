@@ -14,7 +14,7 @@ readme = "README.md"
 authors = [
     {name = "Hydroqc Team", email = "info@hydroqc.ca"}
 ]
-license = {text = "GPL-3.0-or-later"}
+license = {text = "LGPL-3.0-or-later"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
