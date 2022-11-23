@@ -153,48 +153,66 @@ test:
     - when: on_success
 
 
-private_test_titilambert:
+D_CPC_titilambert:
   variables:
     PROJECT_ID: 35085986
   <<: *private_test_script
   rules:
-    - if: '$CI_SKIP =~ /titilambert/'
+    - if: '$CI_SKIP =~ /d_cpc_titilambert/'
       when: never
     - !reference [.private_test_script, rules]
 
-private_test_mdallaire1:
+DPC_mdallaire1:
   variables:
     PROJECT_ID: 39503160
   <<: *private_test_script
   rules:
-    - if: '$CI_SKIP =~ /mdallaire1/'
+    - if: '$CI_SKIP =~ /dpc_mdallaire1/'
       when: never
     - !reference [.private_test_script, rules]
 
-private_test_weimdall:
+DT_mdallaire1:
+  variables:
+    PROJECT_ID: 41244986
+  <<: *private_test_script
+  rules:
+    - if: '$CI_SKIP =~ /dt_mdallaire1/'
+      when: never
+    - !reference [.private_test_script, rules]
+
+D_weimdall:
   variables:
     PROJECT_ID: 39038345
   <<: *private_test_script
   rules:
-    - if: '$CI_SKIP =~ /weimdall/'
+    - if: '$CI_SKIP =~ /d_weimdall/'
       when: never
     - !reference [.private_test_script, rules]
 
-private_test_zepiaf:
+D_CPC_zepiaf:
   variables:
     PROJECT_ID: 39098670
   <<: *private_test_script
   rules:
-    - if: '$CI_SKIP =~ /zepiaf/'
+    - if: '$CI_SKIP =~ /d_cpc_zepiaf/'
       when: never
     - !reference [.private_test_script, rules]
 
-private_test_devzwf:
+D_devzwf:
   variables:
     PROJECT_ID: 39310934
   <<: *private_test_script
   rules:
-    - if: '$CI_SKIP =~ /devzwf/'
+    - if: '$CI_SKIP =~ /d_devzwf/'
+      when: never
+    - !reference [.private_test_script, rules]
+
+M_hdenergy:
+  variables:
+    PROJECT_ID: 41155894
+  <<: *private_test_script
+  rules:
+    - if: '$CI_SKIP =~ /m_hdenergy/'
       when: never
     - !reference [.private_test_script, rules]
 
