@@ -39,11 +39,20 @@ Each account and contracts are different and we do our best to integrate all ava
 
 | Base Rate | EPP | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
 | - | - | - | - | - | - | - | - |
-| DT | Yes | @mdallaire1 | N/A | N/A | No | No | DT specifics No tested yet |
+| DT | Yes | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | DT specifics No tested yet |
 
 *EPP = Equal Payment Plan
 
-### Other plans (commercial, etc)
+#### Rate M
+
+| Base Rate | Rate Option | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
+| - | - | - | - | - | - | - | - |
+| M | - | @hdenergy | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/41155894-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | Yes | Yes | [HD Énergie](https://hd.energy) |
+| M | GDP | @hdenergy | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/41155894-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | Yes | Yes | [HD Énergie](https://hd.energy) |
+
+Thanks to [HD Énergie](https://hd.energy) for sponsoring developpement of the Rate M support.
+
+### Other plans
 We don't have anyone to test with. Please reach out to us if you have this plan and want to help!
 
 ## Documentation
