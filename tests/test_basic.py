@@ -1,10 +1,10 @@
 """Basics tests for hydroqc."""
 import asyncio
 import datetime
-import os
 import time
 import typing
 
+import parameterized  # type: ignore
 import pytest
 from hydroqc.account import Account
 from hydroqc.contract import Contract
@@ -14,12 +14,7 @@ from hydroqc.webuser import WebUser
 from hydroqc.winter_credit.consts import EST_TIMEZONE
 from hydroqc.winter_credit.handler import WinterCreditHandler
 
-HYDROQC_USERNAME = os.environ["HYDROQC_USERNAME"]
-HYDROQC_PASSWORD = os.environ["HYDROQC_PASSWORD"]
-HYDROQC_RATE = os.environ["HYDROQC_RATE"]
-HYDROQC_EPP_ENABLED = os.environ["HYDROQC_EPP_ENABLED"].lower() == "true"
-HYDROQC_WC_ENABLED = os.environ["HYDROQC_WC_ENABLED"].lower() == "true"
-HYDROQC_ACCOUNT_ID = int(os.environ.get("HYDROQC_ACCOUNT_ID", 0))
+from .tools import get_env_vars
 
 today = datetime.datetime.today().astimezone(EST_TIMEZONE).date()
 today_str = today.strftime("%Y-%m-%d")
@@ -31,19 +26,41 @@ lastweekday_str = lastweekday.strftime("%Y-%m-%d")
 
 async def is_young_contract(contract: Contract) -> bool:
     """Determine if the contract is young than 1 year."""
-    contract_info = await contract.get_info()
-    # Get contract start date
-    contract_start_date = datetime.date.fromisoformat(contract_info["dateDebutContrat"])
     # Get one years ago plus few days
     one_year_ago = today - datetime.timedelta(days=367)
+    contract_start_date = typing.cast(datetime.date, contract.start_date)
     # Get the youngest date between contract start date VS 1 years ago
-    if contract_start_date > one_year_ago:
+    if contract_start_date is not None and contract_start_date > one_year_ago:
         return True
     return False
 
 
+@parameterized.parameterized_class(
+    (
+        "NAME",
+        "HYDROQC_USERNAME",
+        "HYDROQC_PASSWORD",
+        "HYDROQC_CUSTOMER_NUMBER",
+        "HYDROQC_RATE",
+        "HYDROQC_RATE_OPTION",
+        "HYDROQC_EPP_ENABLED",
+        "HYDROQC_WC_ENABLED",
+        "HYDROQC_ACCOUNT_ID",
+    ),
+    get_env_vars(),
+)
 class TestBase:
     """Base test class."""
+
+    NAME: str
+    HYDROQC_USERNAME: str
+    HYDROQC_PASSWORD: str
+    HYDROQC_CUSTOMER_NUMBER: str
+    HYDROQC_RATE: str
+    HYDROQC_RATE_OPTION: str
+    HYDROQC_EPP_ENABLED: str
+    HYDROQC_WC_ENABLED: bool
+    HYDROQC_ACCOUNT_ID: int
 
     @typing.no_type_check
     @pytest.fixture(scope="module")
@@ -68,8 +85,8 @@ class TestBase:
     def webuser(self) -> WebUser:
         """Fixture to keep the webuser instance through all tests."""
         return WebUser(
-            HYDROQC_USERNAME,
-            HYDROQC_PASSWORD,
+            self.HYDROQC_USERNAME,
+            self.HYDROQC_PASSWORD,
             verify_ssl=True,
             log_level="ERROR",
             http_log_level="ERROR",
@@ -115,9 +132,23 @@ class TestBase:
     @pytest.fixture(scope="module")
     def customer(self, webuser: WebUser) -> Customer | None:
         """Fixture to keep the customer instance through all tests."""
-        if len(webuser.customers) <= HYDROQC_ACCOUNT_ID:
-            return None
-        return webuser.customers[HYDROQC_ACCOUNT_ID]
+        # New env var
+        if self.HYDROQC_CUSTOMER_NUMBER is not None:
+            customer_research = [
+                c
+                for c in webuser.customers
+                if c.customer_id == self.HYDROQC_CUSTOMER_NUMBER
+            ]
+            if not customer_research:
+                return None
+            return customer_research[0]
+
+        if self.HYDROQC_ACCOUNT_ID is not None:
+            # TODO DEPRECATED env var
+            if len(webuser.customers) <= self.HYDROQC_ACCOUNT_ID:
+                return None
+            return webuser.customers[self.HYDROQC_ACCOUNT_ID]
+        return None
 
     @typing.no_type_check
     @pytest.mark.asyncio
@@ -132,6 +163,13 @@ class TestBase:
         assert customer.names != "", "Bad customer name"
         assert repr(customer).startswith("<Customer - ")
         assert customer.customer_id is not None, "No customer id found"
+        assert customer.infocompte_enabled is None
+        await customer.get_info()
+        assert customer.infocompte_enabled in set((True, False))
+        if self.HYDROQC_RATE == "M":
+            assert customer.infocompte_enabled is False
+        else:
+            assert customer.infocompte_enabled is True
 
     @pytest.fixture(scope="module")
     def account(self, customer: Customer) -> Account | None:
@@ -150,7 +188,10 @@ class TestBase:
         ), "Can not retrieve the same account with customer.get_account method"
         with pytest.raises(HydroQcError):
             customer.get_account("bad account id")
-        assert isinstance(account.balance, float)
+        if self.HYDROQC_RATE == "M":
+            assert not hasattr(account, "_balance")
+        else:
+            assert isinstance(account.balance, float)
         assert repr(account).startswith("<Account - ")
 
     @pytest.fixture(scope="module")
@@ -172,6 +213,23 @@ class TestBase:
             account.get_contract("bad contract id")
         assert contract.account_id == account.account_id, "Bad account id in contract"
         assert repr(contract).startswith("<Contract - ")
+        assert (
+            contract.rate == self.HYDROQC_RATE
+        ), "Bad rate status, please check the value of self.HYDROQC_RATE"
+        if self.HYDROQC_RATE_OPTION != "":
+            assert contract.rate_option == (
+                self.HYDROQC_RATE_OPTION if self.HYDROQC_RATE_OPTION != "NONE" else None
+            ), "Bad Rate option, please check the value of self.HYDROQC_RATE_OPTION"
+            assert contract.winter_credit.is_enabled == (
+                self.HYDROQC_RATE_OPTION == "CPC"
+            )
+
+        assert isinstance(contract.start_date, datetime.date)
+        assert contract.start_date.year > 1900
+        assert isinstance(contract.address, str)
+        assert contract.address != ""
+        assert isinstance(contract.meter_id, str)
+        assert contract.meter_id != ""
 
     @pytest.mark.asyncio
     async def test_hourly_consumption(self, contract: Contract) -> None:
@@ -267,6 +325,7 @@ class TestBase:
     async def test_contract_info(self, contract: Contract) -> None:
         """Test contract information validity."""
         await contract.get_periods_info()
+
         assert (
             contract._hydro_client.selected_customer == contract.customer_id
         ), "Bad selected customer"
@@ -276,25 +335,33 @@ class TestBase:
 
         assert len(contract.get_latest_period_info()) > 0, "No period info found"
         assert contract.cp_current_day >= 0
-
         assert contract.cp_duration >= 0
-        assert contract.cp_current_bill >= 0
-        assert contract.cp_projected_bill >= 0
-        assert contract.cp_daily_bill_mean >= 0
+        if self.HYDROQC_RATE == "M":
+            if self.HYDROQC_RATE_OPTION == "GDP":
+                assert contract.cp_current_bill is None
+                assert contract.cp_daily_bill_mean is None
+                assert contract.cp_kwh_cost_mean is None
+            else:
+                assert contract.cp_current_bill >= 0
+                assert contract.cp_daily_bill_mean >= 0
+                assert contract.cp_kwh_cost_mean >= 0
+            assert contract.cp_projected_bill is None
+            assert contract.cp_projected_total_consumption is None
+        else:
+            assert contract.cp_current_bill >= 0
+            assert contract.cp_projected_bill >= 0
+            assert contract.cp_daily_bill_mean >= 0
+            assert contract.cp_projected_total_consumption >= 0
+            assert contract.cp_kwh_cost_mean >= 0
         assert contract.cp_daily_consumption_mean >= 0
         assert contract.cp_total_consumption >= 0
-        assert contract.cp_projected_total_consumption >= 0
         assert contract.cp_lower_price_consumption >= 0
         assert contract.cp_higher_price_consumption >= 0
         assert contract.cp_average_temperature >= -30
         assert contract.cp_average_temperature <= 50
-        assert contract.cp_kwh_cost_mean >= 0
         assert (
-            contract.cp_rate == HYDROQC_RATE
-        ), "Bad rate status, please check the value of HYDROQC_RATE"
-        assert (
-            contract.cp_epp_enabled == HYDROQC_EPP_ENABLED
-        ), "Bad EPP status, please check the value of HYDROQC_EPP_ENABLED"
+            contract.cp_epp_enabled == self.HYDROQC_EPP_ENABLED
+        ), "Bad EPP status, please check the value of self.HYDROQC_EPP_ENABLED"
 
     @pytest.fixture(scope="module")
     def winter_credit(self, contract: Contract) -> WinterCreditHandler:
@@ -304,14 +371,13 @@ class TestBase:
     @pytest.mark.asyncio
     async def test_winter_credit(
         self,
-        webuser: WebUser,
         account: Account,
         contract: Contract,
         winter_credit: WinterCreditHandler,
     ) -> None:
         """Test winter credit information validity."""
         contract.set_preheat_duration(60)
-        assert winter_credit.webuser_id == webuser.webuser_id
+        assert winter_credit.applicant_id == contract.applicant_id
         assert winter_credit.customer_id == account.customer_id
         assert winter_credit.contract_id == contract.contract_id
 
@@ -320,9 +386,15 @@ class TestBase:
         ), "Raw data should be empty, data not fetched yet"
 
         await winter_credit.refresh_data()
-        assert (
-            winter_credit.is_enabled == HYDROQC_WC_ENABLED
-        ), "Bad winter credit status, please check the value of HYDROQC_WC_ENABLED"
+        if self.HYDROQC_RATE_OPTION != "":
+            assert winter_credit.is_enabled == (
+                self.HYDROQC_RATE_OPTION == "CPC"
+            ), "Bad winter credit status, please check the value of self.HYDROQC_RATE_OPTION"
+        else:
+            # TODO DEPRECATED
+            assert (
+                winter_credit.is_enabled == self.HYDROQC_WC_ENABLED
+            ), "Bad winter credit status, please check the value of self.HYDROQC_WC_ENABLED"
         assert len(winter_credit.raw_data) > 0
         if winter_credit.is_enabled:
             assert winter_credit.winter_start_date.month == 12
@@ -381,6 +453,151 @@ class TestBase:
             assert winter_credit.yesterday_evening_peak is None
             assert winter_credit.next_anchor is None
 
-        # assert winter_credit.next_anchor
-        # Close session
-        # await self.webuser.close_session()
+    @pytest.mark.asyncio
+    async def test_csv(
+        self,
+        contract: Contract,
+    ) -> None:
+        """Test CSV downloads."""
+        # get_daily_energy_and_power
+        data_csv = await contract.get_daily_energy_and_power(yesterday_str, today_str)
+        first_line = next(data_csv)
+        if contract.rate in set(("DT", "DPC")):
+            assert first_line == [
+                "Contrat",
+                "Tarif",
+                "Date de consommation",
+                "kWh bas",
+                "kWh haut",
+                "Code de consommation",
+                "Puissance réelle (kW)",
+                "Code de puissance réelle",
+                "Heure ? Puissance maximale réelle",
+                "90 % de la puissance apparente (kVA)",
+                "Code de puissance apparente",
+                "Heure ? Puissance apparente maximale ",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_daily_energy_and_power CSV headers"
+        else:
+            assert first_line == [
+                "Contrat",
+                "Tarif",
+                "Date de consommation",
+                "kWh",
+                "Code de consommation",
+                "Puissance réelle (kW)",
+                "Code de puissance réelle",
+                "Heure ? Puissance maximale réelle",
+                "90 % de la puissance apparente (kVA)",
+                "Code de puissance apparente",
+                "Heure ? Puissance apparente maximale ",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_daily_energy_and_power CSV headers"
+
+        # get_daily_energy
+        data_csv = await contract.get_daily_energy(yesterday_str, today_str)
+        first_line = next(data_csv)
+        if contract.rate in set(("DT", "DPC")):
+            assert first_line == [
+                "Contrat",
+                "Tarif",
+                "Date",
+                "kWh bas",
+                "kWh Haut",
+                "Code de consommation",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_daily_energy CSV headers"
+        else:
+            assert first_line == [
+                "Contrat",
+                "Tarif",
+                "Date",
+                "kWh",
+                "Code de consommation",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_daily_energy CSV headers"
+
+        # get_hourly_energy
+        data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
+        first_line = next(data_csv)
+        if contract.rate in set(("DT", "DPC")):
+            assert first_line == [
+                "Contrat",
+                "Date et heure",
+                "kWh bas",
+                "kWh Haut",
+                "Code de consommation",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_daily_energy CSV headers"
+        else:
+            assert first_line == [
+                "Contrat",
+                "Date et heure",
+                "kWh",
+                "Code de consommation",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_hourly_energy CSV headers"
+
+        # get_power_demanded_per_15min
+        data_csv = await contract.get_power_demanded_per_15min(yesterday_str, today_str)
+        first_line = next(data_csv)
+        assert first_line == [
+            "Contrat",
+            "Date et heure",
+            "Puissance réelle (kW)",
+            "Code de puissance réelle",
+            "90 % de la puissance apparente (kVA)",
+            "Code de puissance apparente",
+        ], "Bad get_power_demanded_per_15min headers"
+
+        # get_consumption_overview_csv
+        data_csv = await contract.get_consumption_overview_csv()
+        first_line = next(data_csv)
+
+        if contract.rate == "M":
+            assert first_line == [
+                "Contract",
+                "Rate",
+                "Starting date",
+                "Ending date",
+                "Day(s)",
+                "Date and time of last reading",
+                "kWh",
+                "Amount ($)",
+                "Meter-reading code",
+                "Average $/day",
+                "Average ¢/kWh",
+                "Billing demand",
+                "Real power (kW)",
+                "Date and time of maximum real power ",
+                "Apparent (90%) (kVA)",
+                "Date and time of maximum apparent power demand",
+                "Minimum billing demand  (MBD)",
+                "Minimum billing demand (MBD) period ",
+                "Power factor (or PF (%)",
+                "Load factor (or LF (%)",
+                "Mean temperature (°C)",
+            ]
+        else:
+            assert first_line == [
+                "Contract",
+                "Rate",
+                "Starting date",
+                "Ending date",
+                "Day",
+                "Date and time of last reading",
+                "kWh",
+                "Amount ($)",
+                "Meter-reading code",
+                "Average $/day",
+                "Average kWh/day",
+                "kWh anticipated",
+                "Amount anticipated ($)",
+                "Average temperature (°C)",
+            ], "Bad get_consumption_overview_csv CSV headers"

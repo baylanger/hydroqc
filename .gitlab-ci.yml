@@ -162,21 +162,12 @@ D_CPC_titilambert:
       when: never
     - !reference [.private_test_script, rules]
 
-DPC_mdallaire1:
+DPC_&_DT_mdallaire1:
   variables:
     PROJECT_ID: 39503160
   <<: *private_test_script
   rules:
     - if: '$CI_SKIP =~ /dpc_mdallaire1/'
-      when: never
-    - !reference [.private_test_script, rules]
-
-DT_mdallaire1:
-  variables:
-    PROJECT_ID: 41244986
-  <<: *private_test_script
-  rules:
-    - if: '$CI_SKIP =~ /dt_mdallaire1/'
       when: never
     - !reference [.private_test_script, rules]
 

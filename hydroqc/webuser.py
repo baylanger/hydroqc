@@ -13,10 +13,6 @@ class WebUser:
     Represents a login/password web account (Demandeur)
     """
 
-    _no_partenaire_demandeur: str
-    _nom1_demandeur: str
-    _nom2_demandeur: str
-
     def __init__(
         self,
         username: str,
@@ -44,24 +40,12 @@ class WebUser:
         Retrieve customers, accounts and contracts.
         """
         user_info = await self._hydro_client.get_user_info()
-        self._no_partenaire_demandeur = user_info[0]["noPartenaireDemandeur"]
         # We can only create the logger after getting user info at least on time
         if self._logger is None:
             self._logger = get_logger(f"w-{self.webuser_id}", self._log_level)
         self._logger.info("Got webuser info")
 
-        if (
-            not user_info
-            or "nom1Demandeur" not in user_info[0]
-            or "nom2Demandeur" not in user_info[0]
-        ):
-            msg = f"Can not find customer name: {user_info}"
-            self._logger.error(msg)
-            raise HydroQcError(msg)
-
         # is the same accross contracts
-        self._nom1_demandeur = user_info[0]["nom1Demandeur"]
-        self._nom2_demandeur = user_info[0]["nom2Demandeur"]
         for customer_data in user_info:
             customer_names = [
                 str(v)
@@ -70,36 +54,34 @@ class WebUser:
             ]
             customer_id = customer_data["noPartenaireTitulaire"]
             # Create new customer if it's not there
-            if customer_id not in [c.customer_id for c in self.customers]:
+            if customer_id not in set(c.customer_id for c in self.customers):
                 self._logger.info("Creating new customer %s", customer_id)
                 customer = Customer(
-                    self.webuser_id,
+                    customer_data["noPartenaireDemandeur"],
                     customer_data["noPartenaireTitulaire"],
                     customer_names,
                     self._hydro_client,
                     self._log_level,
                 )
                 self.customers.append(customer)
-            else:
-                customer = [c for c in self.customers if c.customer_id == customer_id][
-                    0
-                ]
-            await customer.get_info()
 
     @property
     def webuser_id(self) -> str:
         """Get webuser id."""
-        return self._no_partenaire_demandeur
+        data = self._hydro_client.get_token_data()
+        return data["sub"]
 
     @property
     def first_name(self) -> str:
         """Get webuser firstname."""
-        return self._nom1_demandeur
+        data = self._hydro_client.get_token_data()
+        return data["given_name"]
 
     @property
     def last_name(self) -> str:
         """Get webuser lastname."""
-        return self._nom2_demandeur
+        data = self._hydro_client.get_token_data()
+        return data["family_name"]
 
     @property
     def session_expired(self) -> bool:
@@ -118,12 +100,20 @@ class WebUser:
             raise HydroQcError(f"Customer {customer_id} not found")
         return customers[0]
 
+    async def fetch_customers_info(self) -> None:
+        """Fetch all customers info.
+
+        It could be long if you have more than 5 customers.
+        """
+        for customer in self.customers:
+            await customer.get_info()
+
     async def close_session(self) -> None:
         """Close http sessions."""
         await self._hydro_client.close_session()
 
     def __repr__(self) -> str:
         """Represent object."""
-        if not self._no_partenaire_demandeur:
+        if not self.webuser_id:
             return f"""<Webuser - {self._username}>"""
         return f"""<Webuser - {self.webuser_id}>"""

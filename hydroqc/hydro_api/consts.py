@@ -25,17 +25,29 @@ LOGIN_URL_6 = f"{HOST_SERVICES}/cl/prive/api/v3_0/conversion/codeAcces"
 CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
 # Initialization uri
 RELATION_URL = f"{HOST_SERVICES}/cl/prive/api/v1_0/relations"
-INFOBASE_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/infoBase"
+
+
+CONSO_CSV_URL = (
+    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    "resourceTelechargerDonneesConsommation"
+)
+CONSO_OVERVIEW_CSV_URL = (
+    f"{HOST_SPRING}/portail/en/group/clientele/portrait-de-consommation/"
+    "resourceTelechargerPeriodesFacturation"
+)
+
 # TODO avoid all the /portail/ URLs
 SESSION_URL = f"{HOST_SPRING}/portail/prive/maj-session/"
 # TODO avoid all the /portail/ URLs
-CONTRACT_URL_3 = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/gerer-mon-compte/"  # not used
-)
-CONTRACT_URL = (
+CONTRACT_HTML_URL = f"{HOST_SPRING}/portail/fr/group/clientele/gerer-mon-compte"
+
+#
+INFOBASE_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/infoBase"
+CONTRACT_SUMMARY_URL = (
     f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/"
     "calculerSommaireContractuel?indMAJNombres=true"
 )
+CONTRACT_LIST_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/contrats"
 # CONTRACT_URL_4 = (f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/"
 #                  "calculerSommaireContractuel")
 

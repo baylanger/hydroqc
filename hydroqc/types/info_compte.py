@@ -166,3 +166,26 @@ class InfoCompteTyping(TypedDict, total=True):
     infoCockpitPourPartenaireModel: infoCockpitPourPartenaireModelTyping
     listeContratModel: list[listeContratModelTyping]
     listeInfoEligibiliteConfirmPaiementOuEntenteModel: list[Any]
+
+
+class AccountContratTyping(TypedDict, total=True):
+    """AccountContrat subelement of ContractSummaryTyping format."""
+
+    noCompteContrat: str
+    listeNoContrat: list[str]
+    titulaire: str
+
+
+class ContractSummaryTyping(TypedDict, total=True):
+    """Contract Summary json output format."""
+
+    nbContrats: int
+    nbComptesContrats: int
+    listeComptesContrats: dict[str, list[str]]
+    comptesContrats: list[AccountContratTyping]
+
+
+class ListContractsTyping(TypedDict, total=True):
+    """Contract list json output format."""
+
+    listeContrats: list[listeContratModelTyping]

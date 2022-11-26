@@ -45,14 +45,14 @@ class WinterCreditHandler:
 
     def __init__(
         self,
-        webuser_id: str,
+        applicant_id: str,
         customer_id: str,
         contract_id: str,
         hydro_client: HydroClient,
         logger: logging.Logger,
     ):
         """Winter Credit constructor."""
-        self._no_partenaire_demandeur: str = webuser_id
+        self._no_partenaire_demandeur: str = applicant_id
         self._no_partenaire_titulaire: str = customer_id
         self._no_contrat: str = contract_id
         self._hydro_client: HydroClient = hydro_client
@@ -64,8 +64,8 @@ class WinterCreditHandler:
 
     # Basics
     @property
-    def webuser_id(self) -> str:
-        """Get webuser id."""
+    def applicant_id(self) -> str:
+        """Get applicant id."""
         return self._no_partenaire_demandeur
 
     @property
@@ -96,7 +96,7 @@ class WinterCreditHandler:
         """Get data from HydroQuebec web site."""
         self._logger.debug("Fetching data from HydroQuebec...")
         self._raw_data = await self._hydro_client.get_winter_credit(
-            self.webuser_id, self.customer_id, self.contract_id
+            self.applicant_id, self.customer_id, self.contract_id
         )
         self._logger.debug("Data fetched from HydroQuebec...")
         # Ensure that peaks are sorted by date

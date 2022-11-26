@@ -1,5 +1,6 @@
 """HydroQc Client Module."""
 import base64
+import csv
 import importlib.resources
 import json
 import logging
@@ -9,8 +10,10 @@ import ssl
 import string
 import time
 import uuid
+from collections.abc import Iterator
 from datetime import datetime, timedelta
 from importlib.metadata import PackageNotFoundError, version
+from io import StringIO
 from json import dumps as json_dumps
 from typing import Any
 
@@ -21,6 +24,10 @@ from hydroqc.hydro_api.consts import (
     ANNUAL_DATA_URL,
     AUTH_URL,
     AUTHORIZE_URL,
+    CONSO_CSV_URL,
+    CONSO_OVERVIEW_CSV_URL,
+    CONTRACT_LIST_URL,
+    CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
     DAILY_CONSUMPTION_API_URL,
     GET_WINTER_CREDIT_API_URL,
@@ -44,7 +51,10 @@ from hydroqc.types import (
     ConsoDailyTyping,
     ConsoHourlyTyping,
     ConsoMonthlyTyping,
+    ContractSummaryTyping,
+    IDTokenTyping,
     InfoCompteTyping,
+    ListContractsTyping,
     PeriodDataTyping,
     WinterCreditDataTyping,
     listeComptesContratsTyping,
@@ -171,6 +181,14 @@ class HydroClient:
             self._logger.debug("JSON received : ", data)
             raise HydroQcHTTPError("Bad JSON format") from exp
 
+    def get_token_data(self) -> IDTokenTyping:
+        """Decode id token data."""
+        raw_token_data = self._id_token.split(".")[1]
+        # In some cases padding get lost, adding it to avoid issues with base64 decode
+        raw_token_data += "=" * ((4 - len(raw_token_data) % 4) % 4)
+        token_data: IDTokenTyping = self._load_json(base64.b64decode(raw_token_data))
+        return token_data
+
     @property
     def session_expired(self) -> bool:
         """Get Oauth session expired or not.
@@ -179,10 +197,7 @@ class HydroClient:
         """
         if self._id_token in {"", None}:
             return True
-        raw_token_data = self._id_token.split(".")[1]
-        # In some cases padding get lost, adding it to avoid issues with base64 decode
-        raw_token_data += "=" * ((4 - len(raw_token_data) % 4) % 4)
-        token_data = self._load_json(base64.b64decode(raw_token_data))
+        token_data = self.get_token_data()
         return bool(time.time() > token_data["exp"])
 
     def _get_httpsession(self) -> None:
@@ -193,13 +208,13 @@ class HydroClient:
             )
 
     def _get_customer_http_headers(
-        self, webuser_id: str, customer_id: str
+        self, applicant_id: str, customer_id: str
     ) -> dict[str, str]:
         """Prepare http headers for customer url queries."""
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.access_token,
-            "NO_PARTENAIRE_DEMANDEUR": webuser_id,
+            "NO_PARTENAIRE_DEMANDEUR": applicant_id,
             "NO_PARTENAIRE_TITULAIRE": customer_id,
             "DATE_DERNIERE_VISITE": datetime.now().strftime(
                 "%Y-%m-%dT%H:%M:%S.000+0000"
@@ -347,7 +362,7 @@ class HydroClient:
         return self._selected_contract
 
     async def _select_contract(
-        self, webuser_id: str, customer_id: str, contract_id: str, force: bool = False
+        self, applicant_id: str, customer_id: str, contract_id: str, force: bool = False
     ) -> None:
         """Select a customer on the Home page.
 
@@ -361,7 +376,7 @@ class HydroClient:
         if force and "cl-ec-spring.hydroquebec.com" in self.cookies:
             del self.cookies["cl-ec-spring.hydroquebec.com"]
 
-        headers = self._get_customer_http_headers(webuser_id, customer_id)
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
         # await self.http_request(INFOBASE_URL, "get", headers=headers)
 
         params = {"mode": "web"}
@@ -396,11 +411,11 @@ class HydroClient:
 
     @CCached(ttl=21600)
     async def get_customer_info(
-        self, webuser_id: str, customer_id: str
+        self, applicant_id: str, customer_id: str
     ) -> InfoCompteTyping:
         """Fetch customer data."""
         self._logger.info("Fetching customer info: c-%s", customer_id)
-        headers = self._get_customer_http_headers(webuser_id, customer_id)
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
         params = {"withCredentials": "true"}
         api_call_response = await self.http_request(
             CUSTOMER_INFO_URL,
@@ -413,11 +428,11 @@ class HydroClient:
 
     @CCached(ttl=21600)
     async def get_periods_info(
-        self, webuser_id: str, customer_id: str, contract_id: str
+        self, applicant_id: str, customer_id: str, contract_id: str
     ) -> list[PeriodDataTyping]:
         """Fetch all periods info."""
-        await self._select_contract(webuser_id, customer_id, contract_id)
-        headers = self._get_customer_http_headers(webuser_id, customer_id)
+        await self._select_contract(applicant_id, customer_id, contract_id)
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
         res = await self.http_request(PERIOD_DATA_URL, "get", headers=headers)
         data = json.loads(await res.text())
 
@@ -430,11 +445,11 @@ class HydroClient:
 
     @CCached(ttl=21600)
     async def get_account_info(
-        self, webuser_id: str, customer_id: str, account_id: str
+        self, applicant_id: str, customer_id: str, account_id: str
     ) -> listeComptesContratsTyping:
         """Fetch account data."""
         self._logger.info("Fetching account info: c-%s - a-%s", customer_id, account_id)
-        data = await self.get_customer_info(webuser_id, customer_id)
+        data = await self.get_customer_info(applicant_id, customer_id)
         accounts = {
             a["noCompteContrat"]: a
             for a in data["infoCockpitPourPartenaireModel"]["listeComptesContrats"]
@@ -443,26 +458,50 @@ class HydroClient:
             raise HydroQcError("Account not found")
         return accounts[account_id]
 
+    async def list_account_contract(
+        self, applicant_id: str, customer_id: str
+    ) -> ContractSummaryTyping:
+        """Get all  account_contract linked to a customer."""
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        res = await self.http_request(CONTRACT_SUMMARY_URL, "get", headers=headers)
+        data: ContractSummaryTyping = await res.json()
+        return data
+
     @CCached(ttl=21600)
     async def get_contract_info(
-        self, webuser_id: str, customer_id: str, contract_id: str
+        self, applicant_id: str, customer_id: str, account_id: str, contract_id: str
     ) -> listeContratModelTyping:
         """Fetch contract data."""
         self._logger.info(
             "Fetching contract info: c-%s - a-%s - c-%s",
-            webuser_id,
+            applicant_id,
             customer_id,
             contract_id,
         )
-        data = await self.get_customer_info(webuser_id, customer_id)
-        contracts = {c["noContrat"]: c for c in data["listeContratModel"]}
-        if contract_id not in contracts:
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        post_data = {
+            "listeServices": ["PC"],
+            "comptesContrats": [
+                {
+                    "listeNoContrat": [contract_id],
+                    "noCompteContrat": account_id,
+                    "titulaire": customer_id,
+                }
+            ],
+        }
+        post_data_str = json_dumps(post_data)
+        res = await self.http_request(
+            CONTRACT_LIST_URL, "post", headers=headers, data=post_data_str
+        )
+        data: ListContractsTyping = await res.json()
+        # We ask only one contract, so we should have only one
+        if not data["listeContrats"]:
             raise HydroQcError("Contract not found")
-        return contracts[contract_id]
+        return data["listeContrats"][0]
 
     @CCached(ttl=3600)
     async def get_winter_credit(
-        self, webuser_id: str, customer_id: str, contract_id: str
+        self, applicant_id: str, customer_id: str, contract_id: str
     ) -> WinterCreditDataTyping:
         """Return information about the winter credit.
 
@@ -471,7 +510,7 @@ class HydroClient:
         self._logger.info(
             "Fetching winter credits: c-%s c-%s", customer_id, contract_id
         )
-        headers = self._get_customer_http_headers(webuser_id, customer_id)
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
         params = {"noContrat": contract_id}
         api_call_response = await self.http_request(
             GET_WINTER_CREDIT_API_URL,
@@ -483,7 +522,7 @@ class HydroClient:
         return data
 
     async def get_today_hourly_consumption(
-        self, webuser_id: str, customer_id: str, contract_id: str
+        self, applicant_id: str, customer_id: str, contract_id: str
     ) -> ConsoHourlyTyping:
         """Return latest consumption info (about 2h delay it seems).
 
@@ -495,16 +534,16 @@ class HydroClient:
         # We need to call a valid date first as theoretically today is invalid
         # and the api will not respond if called directly
         await self.get_hourly_consumption(
-            webuser_id, customer_id, contract_id, yesterday_str
+            applicant_id, customer_id, contract_id, yesterday_str
         )
         res: ConsoHourlyTyping = await self.get_hourly_consumption(
-            webuser_id, customer_id, contract_id, today_str
+            applicant_id, customer_id, contract_id, today_str
         )
         return res
 
     @CCached(ttl=3600)
     async def get_hourly_consumption(
-        self, webuser_id: str, customer_id: str, contract_id: str, date_wanted: str
+        self, applicant_id: str, customer_id: str, contract_id: str, date_wanted: str
     ) -> ConsoHourlyTyping:
         """Return hourly consumption for a specific day.
 
@@ -519,7 +558,7 @@ class HydroClient:
             "Fetching hourly consumption: c-%s c-%s", customer_id, contract_id
         )
         # TODO use decorator
-        await self._select_contract(webuser_id, customer_id, contract_id)
+        await self._select_contract(applicant_id, customer_id, contract_id)
         params = {"date": date_wanted}
         api_call_response = await self.http_request(
             HOURLY_CONSUMPTION_API_URL, "get", params=params
@@ -531,7 +570,7 @@ class HydroClient:
     @CCached(ttl=43200)
     async def get_daily_consumption(
         self,
-        webuser_id: str,
+        applicant_id: str,
         customer_id: str,
         contract_id: str,
         start_date: str,
@@ -551,7 +590,7 @@ class HydroClient:
             "Fetching daily consumption: c-%s c-%s", customer_id, contract_id
         )
         # TODO use decorator
-        await self._select_contract(webuser_id, customer_id, contract_id)
+        await self._select_contract(applicant_id, customer_id, contract_id)
         params = {"dateDebut": start_date, "dateFin": end_date}
         api_call_response = await self.http_request(
             DAILY_CONSUMPTION_API_URL,
@@ -564,7 +603,7 @@ class HydroClient:
 
     @CCached(ttl=21600)
     async def get_monthly_consumption(
-        self, webuser_id: str, customer_id: str, contract_id: str
+        self, applicant_id: str, customer_id: str, contract_id: str
     ) -> ConsoMonthlyTyping:
         """Fetch data of the current year.
 
@@ -578,7 +617,7 @@ class HydroClient:
             "Fetching monthly consumption: c-%s c-%s", customer_id, contract_id
         )
         # TODO use decorator
-        await self._select_contract(webuser_id, customer_id, contract_id)
+        await self._select_contract(applicant_id, customer_id, contract_id)
         headers = {"Content-Type": "application/json"}
         api_call_response = await self.http_request(
             MONTHLY_DATA_URL, "get", headers=headers
@@ -589,7 +628,7 @@ class HydroClient:
 
     @CCached(ttl=21600)
     async def get_annual_consumption(
-        self, webuser_id: str, customer_id: str, contract_id: str
+        self, applicant_id: str, customer_id: str, contract_id: str
     ) -> ConsoAnnualTyping:
         """Fetch data of the current year.
 
@@ -599,7 +638,7 @@ class HydroClient:
         self._logger.info(
             "Fetching annual consumption: c-%s c-%s", customer_id, contract_id
         )
-        await self._select_contract(webuser_id, customer_id, contract_id)
+        await self._select_contract(applicant_id, customer_id, contract_id)
         headers = {"Content-Type": "application/json"}
         api_call_response = await self.http_request(
             ANNUAL_DATA_URL, "get", headers=headers
@@ -607,3 +646,51 @@ class HydroClient:
         # We can not use res.json() because the response header are not application/json
         data: ConsoAnnualTyping = self._load_json(await api_call_response.text())
         return data
+
+    async def get_conso_csv(
+        self,
+        applicant_id: str,
+        customer_id: str,
+        contract_id: str,
+        start_date: str,
+        end_date: str,
+        option: str,
+        raw_output: bool = False,
+    ) -> Iterator[list[str | int | float]] | StringIO:
+        """Download one of the history CSV on the portrait-de-consommation page.
+
+        `option` should be one of 'puissance-jour', 'energie-heure',
+                                  'puissance-min', 'energie-jour',
+        """
+        await self._select_contract(applicant_id, customer_id, contract_id)
+        data = {"startDate": start_date, "endDate": end_date, "option": option}
+        res = await self.http_request(
+            CONSO_CSV_URL,
+            "post",
+            data=data,
+        )
+        # TODO: improve this, with something like asyncsv
+        # instead of loading all the csv in memory
+        content = StringIO(await res.text())
+        if raw_output:
+            return content
+        data_csv: Iterator[Any] = csv.reader(content, delimiter=";")
+        return data_csv
+
+    async def get_conso_overview_csv(
+        self,
+        applicant_id: str,
+        customer_id: str,
+        contract_id: str,
+        raw_output: bool = False,
+    ) -> Iterator[list[str | int | float]] | StringIO:
+        """Download the overview by consumption period CSV on the portrait-de-consommation page."""
+        await self._select_contract(applicant_id, customer_id, contract_id)
+        res = await self.http_request(CONSO_OVERVIEW_CSV_URL, "get")
+        # TODO: improve this, with something like asyncsv
+        # instead of loading all the csv in memory
+        content = StringIO(await res.text())
+        if raw_output:
+            return content
+        data_csv: Iterator[Any] = csv.reader(content, delimiter=";")
+        return data_csv

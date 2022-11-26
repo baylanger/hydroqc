@@ -19,7 +19,7 @@ class Account:
 
     def __init__(
         self,
-        webuser_id: str,
+        applicant_id: str,
         customer_id: str,
         account_id: str,
         contracts: list[Contract],
@@ -28,9 +28,9 @@ class Account:
     ):
         """Create an Hydroquebec account."""
         self._logger = get_logger(
-            f"a-{account_id}", log_level, parent=f"w-{webuser_id}.c-{customer_id}"
+            f"a-{account_id}", log_level, parent=f"w-{applicant_id}.c-{customer_id}"
         )
-        self._no_partenaire_demandeur: str = webuser_id
+        self._no_partenaire_demandeur: str = applicant_id
         self._no_partenaire_titulaire: str = customer_id
         self._no_compte_contrat: str = account_id
         self._hydro_client: HydroClient = hydro_client
@@ -41,8 +41,8 @@ class Account:
         self._bill_date_next: str = ""
 
     @property
-    def webuser_id(self) -> str:
-        """Get webuser id."""
+    def applicant_id(self) -> str:
+        """Get applicant id."""
         return self._no_partenaire_demandeur
 
     @property
@@ -59,7 +59,7 @@ class Account:
         """Fetch latest data of this account."""
         self._logger.info("Get account info")
         data = await self._hydro_client.get_account_info(
-            self.webuser_id, self.customer_id, self.account_id
+            self.applicant_id, self.customer_id, self.account_id
         )
         self._address = data["adresse"].strip()
         self._balance = data["solde"]
@@ -85,4 +85,4 @@ class Account:
 
     def __repr__(self) -> str:
         """Represent object."""
-        return f"""<Account - {self.webuser_id} - {self.customer_id} - {self.account_id}>"""
+        return f"""<Account - {self.applicant_id} - {self.customer_id} - {self.account_id}>"""
