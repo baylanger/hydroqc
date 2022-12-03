@@ -11,7 +11,13 @@ from hydroqc.contract import Contract
 from hydroqc.customer import Customer
 from hydroqc.error import HydroQcError
 from hydroqc.webuser import WebUser
-from hydroqc.winter_credit.consts import EST_TIMEZONE
+from hydroqc.winter_credit.consts import (
+    DEFAULT_EVENING_PEAK_END,
+    DEFAULT_EVENING_PEAK_START,
+    DEFAULT_MORNING_PEAK_END,
+    DEFAULT_MORNING_PEAK_START,
+    EST_TIMEZONE,
+)
 from hydroqc.winter_credit.handler import WinterCreditHandler
 
 from .tools import get_env_vars
@@ -406,8 +412,25 @@ class TestBase:
             assert len(winter_credit.critical_peaks) >= 0
             assert len(winter_credit.critical_peaks) <= len(winter_credit.peaks)
             assert winter_credit.cumulated_credit >= 0
-            assert winter_credit.current_peak in [None] + winter_credit.peaks
+
+            if (
+                today <= winter_credit.winter_start_date.date()
+                or today >= winter_credit.winter_end_date.date()
+            ):
+                assert winter_credit.current_peak is None
+            else:
+                # We are in winter
+                now = datetime.datetime.now().time()
+                if (DEFAULT_MORNING_PEAK_START <= now <= DEFAULT_MORNING_PEAK_END) or (
+                    DEFAULT_EVENING_PEAK_START <= now <= DEFAULT_EVENING_PEAK_END
+                ):
+                    assert winter_credit.current_peak.start_date in [
+                        p.start_date for p in winter_credit.peaks
+                    ]
+                else:
+                    assert winter_credit.current_peak is None
             assert winter_credit.current_peak_is_critical in {None, True, False}
+            # import pdb;pdb.set_trace()
             assert winter_credit.current_state in {
                 "critical_anchor",
                 "anchor",
@@ -422,15 +445,40 @@ class TestBase:
                 winter_credit.next_critical_peak
                 in [None] + winter_credit.critical_peaks
             )
-            assert winter_credit.today_morning_peak in [None] + winter_credit.peaks
-            assert winter_credit.today_evening_peak in [None] + winter_credit.peaks
-            assert winter_credit.tomorrow_morning_peak in [None] + winter_credit.peaks
-            assert winter_credit.tomorrow_evening_peak in [None] + winter_credit.peaks
-            assert winter_credit.yesterday_morning_peak in [None] + winter_credit.peaks
-            assert winter_credit.yesterday_evening_peak in [None] + winter_credit.peaks
-            assert winter_credit.next_anchor in [None] + [
-                p.anchor for p in winter_credit.peaks
-            ]
+            if (
+                today <= winter_credit.winter_start_date.date()
+                or today >= winter_credit.winter_end_date.date()
+            ):
+                assert winter_credit.today_morning_peak is None
+                assert winter_credit.today_evening_peak is None
+                assert winter_credit.tomorrow_morning_peak is None
+                assert winter_credit.tomorrow_evening_peak is None
+                assert winter_credit.yesterday_morning_peak is None
+                assert winter_credit.yesterday_evening_peak is None
+                assert winter_credit.next_anchor is None
+            else:
+                # We are in winter
+                assert winter_credit.today_morning_peak.start_date in [
+                    p.start_date for p in winter_credit.peaks
+                ]
+                assert winter_credit.today_evening_peak.start_date in [
+                    p.start_date for p in winter_credit.peaks
+                ]
+                assert winter_credit.tomorrow_morning_peak.start_date in [
+                    p.start_date for p in winter_credit.peaks
+                ]
+                assert winter_credit.tomorrow_evening_peak.start_date in [
+                    p.start_date for p in winter_credit.peaks
+                ]
+                assert winter_credit.yesterday_morning_peak.start_date in [
+                    p.start_date for p in winter_credit.peaks
+                ]
+                assert winter_credit.yesterday_evening_peak.start_date in [
+                    p.start_date for p in winter_credit.peaks
+                ]
+                assert winter_credit.next_anchor.start_date in [
+                    p.anchor.start_date for p in winter_credit.peaks
+                ]
         else:
             assert winter_credit.winter_start_date is None
             assert winter_credit.winter_end_date is None

@@ -114,7 +114,11 @@ class WinterCreditHandler:
     @property
     def _raw_critical_peaks(self) -> list[CriticalPeakDataTyping]:
         """Shortcut to get quickly critical peaks."""
-        return self._raw_data["periodesEffacementsHivers"][0]["periodesEffacementHiver"]
+        if self._raw_data["periodesEffacementsHivers"]:
+            return self._raw_data["periodesEffacementsHivers"][0][
+                "periodesEffacementHiver"
+            ]
+        return []
 
     def _set_peak_critical(self, peak: Peak) -> None:
         """Determine if the passed peak is critical or not, and save it to the object."""
@@ -142,6 +146,18 @@ class WinterCreditHandler:
     @winter_credit_enabled
     def winter_start_date(self) -> datetime.datetime:
         """Get start date of the winter credits."""
+        if not self._raw_data["periodesEffacementsHivers"]:
+            today = datetime.date.today()
+            if today.month >= 12:
+                return datetime.datetime.strptime(
+                    f"{today.year}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+                )
+            if today.month <= 3:
+                return datetime.datetime.strptime(
+                    f"{today.year-1}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+                )
+            # today.month > 4
+            raise ValueError("Please fix me")
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateDebutPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
@@ -151,6 +167,18 @@ class WinterCreditHandler:
     @winter_credit_enabled
     def winter_end_date(self) -> datetime.datetime:
         """Get end date of the winter credits."""
+        if not self._raw_data["periodesEffacementsHivers"]:
+            today = datetime.date.today()
+            if today.month >= 12:
+                return datetime.datetime.strptime(
+                    f"{today.year+1}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+                )
+            if today.month <= 3:
+                return datetime.datetime.strptime(
+                    f"{today.year}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+                )
+            # today.month > 4
+            raise ValueError("Please fix me")
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateFinPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
