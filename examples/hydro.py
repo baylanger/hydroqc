@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import asyncio
-
+import os
 from hydroqc.webuser import WebUser
 
+USERNAME = os.getenv('hydroQcUsername')
+PASSWORD = os.getenv('hydroQcPassword')
 
-webuser = WebUser("USERNAME", "PASSWORD", verify_ssl=False, log_level="ERROR", http_log_level="ERROR")
+webuser = WebUser(USERNAME,PASSWORD, verify_ssl=False, log_level="ERROR", http_log_level="ERROR")
 async def async_func():
     await webuser.login()
     await webuser.get_info()
