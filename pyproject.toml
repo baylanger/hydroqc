@@ -44,3 +44,7 @@ include-package-data = true
 include = ["hydroqc*"]
 
 [tool.setuptools_scm]
+
+
+[project.scripts]
+hydroqc-diag = "hydroqc.diagnostic:main"

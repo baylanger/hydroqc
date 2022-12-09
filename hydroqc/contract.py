@@ -252,7 +252,7 @@ class Contract:
         )
         return data_csv
 
-    async def get_power_demanded_per_15min(
+    async def get_power_demand_per_15min(
         self,
         start_date: str,
         end_date: str,

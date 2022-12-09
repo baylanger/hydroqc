@@ -592,8 +592,8 @@ class TestBase:
                 "Code de température",
             ], "Bad get_hourly_energy CSV headers"
 
-        # get_power_demanded_per_15min
-        data_csv = await contract.get_power_demanded_per_15min(yesterday_str, today_str)
+        # get_power_demand_per_15min
+        data_csv = await contract.get_power_demand_per_15min(yesterday_str, today_str)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",
@@ -602,7 +602,7 @@ class TestBase:
             "Code de puissance réelle",
             "90 % de la puissance apparente (kVA)",
             "Code de puissance apparente",
-        ], "Bad get_power_demanded_per_15min headers"
+        ], "Bad get_power_demand_per_15min headers"
 
         # get_consumption_overview_csv
         data_csv = await contract.get_consumption_overview_csv()
