@@ -4,6 +4,7 @@ import csv
 import importlib.resources
 import json
 import logging
+import os
 import platform
 import random
 import ssl
@@ -79,6 +80,7 @@ class HydroClient:
         verify_ssl: bool = True,
         session: aiohttp.ClientSession | None = None,
         log_level: str | None = "INFO",
+        diag_folder: str | None = None,
     ):
         """Initialize the client object."""
         self.username: str = username
@@ -86,6 +88,8 @@ class HydroClient:
         self._timeout: int = timeout
         self._session: aiohttp.ClientSession | None = session
         self._verify_ssl: bool = verify_ssl
+        self._diag_folder: str | None = diag_folder
+        self._diag_id: int = 0
         with importlib.resources.path(
             __package__, "hydro-chain.pem"
         ) as hydro_chain_pem_file:
@@ -149,6 +153,26 @@ class HydroClient:
         if verify_ssl:
             ssl_context = self._sslcontext
 
+        # Query Diagnostic
+        if self._diag_folder is not None:
+            cleaned_url = url.replace("/", "_").split("#", 1)[0]
+            diag_file_path = os.path.join(
+                self._diag_folder,
+                f"hq_{self._diag_id:02}_q_{method}_{cleaned_url}.json"[:128],
+            )
+            with open(diag_file_path, "w", encoding="utf-8") as fhj:
+                json.dump(
+                    {
+                        "url": url,
+                        "params": params,
+                        "data": data,
+                        # TODO Remove tokens
+                        "headers": headers,
+                    },
+                    fhj,
+                    indent=2,
+                )
+
         self._logger.debug("HTTP query %s to %s", url, method)
         raw_res: aiohttp.ClientResponse = await getattr(self._session, method)(
             url,
@@ -159,6 +183,25 @@ class HydroClient:
             cookies=cookies,
             headers=headers,
         )
+        # Result Diagnostic
+        if self._diag_folder is not None:
+            cleaned_url = url.replace("/", "_").split("#", 1)[0]
+            diag_file_path = os.path.join(
+                self._diag_folder,
+                f"hq_{self._diag_id:02}_r_{method}_{cleaned_url}.json"[:128],
+            )
+            diag_result = await raw_res.text()
+            try:
+                diag_result = json.dumps(json.loads(diag_result), indent=2)
+
+            except json.JSONDecodeError:
+                pass
+
+            with open(diag_file_path, "w", encoding="utf-8") as fhj:
+                fhj.write(diag_result)
+            # Increment diag_id
+            self._diag_id += 1
+
         if raw_res.status != status:
             self._logger.exception("Exception in http_request")
             data = await raw_res.text()

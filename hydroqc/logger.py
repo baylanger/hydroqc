@@ -6,7 +6,10 @@ from hydroqc.error import HydroQcError
 
 
 def get_logger(
-    name: str, log_level: str | None = "INFO", parent: str | None = None
+    name: str,
+    log_level: str | None = "INFO",
+    parent: str | None = None,
+    log_file: str | None = None,
 ) -> logging.Logger:
     """Build logger."""
     if log_level is None:
@@ -26,6 +29,11 @@ def get_logger(
         "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
     )
     console_handler.setFormatter(formatter)
+    if log_file:
+        file_handler = logging.FileHandler(log_file)
+        file_handler.setFormatter(formatter)
     if len(logger.handlers) == 0 and parent is None:
         logger.addHandler(console_handler)
+        if log_file:
+            logger.addHandler(file_handler)
     return logger

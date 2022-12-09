@@ -20,15 +20,22 @@ class WebUser:
         verify_ssl: bool,
         log_level: str | None = None,
         http_log_level: str | None = None,
+        log_file: str | None = None,
+        diag_folder: str | None = None,
     ):
         """Create a new Hydroquebec webuser."""
         self._hydro_client = HydroClient(
-            username, password, verify_ssl, log_level=http_log_level
+            username,
+            password,
+            verify_ssl,
+            log_level=http_log_level,
+            diag_folder=diag_folder,
         )
         self._username: str = username
         self._log_level: str | None = log_level
         self.customers: list[Customer] = []
         self._logger: None | logging.Logger = None
+        self._log_file: str | None = log_file
 
     async def login(self) -> bool:
         """Login to Hydroquebec website."""
@@ -37,12 +44,14 @@ class WebUser:
     async def get_info(self) -> None:
         """Fetch data about this webuser.
 
-        Retrieve customers, accounts and contracts.
+        Retrieve customers
         """
         user_info = await self._hydro_client.get_user_info()
         # We can only create the logger after getting user info at least on time
         if self._logger is None:
-            self._logger = get_logger(f"w-{self.webuser_id}", self._log_level)
+            self._logger = get_logger(
+                f"w-{self.webuser_id}", self._log_level, log_file=self._log_file
+            )
         self._logger.info("Got webuser info")
 
         # is the same accross contracts

@@ -130,3 +130,6 @@ dmypy.json
 /hydro-env/
 config.yaml
 .idea/
+
+diagnostic.zip
+/diagnostic/
