@@ -9,7 +9,9 @@ import pathlib
 import shutil
 import traceback
 import zipfile
+from typing import cast
 
+from hydroqc.contract import ContractDCPC, ContractDPC, ContractM
 from hydroqc.error import HydroQcError
 from hydroqc.logger import get_logger
 from hydroqc.webuser import WebUser
@@ -134,12 +136,6 @@ class Diagnostic:
             await self.contract.get_periods_info()
             self.logger.info("%02d - Got period info", self.diag_id - 1)
 
-            # Winter Credit
-            if self.contract.rate == "D" and self.contract.rate_option == "CPC":
-                self.logger.info("Trying to get winter_credit")
-                await self.contract.winter_credit.refresh_data()
-                self.logger.info("Got winter_credit")
-
             # Hourly today consumption
             self.logger.info(
                 "%02d - Trying to get today hourly consumption", self.diag_id
@@ -171,15 +167,6 @@ class Diagnostic:
             await self.contract.get_annual_consumption()
             self.logger.info("%02d - Got annual consumption", self.diag_id - 1)
 
-            # get_daily_energy_and_power
-            self.logger.info(
-                "%02d - Trying to get csv daily_energy_and_power", self.diag_id
-            )
-            await self.contract.get_daily_energy_and_power(
-                day_2.isoformat(), day_1.isoformat()
-            )
-            self.logger.info("%02d - Got csv daily_energy_and_power", self.diag_id - 1)
-
             # get_daily_energy
             self.logger.info("%02d - Trying to get csv get_daily_energy", self.diag_id)
             await self.contract.get_daily_energy(day_2.isoformat(), day_1.isoformat())
@@ -190,17 +177,6 @@ class Diagnostic:
             await self.contract.get_hourly_energy(day_2.isoformat(), day_1.isoformat())
             self.logger.info("%02d - Got csv get_hourly_energy", self.diag_id - 1)
 
-            # get_power_demand_per_15min
-            self.logger.info(
-                "%02d - Trying to get csv get_power_demand_per_15min", self.diag_id
-            )
-            await self.contract.get_power_demand_per_15min(
-                day_2.isoformat(), day_1.isoformat()
-            )
-            self.logger.info(
-                "%02d - Got csv get_power_demand_per_15min", self.diag_id - 1
-            )
-
             # get_consumption_overview_csv
             self.logger.info(
                 "%02d - Trying to get csv get_consumption_overview_csv", self.diag_id
@@ -209,6 +185,59 @@ class Diagnostic:
             self.logger.info(
                 "%02d - Got csv get_consumption_overview_csv", self.diag_id - 1
             )
+
+            # Contract Specific calls
+            # Winter Credit
+            if self.contract.rate == "D" and self.contract.rate_option == "CPC":
+                self.logger.info("Trying to get winter_credit")
+                contract_d = cast(ContractDCPC, self.contract)
+                await contract_d.winter_credit.refresh_data()
+                self.logger.info("Got winter_credit")
+
+            # FlexD
+            elif self.contract.rate in {"DPC", "DT"}:
+                self.logger.info("%02d - Trying to get flexD data", self.diag_id)
+                contract_dpc = cast(ContractDPC, self.contract)
+                await contract_dpc._hydro_client.get_flexd_data(
+                    contract_dpc.applicant_id, self.customer_id, self.contract_id
+                )
+                self.logger.info("%02d - Got flexD data", self.diag_id - 1)
+                low_price = contract_dpc.cp_lower_price_consumption
+                self.logger.info(
+                    "%02d - Lower price consumption value: %s",
+                    self.diag_id - 1,
+                    low_price,
+                )
+                high_price = contract_dpc.cp_higher_price_consumption
+                self.logger.info(
+                    "%02d - Higher price consumption value: %s",
+                    self.diag_id - 1,
+                    high_price,
+                )
+
+            elif self.contract.rate == "M":
+                contract_m = cast(ContractM, self.contract)
+                # get_daily_energy_and_power
+                self.logger.info(
+                    "%02d - Trying to get csv daily_energy_and_power", self.diag_id
+                )
+                await contract_m.get_daily_energy_and_power(
+                    day_2.isoformat(), day_1.isoformat()
+                )
+                self.logger.info(
+                    "%02d - Got csv daily_energy_and_power", self.diag_id - 1
+                )
+                # get_power_demand_per_15min
+                self.logger.info(
+                    "%02d - Trying to get csv get_power_demand_per_15min", self.diag_id
+                )
+                await contract_m.get_power_demand_per_15min(
+                    day_2.isoformat(), day_1.isoformat()
+                )
+                self.logger.info(
+                    "%02d - Got csv get_power_demand_per_15min", self.diag_id - 1
+                )
+
         except BaseException as exp:
             self.logger.error(exp)
             self.logger.error("Traceback will follow")

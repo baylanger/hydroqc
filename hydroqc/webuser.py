@@ -52,7 +52,6 @@ class WebUser:
             self._logger = get_logger(
                 f"w-{self.webuser_id}", self._log_level, log_file=self._log_file
             )
-        self._logger.info("Got webuser info")
 
         # is the same accross contracts
         for customer_data in user_info:
@@ -73,6 +72,7 @@ class WebUser:
                     self._log_level,
                 )
                 self.customers.append(customer)
+        self._logger.debug("Got webuser info")
 
     @property
     def webuser_id(self) -> str:
@@ -114,8 +114,12 @@ class WebUser:
 
         It could be long if you have more than 5 customers.
         """
+        if self._logger:
+            self._logger.debug("Getting customers info")
         for customer in self.customers:
             await customer.get_info()
+        if self._logger:
+            self._logger.debug("Got customers info")
 
     async def close_session(self) -> None:
         """Close http sessions."""

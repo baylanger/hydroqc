@@ -1,10 +1,10 @@
 """Hydroquebec Account Module."""
-from hydroqc.contract import Contract
+from hydroqc.contract.common import Contract
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
 
-from hydroqc.types import listeComptesContratsTyping
+from hydroqc.types import listeComptesContratsTyping, listeContratModelTyping
 
 
 class Account:
@@ -57,7 +57,7 @@ class Account:
 
     async def get_info(self) -> listeComptesContratsTyping:
         """Fetch latest data of this account."""
-        self._logger.info("Get account info")
+        self._logger.debug("Getting account info")
         data = await self._hydro_client.get_account_info(
             self.applicant_id, self.customer_id, self.account_id
         )
@@ -68,12 +68,21 @@ class Account:
         self._bill_date_create = data["dateEmission"]
         self._bill_date_due = data["dateEcheance"]
         self._bill_date_next = data["dateProchaineFacture"]
+        self._logger.debug("Got account info")
         return data
 
     @property
     def balance(self) -> float:
         """Get current balance."""
         return self._balance
+
+    async def get_contract_info(self, contract_id: str) -> listeContratModelTyping:
+        """Fetch info about a contract."""
+        self._logger.info("Get contract info")
+        _raw_info_data = await self._hydro_client.get_contract_info(
+            self.applicant_id, self.customer_id, self.account_id, contract_id
+        )
+        return _raw_info_data
 
     def get_contract(self, contract_id: str) -> Contract:
         """Find contract by id."""

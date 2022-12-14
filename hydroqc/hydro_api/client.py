@@ -31,6 +31,7 @@ from hydroqc.hydro_api.consts import (
     CONTRACT_SUMMARY_URL,
     CUSTOMER_INFO_URL,
     DAILY_CONSUMPTION_API_URL,
+    FLEXD_DATA_URL,
     GET_WINTER_CREDIT_API_URL,
     HOURLY_CONSUMPTION_API_URL,
     LOGIN_URL_6,
@@ -53,6 +54,7 @@ from hydroqc.types import (
     ConsoHourlyTyping,
     ConsoMonthlyTyping,
     ContractSummaryTyping,
+    DPCDataTyping,
     IDTokenTyping,
     InfoCompteTyping,
     ListContractsTyping,
@@ -690,7 +692,23 @@ class HydroClient:
         data: ConsoAnnualTyping = self._load_json(await api_call_response.text())
         return data
 
-    async def get_conso_csv(
+    @CCached(ttl=21600)
+    async def get_flexd_data(
+        self, applicant_id: str, customer_id: str, contract_id: str
+    ) -> DPCDataTyping:
+        """Fetch FlexD data of the current year.
+
+        API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
+        portrait-de-consommation/resourceObtenirDonneesMoisHiverFlex
+
+        """
+        await self._select_contract(applicant_id, customer_id, contract_id)
+        api_call_response = await self.http_request(FLEXD_DATA_URL, "get")
+        # We can not use res.json() because the response header are not application/json
+        data: DPCDataTyping = self._load_json(await api_call_response.text())
+        return data
+
+    async def get_consumption_csv(
         self,
         applicant_id: str,
         customer_id: str,
@@ -720,7 +738,7 @@ class HydroClient:
         data_csv: Iterator[Any] = csv.reader(content, delimiter=";")
         return data_csv
 
-    async def get_conso_overview_csv(
+    async def get_consumption_overview_csv(
         self,
         applicant_id: str,
         customer_id: str,

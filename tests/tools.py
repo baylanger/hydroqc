@@ -1,5 +1,13 @@
 """Test tools."""
+import datetime
+import functools
 import os
+from collections.abc import Callable
+from typing import ParamSpec, TypeVar, cast
+
+import pytest
+from hydroqc.contract.common import Contract
+from hydroqc.winter_credit.consts import EST_TIMEZONE
 
 PARAMS_PREFIX = "HYDROQC"
 PARAMS_LIST = (
@@ -7,6 +15,14 @@ PARAMS_LIST = (
     ("PASSWORD", lambda x: os.environ[x]),
     (
         "CUSTOMER_NUMBER",
+        lambda x: os.environ.get(x),  # pylint: disable=unnecessary-lambda
+    ),
+    (
+        "ACCOUNT_NUMBER",
+        lambda x: os.environ.get(x),  # pylint: disable=unnecessary-lambda
+    ),
+    (
+        "CONTRACT_NUMBER",
         lambda x: os.environ.get(x),  # pylint: disable=unnecessary-lambda
     ),
     ("RATE", lambda x: os.environ[x]),
@@ -18,6 +34,14 @@ PARAMS_LIST = (
     ),
     ("ACCOUNT_ID", lambda x: int(os.environ.get(x, 0))),
 )
+
+
+today = datetime.datetime.today().astimezone(EST_TIMEZONE).date()
+today_str = today.strftime("%Y-%m-%d")
+yesterday = today - datetime.timedelta(days=1)
+yesterday_str = yesterday.strftime("%Y-%m-%d")
+lastweekday = today - datetime.timedelta(days=7)
+lastweekday_str = lastweekday.strftime("%Y-%m-%d")
 
 
 def get_env_vars() -> list[list[str | bool | int | None]]:
@@ -60,12 +84,40 @@ def get_env_vars() -> list[list[str | bool | int | None]]:
             for param in PARAMS_LIST:
                 env_var_name = f"{PARAMS_PREFIX}_{index}_{param[0]}"
                 value: str | int | bool | None = param[1](env_var_name)  # type: ignore
+                if isinstance(value, str) and value == "NONE":
+                    value = ""
                 params.append(value)
 
             params_list[index] = params
 
     # CREATE test names
     for params in params_list:
-        params.insert(0, f"{params[3]}_{params[4]}")
+        params.insert(0, f"{params[5]}_{params[6]}")
 
     return params_list
+
+
+T = TypeVar("T")
+P = ParamSpec("P")
+
+
+class SkipIfBadRate:
+    """Custom cache class based on aiocache."""
+
+    def __init__(self, rates: list[str], rate_option: str) -> None:
+        """Initialize custom cache decorator."""
+        self.rates = rates
+        self.rate_option = rate_option
+
+    def __call__(self, func: Callable[P, T]) -> Callable[P, T]:
+        """Call custom cache decorator."""
+
+        @functools.wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+            contract = cast(Contract, kwargs["contract"])
+            if contract.rate in self.rates and self.rate_option == contract.rate_option:
+                value = await func(*args, **kwargs)  # type: ignore
+                return cast(T, value)
+            return pytest.skip("RATE OR RATE OPTION NOT MATCHING")
+
+        return cast(Callable[P, T], wrapper)

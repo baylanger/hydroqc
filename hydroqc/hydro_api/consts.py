@@ -26,7 +26,10 @@ CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
 # Initialization uri
 RELATION_URL = f"{HOST_SERVICES}/cl/prive/api/v1_0/relations"
 
-
+FLEXD_DATA_URL = (
+    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    "resourceObtenirDonneesMoisHiverFlex"
+)
 CONSO_CSV_URL = (
     f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceTelechargerDonneesConsommation"

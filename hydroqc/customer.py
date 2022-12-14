@@ -2,10 +2,11 @@
 import logging
 
 from hydroqc.account import Account
-from hydroqc.contract import Contract
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
+
+from hydroqc import contract as contractModule
 
 
 class Customer:
@@ -40,7 +41,7 @@ class Customer:
 
     async def get_info(self) -> None:
         """Retrieve account id, customer id and contract id."""
-        self._logger.info("Get customer info")
+        self._logger.debug("Getting customer info")
         customer_data = await self._hydro_client.get_customer_info(
             self.applicant_id, self.customer_id
         )
@@ -84,8 +85,17 @@ class Customer:
 
             for contract_id in raw_account_data["listeNoContrat"]:
                 if contract_id not in [c.contract_id for c in account.contracts]:
+                    contract_info = await account.get_contract_info(contract_id)
                     self._logger.info("Creating new contracts %s", contract_id)
-                    contract = Contract(
+                    rate = contract_info["tarifActuel"]
+                    rate_option = contract_info.get("optionTarifActuel", "")
+                    contract_class_name = f"Contract{rate}{rate_option}"
+                    if not hasattr(contractModule, contract_class_name):
+                        raise HydroQcError(
+                            f"Contract rate `{rate}` with option `{rate_option}` "
+                            "not supported, please open a new issue"
+                        )
+                    contract = getattr(contractModule, contract_class_name)(
                         self.applicant_id,
                         self.customer_id,
                         account_id,
@@ -99,6 +109,7 @@ class Customer:
                         c for c in account.contracts if c.contract_id == contract_id
                     ][0]
                 await contract.get_info()
+        self._logger.debug("Got customer info")
 
     @property
     def applicant_id(self) -> str:

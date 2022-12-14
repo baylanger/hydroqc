@@ -1,5 +1,6 @@
 """Hydroquebec contract module."""
 import logging
+from abc import ABC
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
 from io import StringIO
@@ -7,7 +8,6 @@ from io import StringIO
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
 from hydroqc.winter_credit.consts import EST_TIMEZONE
-from hydroqc.winter_credit.handler import WinterCreditHandler
 
 from hydroqc.types import (
     ConsoAnnualTyping,
@@ -49,7 +49,7 @@ def check_info_data_present(
     return wrapper
 
 
-class Contract:
+class Contract(ABC):
     """Hydroquebec contract.
 
     Represents a contract (contrat)
@@ -57,7 +57,7 @@ class Contract:
 
     _mve_activated: bool
     _rate_code: str
-    _rate_option_code: str | None
+    _rate_option_code: str
     _meter_id: str
     _address: str
     _raw_info_data: listeContratModelTyping
@@ -82,18 +82,10 @@ class Contract:
         self._no_compte_contrat: str = account_id
         self._no_contrat: str = contract_id
         self._hydro_client: HydroClient = hydro_client
-        wch_logger = self._logger.getChild("wch")
-        self._wch: WinterCreditHandler = WinterCreditHandler(
-            self.applicant_id,
-            self.customer_id,
-            self.contract_id,
-            hydro_client,
-            wch_logger,
-        )
         self._address: str = ""
         self._all_period_data: list[PeriodDataTyping] = []
-        self._rate_option_code = None
 
+    # Main attributes
     @property
     def applicant_id(self) -> str:
         """Get applicant id."""
@@ -115,14 +107,64 @@ class Contract:
         return self._no_contrat
 
     @property
-    def winter_credit(self) -> WinterCreditHandler:
-        """Get winter credit helper object."""
-        return self._wch
+    def rate(self) -> str:
+        """Get current period rate name."""
+        if hasattr(self, "_rate_code"):
+            return self._rate_code
+        return "Unknown rate"
 
-    def set_preheat_duration(self, duration: int) -> None:
-        """Set preheat duration in minutes."""
-        self._wch.set_preheat_duration(duration)
+    @property
+    def rate_option(self) -> str | None:
+        """Get current period rate option name."""
+        return self._rate_option_code
 
+    @property
+    @check_info_data_present
+    def address(self) -> str:
+        """Get contract address."""
+        return self._raw_info_data["adresseConsommation"].strip()
+
+    @property
+    @check_info_data_present
+    def meter_id(self) -> str:
+        """Get meter id."""
+        return self._raw_info_data["noCompteur"]
+
+    @property
+    @check_info_data_present
+    def start_date(self) -> date:
+        """Get contract start date."""
+        start_date = date.fromisoformat(
+            self._raw_info_data["dateDebutContrat"].split("T")[0]
+        )
+        return start_date
+
+    # Main methods
+    async def get_info(self) -> listeContratModelTyping:
+        """Fetch info about this contract."""
+        self._logger.debug("Getting contract info")
+        self._raw_info_data = await self._hydro_client.get_contract_info(
+            self.applicant_id, self.customer_id, self.account_id, self.contract_id
+        )
+        self._logger.debug("Got contract info")
+        return self._raw_info_data
+
+    async def get_periods_info(self) -> list[PeriodDataTyping]:
+        """Fetch periods info."""
+        self._logger.debug("Getting contract periods info")
+        self._all_period_data = await self._hydro_client.get_periods_info(
+            self.applicant_id, self.customer_id, self.contract_id
+        )
+        self._logger.debug("Got contract periods info")
+        return self._all_period_data
+
+    def get_latest_period_info(self) -> PeriodDataTyping | dict[None, None]:
+        """Fetch latest period info."""
+        if self._all_period_data:
+            return self._all_period_data[0]
+        return {}
+
+    # Consumption methods
     async def get_today_hourly_consumption(self) -> ConsoHourlyTyping:
         """Fetch hourly consumption for today."""
         return await self._hydro_client.get_today_hourly_consumption(
@@ -167,49 +209,7 @@ class Contract:
             self.applicant_id, self.customer_id, self.contract_id
         )
 
-    async def get_info(self) -> listeContratModelTyping:
-        """Fetch info about this contract."""
-        self._logger.info("Get contract info")
-        self._raw_info_data = await self._hydro_client.get_contract_info(
-            self.applicant_id, self.customer_id, self.account_id, self.contract_id
-        )
-        self._wch.set_enabled(self._raw_info_data.get("optionTarifActuel") == "CPC")
-        return self._raw_info_data
-
-    async def get_periods_info(self) -> list[PeriodDataTyping]:
-        """Fetch periods info."""
-        self._all_period_data = await self._hydro_client.get_periods_info(
-            self.applicant_id, self.customer_id, self.contract_id
-        )
-        return self._all_period_data
-
-    def get_latest_period_info(self) -> PeriodDataTyping | dict[None, None]:
-        """Fetch latest period info."""
-        if self._all_period_data:
-            return self._all_period_data[0]
-        return {}
-
-    async def get_daily_energy_and_power(
-        self,
-        start_date: str,
-        end_date: str,
-        raw_output: bool = False,
-    ) -> Iterator[list[str | int | float]] | StringIO:
-        """Get daily energy and power data on a specific date range.
-
-        date format: 2022-11-23
-        """
-        data_csv = await self._hydro_client.get_conso_csv(
-            self.applicant_id,
-            self.customer_id,
-            self.contract_id,
-            start_date,
-            end_date,
-            "puissance-jour",
-            raw_output,
-        )
-        return data_csv
-
+    # CSV methods
     async def get_daily_energy(
         self,
         start_date: str,
@@ -220,7 +220,7 @@ class Contract:
 
         date format: 2022-11-23
         """
-        data_csv = await self._hydro_client.get_conso_csv(
+        data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,
             self.contract_id,
@@ -241,7 +241,7 @@ class Contract:
 
         date format: 2022-11-23
         """
-        data_csv = await self._hydro_client.get_conso_csv(
+        data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,
             self.contract_id,
@@ -252,33 +252,12 @@ class Contract:
         )
         return data_csv
 
-    async def get_power_demand_per_15min(
-        self,
-        start_date: str,
-        end_date: str,
-        raw_output: bool = False,
-    ) -> Iterator[list[str | int | float]] | StringIO:
-        """Get power demande per 15 min on a specific date range.
-
-        date format: 2022-11-23
-        """
-        data_csv = await self._hydro_client.get_conso_csv(
-            self.applicant_id,
-            self.customer_id,
-            self.contract_id,
-            start_date,
-            end_date,
-            "puissance-min",
-            raw_output,
-        )
-        return data_csv
-
     async def get_consumption_overview_csv(
         self,
         raw_output: bool = False,
     ) -> Iterator[list[str | int | float]] | StringIO:
         """Get the consumption overview over the last 2 years."""
-        data_csv = await self._hydro_client.get_conso_overview_csv(
+        data_csv = await self._hydro_client.get_consumption_overview_csv(
             self.applicant_id,
             self.customer_id,
             self.contract_id,
@@ -286,40 +265,7 @@ class Contract:
         )
         return data_csv
 
-    @property
-    @check_info_data_present
-    def start_date(self) -> date:
-        """Get contract start date."""
-        start_date = date.fromisoformat(
-            self._raw_info_data["dateDebutContrat"].split("T")[0]
-        )
-        return start_date
-
-    @property
-    @check_info_data_present
-    def rate(self) -> str:
-        """Get current period rate name."""
-        return self._raw_info_data["tarifActuel"]
-
-    @property
-    @check_info_data_present
-    def rate_option(self) -> str | None:
-        """Get current period rate option name."""
-        return self._raw_info_data.get("optionTarifActuel")
-
-    @property
-    @check_info_data_present
-    def address(self) -> str:
-        """Get contract address."""
-        return self._raw_info_data["adresseConsommation"].strip()
-
-    @property
-    @check_info_data_present
-    def meter_id(self) -> str:
-        """Get meter id."""
-        return self._raw_info_data["noCompteur"]
-
-    # Current period properties
+    # Current period attributes
     # CP == Current period
     @property
     @check_period_data_present
@@ -371,18 +317,6 @@ class Contract:
 
     @property
     @check_period_data_present
-    def cp_lower_price_consumption(self) -> float:
-        """Total lower priced consumption since the current period started."""
-        return self._all_period_data[0]["consoRegPeriode"]
-
-    @property
-    @check_period_data_present
-    def cp_higher_price_consumption(self) -> float:
-        """Total higher priced consumption since the current period started."""
-        return self._all_period_data[0]["consoHautPeriode"]
-
-    @property
-    @check_period_data_present
     def cp_average_temperature(self) -> float:
         """Average temperature since the current period started."""
         return self._all_period_data[0]["tempMoyennePeriode"]
@@ -405,9 +339,11 @@ class Contract:
         """
         return self._all_period_data[0]["indMVEPeriode"]
 
+    # Repr
     def __repr__(self) -> str:
         """Represent object."""
         return (
-            f"""<Contract - {self.applicant_id} - {self.customer_id} - """
+            f"""<Contract - {self.rate}|{self.rate_option} - """
+            f"""{self.applicant_id} - {self.customer_id} - """
             f"""{self.account_id} - {self.contract_id}>"""
         )

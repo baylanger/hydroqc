@@ -1,5 +1,6 @@
 """Common types."""
 # pylint: disable=invalid-name
+from enum import Enum
 from typing import TypedDict
 
 
@@ -29,3 +30,12 @@ class IDTokenTyping(TypedDict, total=True):
     family_name: str
     iat: int
     email: str
+
+
+class Rates(Enum):
+    """Contract Rates."""
+
+    D: str = "D"
+    DT: str = "DT"
+    DPC: str = "DPC"
+    M: str = "M"
