@@ -152,3 +152,34 @@ class ConsoAnnualTyping(TypedDict, total=True):
 
     success: bool
     results: list[ConsoAnnualResultsTyping]
+
+
+class DPCDataResultsTyping(TypedDict, total=True):
+    """FlexD data json sub output format."""
+
+    dateDebut: str
+    dateFin: str
+    dateDernMaj: str
+    hrsCritiquesAppelees: str
+    hrsCritiquesAppeleesMax: str
+    montantEconPerteVSTarifBase: float
+    nbJoursTotauxHiver: int
+    nbJoursDernMaj: int
+    etatHiver: str
+
+
+class DPCDataTyping(TypedDict, total=True):
+    """FlexD data json output format."""
+
+    success: bool
+    results: list[DPCDataResultsTyping]
+
+
+DTDataResultsTyping = DPCDataResultsTyping
+
+
+class DTDataTyping(TypedDict, total=True):
+    """FlexD data json output format."""
+
+    success: bool
+    results: list[DTDataResultsTyping]

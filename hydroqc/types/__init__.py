@@ -1,10 +1,12 @@
 """Hydroqc custom types."""
-from hydroqc.types.common import IDTokenTyping
+from hydroqc.types.common import IDTokenTyping, Rates
 from hydroqc.types.conso import (
     ConsoAnnualTyping,
     ConsoDailyTyping,
     ConsoHourlyTyping,
     ConsoMonthlyTyping,
+    DPCDataTyping,
+    DTDataTyping,
 )
 from hydroqc.types.info_compte import (
     ComptesTyping,
@@ -35,4 +37,7 @@ __all__ = [
     "IDTokenTyping",
     "ContractSummaryTyping",
     "ListContractsTyping",
+    "DPCDataTyping",
+    "DTDataTyping",
+    "Rates",
 ]
