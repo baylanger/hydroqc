@@ -114,7 +114,7 @@ class Contract(ABC):
         return "Unknown rate"
 
     @property
-    def rate_option(self) -> str | None:
+    def rate_option(self) -> str:
         """Get current period rate option name."""
         return self._rate_option_code
 
