@@ -503,6 +503,7 @@ class HydroClient:
             raise HydroQcError("Account not found")
         return accounts[account_id]
 
+    @CCached(ttl=21600)
     async def list_account_contract(
         self, applicant_id: str, customer_id: str
     ) -> ContractSummaryTyping:
