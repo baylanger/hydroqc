@@ -120,7 +120,7 @@ class ConsoAnnualCompareTyping(TypedDict, total=True):
     moyenneDollarsJourAnnee: float
     isEligibleDRCV: bool
     codeTarifAnnee: str
-    montantGainPerteDTversusBaseAnnee: int
+    montantGainPerteDTversusBaseAnnee: float
     montantChauffageAnnee: int
     montantClimatisationAnnee: int
     kwhChauffageAnnee: int

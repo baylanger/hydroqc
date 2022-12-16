@@ -1,4 +1,6 @@
 """Contract DPC tests module."""
+import datetime
+
 import pytest
 from hydroqc.contract import ContractDPC
 
@@ -44,6 +46,41 @@ class SubTestContractDPC:
             isinstance(contract.cp_higher_price_consumption, int)
             and contract.cp_higher_price_consumption >= 0
         )
+
+        await contract.get_dpc_data()
+
+        assert isinstance(contract.winter_start_date, str)
+        assert isinstance(
+            datetime.date.fromisoformat(contract.winter_start_date), datetime.date
+        )
+
+        assert isinstance(contract.winter_end_date, str)
+        assert isinstance(
+            datetime.date.fromisoformat(contract.winter_end_date), datetime.date
+        )
+
+        assert isinstance(contract.last_update_date, str)
+        assert isinstance(
+            datetime.date.fromisoformat(contract.last_update_date), datetime.date
+        )
+
+        assert isinstance(contract.critical_called_hours, int)
+        assert contract.critical_called_hours >= 0
+
+        assert isinstance(contract.max_critical_called_hours, int)
+        assert contract.max_critical_called_hours >= 0
+
+        assert contract.max_critical_called_hours >= contract.critical_called_hours
+
+        assert isinstance(contract.amount_saved_vs_base_rate, float)
+
+        assert isinstance(contract.winter_total_days, int)
+        assert contract.winter_total_days >= 0
+        assert isinstance(contract.winter_total_days_last_update, int)
+        assert contract.winter_total_days_last_update >= 0
+        assert contract.winter_total_days_last_update <= contract.winter_total_days
+
+        assert isinstance(contract.winter_state, str)
 
         # get_hourly_energy
         data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
