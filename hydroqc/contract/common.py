@@ -49,6 +49,21 @@ def check_info_data_present(
     return wrapper
 
 
+def check_annual_data_present(
+    method: Callable[..., None | str | bool | float | date]
+) -> Callable[..., None | str | bool | float | date]:
+    """Check if contract's data are present."""
+
+    def wrapper(contract: "Contract") -> None | str | bool | float | date:
+        if hasattr(contract, "_annual_info_data"):
+            return method(contract)
+
+        contract._logger.warning("You need to call get_annual_consumption method first")
+        return None
+
+    return wrapper
+
+
 class Contract(ABC):
     """Hydroquebec contract.
 
@@ -61,6 +76,7 @@ class Contract(ABC):
     _meter_id: str
     _address: str
     _raw_info_data: listeContratModelTyping
+    _annual_info_data: ConsoAnnualTyping
 
     def __init__(
         self,
@@ -205,9 +221,10 @@ class Contract(ABC):
 
     async def get_annual_consumption(self) -> ConsoAnnualTyping:
         """Fetch annual consumption."""
-        return await self._hydro_client.get_annual_consumption(
+        self._annual_info_data = await self._hydro_client.get_annual_consumption(
             self.applicant_id, self.customer_id, self.contract_id
         )
+        return self._annual_info_data
 
     # CSV methods
     async def get_daily_energy(

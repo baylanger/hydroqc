@@ -1,5 +1,5 @@
 """Hydroquebec contract module."""
-from hydroqc.contract.common import check_period_data_present
+from hydroqc.contract.common import check_annual_data_present, check_period_data_present
 from hydroqc.contract.contract_residential import ContractResidential
 from hydroqc.hydro_api.client import HydroClient
 
@@ -44,3 +44,11 @@ class ContractDT(ContractResidential):
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
         return self._all_period_data[0]["consoHautPeriode"]
+
+    @property
+    @check_annual_data_present
+    def amount_saved_vs_base_rate(self) -> float:
+        """Annual money saved vs D base rate."""
+        return self._annual_info_data["results"][0]["courant"][
+            "montantGainPerteDTversusBaseAnnee"
+        ]

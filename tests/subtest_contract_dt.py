@@ -45,6 +45,8 @@ class SubTestContractDT:
             and contract.cp_higher_price_consumption >= 0
         )
 
+        assert isinstance(contract.amount_saved_vs_base_rate, float)
+
         # get_hourly_energy
         data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
         first_line = next(data_csv)

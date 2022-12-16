@@ -195,13 +195,28 @@ class Diagnostic:
                 self.logger.info("Got winter_credit")
 
             # FlexD
-            elif self.contract.rate in {"DPC", "DT"}:
+            elif self.contract.rate == "DPC":
                 self.logger.info("%02d - Trying to get flexD data", self.diag_id)
                 contract_dpc = cast(ContractDPC, self.contract)
-                await contract_dpc._hydro_client.get_flexd_data(
+                await contract_dpc._hydro_client.get_dpc_data(
                     contract_dpc.applicant_id, self.customer_id, self.contract_id
                 )
                 self.logger.info("%02d - Got flexD data", self.diag_id - 1)
+                low_price = contract_dpc.cp_lower_price_consumption
+                self.logger.info(
+                    "%02d - Lower price consumption value: %s",
+                    self.diag_id - 1,
+                    low_price,
+                )
+                high_price = contract_dpc.cp_higher_price_consumption
+                self.logger.info(
+                    "%02d - Higher price consumption value: %s",
+                    self.diag_id - 1,
+                    high_price,
+                )
+
+            # DT
+            if self.contract.rate == "DT":
                 low_price = contract_dpc.cp_lower_price_consumption
                 self.logger.info(
                     "%02d - Lower price consumption value: %s",

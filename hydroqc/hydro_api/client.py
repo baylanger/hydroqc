@@ -694,7 +694,7 @@ class HydroClient:
         return data
 
     @CCached(ttl=21600)
-    async def get_flexd_data(
+    async def get_dpc_data(
         self, applicant_id: str, customer_id: str, contract_id: str
     ) -> DPCDataTyping:
         """Fetch FlexD data of the current year.
