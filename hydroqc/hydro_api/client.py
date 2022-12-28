@@ -157,7 +157,7 @@ class HydroClient:
 
         # Query Diagnostic
         if self._diag_folder is not None:
-            cleaned_url = url.replace("/", "_").split("#", 1)[0]
+            cleaned_url = url.replace("/", "_").replace(":", "").split("#", 1)[0]
             diag_file_path = os.path.join(
                 self._diag_folder,
                 f"hq_{self._diag_id:02}_q_{method}_{cleaned_url}.json"[:128],
@@ -187,7 +187,7 @@ class HydroClient:
         )
         # Result Diagnostic
         if self._diag_folder is not None:
-            cleaned_url = url.replace("/", "_").split("#", 1)[0]
+            cleaned_url = url.replace("/", "_").replace(":", "").split("#", 1)[0]
             diag_file_path = os.path.join(
                 self._diag_folder,
                 f"hq_{self._diag_id:02}_r_{method}_{cleaned_url}.json"[:128],

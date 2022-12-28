@@ -162,6 +162,11 @@ class WinterCreditHandler:
     @property
     def cumulated_credit(self) -> float:
         """Get cumulated credits."""
+        return round(sum(p["montantEffacee"] for p in self._raw_critical_peaks), 2)
+
+    @property
+    def projected_cumulated_credit(self) -> float:
+        """Get projected_cumulated credits."""
         if self._raw_data["montantEffaceProjete"] == "":
             return 0.0
         try:

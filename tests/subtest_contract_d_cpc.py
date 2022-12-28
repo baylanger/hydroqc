@@ -68,6 +68,10 @@ class SubTestContractDCPC:
         assert len(winter_credit.critical_peaks) >= 0
         assert len(winter_credit.critical_peaks) <= len(winter_credit.peaks)
         assert winter_credit.cumulated_credit >= 0
+        assert winter_credit.projected_cumulated_credit >= 0
+        assert (
+            winter_credit.projected_cumulated_credit >= winter_credit.cumulated_credit
+        )
 
         if (
             today <= winter_credit.winter_start_date.date()
