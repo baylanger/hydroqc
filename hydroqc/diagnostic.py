@@ -1,6 +1,7 @@
 """Diagnostic module to help users to send debug to devs."""
 import argparse
 import asyncio
+import copy
 import datetime
 import io
 import logging
@@ -9,8 +10,11 @@ import pathlib
 import shutil
 import traceback
 import zipfile
+from collections.abc import Iterator
 from typing import cast
 
+import pytz
+from dateutil.relativedelta import relativedelta
 from hydroqc.contract import ContractDCPC, ContractDPC, ContractM
 from hydroqc.error import HydroQcError
 from hydroqc.logger import get_logger
@@ -23,6 +27,7 @@ LOG_LEVEL = (
     "INFO",
     "DEBUG",
 )
+TZ_EASTERN = pytz.timezone("US/Eastern")
 
 
 class Diagnostic:
@@ -173,9 +178,45 @@ class Diagnostic:
             self.logger.info("%02d - Got csv get_daily_energy", self.diag_id - 1)
 
             # get_hourly_energy
-            self.logger.info("%02d - Trying to get csv get_hourly_energy", self.diag_id)
-            await self.contract.get_hourly_energy(day_2.isoformat(), day_1.isoformat())
-            self.logger.info("%02d - Got csv get_hourly_energy", self.diag_id - 1)
+            today = datetime.date.today()
+            oldest_data_date = today - relativedelta(days=731)
+            if self.contract.start_date is not None:
+                contract_start_date = datetime.date.fromisoformat(
+                    str(self.contract.start_date)
+                )
+                # Get the youngest date between contract start date VS 2 years ago
+                start_date = (
+                    oldest_data_date
+                    if contract_start_date < oldest_data_date
+                    else contract_start_date
+                )
+            else:
+                start_date = oldest_data_date
+            data_date = copy.copy(start_date)
+            while data_date < today:
+                self.logger.info(
+                    "%02d - Trying to get csv %s get_hourly_energy",
+                    self.diag_id,
+                    data_date.isoformat(),
+                )
+                raw_data = cast(
+                    Iterator[list[str | int | float]],
+                    await self.contract.get_hourly_energy(
+                        data_date.isoformat(), today.isoformat()
+                    ),
+                )
+                self.logger.info(
+                    "%02d - Got csv %s get_hourly_energy",
+                    self.diag_id - 1,
+                    data_date.isoformat(),
+                )
+                # Get date
+                raw_data_sorted = list(raw_data)
+                date_str = cast(str, raw_data_sorted[1][1])
+                data_datetime = TZ_EASTERN.localize(
+                    datetime.datetime.fromisoformat(date_str)
+                )
+                data_date = data_datetime.date() + datetime.timedelta(days=1)
 
             # get_consumption_overview_csv
             self.logger.info(
@@ -190,8 +231,8 @@ class Diagnostic:
             # Winter Credit
             if self.contract.rate == "D" and self.contract.rate_option == "CPC":
                 self.logger.info("Trying to get winter_credit")
-                contract_d = cast(ContractDCPC, self.contract)
-                await contract_d.winter_credit.refresh_data()
+                contract_dcpc = cast(ContractDCPC, self.contract)
+                await contract_dcpc.winter_credit.refresh_data()
                 self.logger.info("Got winter_credit")
 
             # FlexD
