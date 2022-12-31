@@ -1,2 +1,2 @@
 global-include py.typed
-global-include hydro_api/hydro-chain.pem
+global-include hydro_api/session.hydroquebec.com.pem

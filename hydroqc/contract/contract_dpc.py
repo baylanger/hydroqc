@@ -4,6 +4,7 @@ from datetime import date
 
 from hydroqc.contract.common import check_period_data_present
 from hydroqc.contract.contract_residential import ContractResidential
+from hydroqc.dpc.handler import DPCPeakHandler
 from hydroqc.hydro_api.client import HydroClient
 
 from hydroqc.types import DPCDataTyping
@@ -53,6 +54,23 @@ class ContractDPC(ContractResidential):
             hydro_client,
             log_level,
         )
+        peaks_logger = self._logger.getChild("peaks")
+        self._peakh: DPCPeakHandler = DPCPeakHandler(
+            self.applicant_id,
+            self.customer_id,
+            self.contract_id,
+            hydro_client,
+            peaks_logger,
+        )
+
+    @property
+    def peak_handler(self) -> DPCPeakHandler:
+        """Get winter credit helper object."""
+        return self._peakh
+
+    def set_preheat_duration(self, duration: int) -> None:
+        """Set preheat duration in minutes."""
+        self._peakh.set_preheat_duration(duration)
 
     async def get_dpc_data(self) -> DPCDataTyping:
         """Fetch FlexD data."""
@@ -72,18 +90,6 @@ class ContractDPC(ContractResidential):
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
         return self._all_period_data[0]["consoHautPeriode"]
-
-    @property
-    @check_dpc_data_present
-    def winter_start_date(self) -> str:
-        """DPC start date."""
-        return self._dpc_data["results"][0]["dateDebut"]
-
-    @property
-    @check_dpc_data_present
-    def winter_end_date(self) -> str:
-        """DPC end date."""
-        return self._dpc_data["results"][0]["dateFin"]
 
     @property
     @check_dpc_data_present

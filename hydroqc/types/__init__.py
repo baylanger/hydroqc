@@ -6,6 +6,8 @@ from hydroqc.types.conso import (
     ConsoHourlyTyping,
     ConsoMonthlyTyping,
     DPCDataTyping,
+    DPCPeakDataTyping,
+    DPCPeakListDataTyping,
     DTDataTyping,
 )
 from hydroqc.types.info_compte import (
@@ -39,5 +41,7 @@ __all__ = [
     "ListContractsTyping",
     "DPCDataTyping",
     "DTDataTyping",
+    "DPCPeakListDataTyping",
+    "DPCPeakDataTyping",
     "Rates",
 ]

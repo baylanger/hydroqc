@@ -109,7 +109,7 @@ This uses python 3 (tested with 3.8)
 
 ## NOTES
 
-As per issue [https://github.com/zepiaf/hydroqc/issues/11](https://github.com/zepiaf/hydroqc/issues/11) the full certificate chain for "session.hydroquebec.com" is not provided completely by Hydro-Quebec, resulting in a failed SSL verification. We are providing it in the "hydro-chain.pem" file and the code is using this file to validate the certificate in queries to "session.hydroquebec.com".
+As per issue [https://github.com/zepiaf/hydroqc/issues/11](https://github.com/zepiaf/hydroqc/issues/11) the full certificate chain for "session.hydroquebec.com" is not provided completely by Hydro-Quebec, resulting in a failed SSL verification. We are providing it in the "session.hydroquebec.com.pem" file and the code is using this file to validate the certificate in queries to "session.hydroquebec.com".
 
 We would very much like for this to be either fixed by Hydro-Quebec or for this chain to be dynamicaly built at run time. Any help to make this happen would be greatly appreciated.
 

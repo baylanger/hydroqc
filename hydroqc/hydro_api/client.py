@@ -5,11 +5,13 @@ import importlib.resources
 import json
 import logging
 import os
+import pathlib
 import platform
 import random
 import ssl
 import string
 import time
+import urllib
 import uuid
 from collections.abc import Iterator
 from datetime import datetime, timedelta
@@ -32,6 +34,7 @@ from hydroqc.hydro_api.consts import (
     CUSTOMER_INFO_URL,
     DAILY_CONSUMPTION_API_URL,
     FLEXD_DATA_URL,
+    FLEXD_PEAK_URL,
     GET_WINTER_CREDIT_API_URL,
     HOURLY_CONSUMPTION_API_URL,
     LOGIN_URL_6,
@@ -55,6 +58,7 @@ from hydroqc.types import (
     ConsoMonthlyTyping,
     ContractSummaryTyping,
     DPCDataTyping,
+    DPCPeakListDataTyping,
     IDTokenTyping,
     InfoCompteTyping,
     ListContractsTyping,
@@ -92,13 +96,6 @@ class HydroClient:
         self._verify_ssl: bool = verify_ssl
         self._diag_folder: str | None = diag_folder
         self._diag_id: int = 0
-        with importlib.resources.path(
-            __package__, "hydro-chain.pem"
-        ) as hydro_chain_pem_file:
-            self._sslcontext: ssl.SSLContext = ssl.create_default_context(
-                cafile=hydro_chain_pem_file
-            )
-            self._sslcontext.set_ciphers("DEFAULT")  # Needed for python3.10
         self.guid: str = str(uuid.uuid1())
         self._logger: logging.Logger = get_logger("httpclient", log_level)
         self._logger.debug("HydroQc initialized")
@@ -151,9 +148,17 @@ class HydroClient:
             if site not in self.cookies:
                 self.cookies[site] = {}
             cookies = self.cookies[site]
-        ssl_context = None
+
+        ssl_context: ssl.SSLContext | None = None
         if verify_ssl:
-            ssl_context = self._sslcontext
+            # TODO check if `host`.pem exits
+            host = urllib.parse.urlparse(url).netloc
+            pem_file = importlib.resources.path(__package__, f"{host}.pem")
+            if isinstance(pem_file, pathlib.PosixPath) and os.path.exists(pem_file):
+                ssl_context = ssl.create_default_context(cafile=pem_file)
+            else:
+                ssl_context = ssl.create_default_context()
+            ssl_context.set_ciphers("DEFAULT")  # Needed for python3.10
 
         # Query Diagnostic
         if self._diag_folder is not None:
@@ -707,6 +712,26 @@ class HydroClient:
         api_call_response = await self.http_request(FLEXD_DATA_URL, "get")
         # We can not use res.json() because the response header are not application/json
         data: DPCDataTyping = self._load_json(await api_call_response.text())
+        return data
+
+    @CCached(ttl=3600)
+    async def get_dpc_peak_data(
+        self, applicant_id: str, customer_id: str, contract_id: str
+    ) -> DPCPeakListDataTyping:
+        """Fetch FlexD data of the current year.
+
+        API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
+        portrait-de-consommation/resourceObtenirDonneesMoisHiverFlex
+
+        """
+        await self._select_contract(applicant_id, customer_id, contract_id)
+        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        params = {"noContrat": contract_id}
+        api_call_response = await self.http_request(
+            FLEXD_PEAK_URL, "get", params=params, headers=headers
+        )
+        # We can not use res.json() because the response header are not application/json
+        data: DPCPeakListDataTyping = self._load_json(await api_call_response.text())
         return data
 
     async def get_consumption_csv(
