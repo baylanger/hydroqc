@@ -173,6 +173,7 @@ class Diagnostic:
             self.logger.info("%02d - Got annual consumption", self.diag_id - 1)
 
             # get_daily_energy
+            # TODO get data 2 years ago
             self.logger.info("%02d - Trying to get csv get_daily_energy", self.diag_id)
             await self.contract.get_daily_energy(day_2.isoformat(), day_1.isoformat())
             self.logger.info("%02d - Got csv get_daily_energy", self.diag_id - 1)
@@ -220,7 +221,8 @@ class Diagnostic:
 
             # get_consumption_overview_csv
             self.logger.info(
-                "%02d - Trying to get csv get_consumption_overview_csv", self.diag_id
+                "%02d - Trying to get csv get_consumption_overview_csv",
+                self.diag_id,
             )
             await self.contract.get_consumption_overview_csv()
             self.logger.info(
@@ -239,9 +241,7 @@ class Diagnostic:
             elif self.contract.rate == "DPC":
                 self.logger.info("%02d - Trying to get flexD data", self.diag_id)
                 contract_dpc = cast(ContractDPC, self.contract)
-                await contract_dpc._hydro_client.get_dpc_data(
-                    contract_dpc.applicant_id, self.customer_id, self.contract_id
-                )
+                await contract_dpc.get_dpc_data()
                 self.logger.info("%02d - Got flexD data", self.diag_id - 1)
                 low_price = contract_dpc.cp_lower_price_consumption
                 self.logger.info(
@@ -255,6 +255,9 @@ class Diagnostic:
                     self.diag_id - 1,
                     high_price,
                 )
+                self.logger.info("%02d - Trying to get flexD data", self.diag_id)
+                await contract_dpc.peak_handler.refresh_data()
+                self.logger.info("%02d - Got flexD data", self.diag_id - 1)
 
             # DT
             if self.contract.rate == "DT":

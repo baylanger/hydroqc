@@ -12,6 +12,7 @@ HOST_LOGIN = "https://connexion.hydroquebec.com"
 HOST_SESSION = "https://session.hydroquebec.com"
 HOST_SERVICES = "https://cl-services.idp.hydroquebec.com"
 HOST_SPRING = "https://cl-ec-spring.hydroquebec.com"
+HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
 
 # OAUTH PATHS
 LOGIN_URL_1 = f"{HOST_LOGIN}/hqam/XUI/"  # not used
@@ -30,6 +31,7 @@ FLEXD_DATA_URL = (
     f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesMoisHiverFlex"
 )
+FLEXD_PEAK_URL = f"{HOST_RB_SOL}/portraitweb/api/v3_0/conso"
 CONSO_CSV_URL = (
     f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceTelechargerDonneesConsommation"

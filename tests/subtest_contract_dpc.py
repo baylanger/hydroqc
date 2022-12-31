@@ -49,15 +49,9 @@ class SubTestContractDPC:
 
         await contract.get_dpc_data()
 
-        assert isinstance(contract.winter_start_date, str)
-        assert isinstance(
-            datetime.date.fromisoformat(contract.winter_start_date), datetime.date
-        )
+        assert isinstance(contract.peak_handler.winter_start_date, datetime.datetime)
 
-        assert isinstance(contract.winter_end_date, str)
-        assert isinstance(
-            datetime.date.fromisoformat(contract.winter_end_date), datetime.date
-        )
+        assert isinstance(contract.peak_handler.winter_end_date, datetime.datetime)
 
         assert isinstance(contract.last_update_date, str)
         assert isinstance(

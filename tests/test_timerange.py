@@ -3,9 +3,9 @@ import datetime
 
 import pytest
 from hydroqc.error import HydroQcWinterCreditError
+from hydroqc.timerange import TimeRange
 from hydroqc.winter_credit.consts import EST_TIMEZONE
 from hydroqc.winter_credit.peak import Anchor, Peak, PreHeat
-from hydroqc.winter_credit.timerange import TimeRange
 
 from hydroqc.types import CriticalPeakDataTyping
 
