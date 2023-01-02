@@ -91,9 +91,11 @@ class Customer:
                     rate_option = contract_info.get("optionTarifActuel", "")
                     contract_class_name = f"Contract{rate}{rate_option}"
                     if not hasattr(contractModule, contract_class_name):
-                        raise HydroQcError(
+                        self._logger.warning(
                             f"Contract rate `{rate}` with option `{rate_option}` "
-                            "not supported, please open a new issue"
+                            "is not supported, falling back to Fallback Contract. "
+                            "This contract has basic features and could crash anytime. "
+                            "Please open an issue to support it."
                         )
                     contract = getattr(contractModule, contract_class_name)(
                         self.applicant_id,
