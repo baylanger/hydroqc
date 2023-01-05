@@ -283,12 +283,18 @@ class SubTestCommon:
             assert len(annual_consumption.get("results", [])) == 0
         else:
             assert len(annual_consumption.get("results", [])) == 1
-            assert (
-                annual_consumption["results"][0]
-                .get("courant", {})
-                .get("dateFinAnnee", "")
-                .startswith(str(today.year))
-            )
+            try:
+                last_period_end_date = datetime.date.fromisoformat(
+                    annual_consumption["results"][0]
+                    .get("courant", {})
+                    .get("dateFinAnnee", "")
+                )
+            except ValueError:
+                assert False, "Can not parse dateFinAnnee in Annual consumption data"
+
+            assert datetime.date.today() - last_period_end_date < datetime.timedelta(
+                days=70
+            ), "Annual data doesn't seems up-to-date"
 
     @pytest.mark.asyncio
     async def test_latest_period(self, contract: Contract) -> None:
