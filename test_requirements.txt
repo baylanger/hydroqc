@@ -1,5 +1,5 @@
 flake8==6.0.0
-pydocstyle==6.1.1
+pydocstyle==6.2.2
 parameterized==0.8.1
 pylint==2.15.9
 pytest==7.2.0
@@ -10,5 +10,5 @@ mypy==0.991
 types-pytz==2022.7.0.0
 types-PyYAML==6.0.12.2
 types-python-dateutil==2.8.19.5
-pyright==1.1.286
+pyright==1.1.287
 lxml==4.9.2
