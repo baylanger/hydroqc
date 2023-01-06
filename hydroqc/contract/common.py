@@ -364,3 +364,34 @@ class Contract(ABC):
             f"""{self.applicant_id} - {self.customer_id} - """
             f"""{self.account_id} - {self.contract_id}>"""
         )
+
+
+class ContractFallBack(Contract):
+    """Hydroquebec fallback contract.
+
+    Represents a contract (contrat) not supported by the library.
+    It will just have a basic features of a contract and could crash anytime.
+    """
+
+    _rate_code = "FALLBACK"
+    _rate_option_code = ""
+
+    def __init__(
+        self,
+        applicant_id: str,
+        customer_id: str,
+        account_id: str,
+        contract_id: str,
+        hydro_client: HydroClient,
+        log_level: str | None = None,
+    ):
+        """Create a new Hydroquebec contract."""
+        Contract.__init__(
+            self,
+            applicant_id,
+            customer_id,
+            account_id,
+            contract_id,
+            hydro_client,
+            log_level,
+        )
