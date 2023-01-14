@@ -17,6 +17,8 @@ class SubTestContractDPC:
         assert contract.rate == "DPC"
         assert contract.rate_option == ""
 
+        contract.set_preheat_duration(60)
+
         assert (
             isinstance(contract.cp_current_bill, float)
             and contract.cp_current_bill >= 0
@@ -49,6 +51,7 @@ class SubTestContractDPC:
 
         await contract.get_dpc_data()
 
+        contract.set_preheat_duration(10)
         assert isinstance(contract.peak_handler.winter_start_date, datetime.datetime)
 
         assert isinstance(contract.peak_handler.winter_end_date, datetime.datetime)
@@ -122,3 +125,43 @@ class SubTestContractDPC:
             "Amount anticipated ($)",
             "Average temperature (°C)",
         ], "Bad get_consumption_overview_csv CSV headers"
+
+        # Get dpc specific data
+        data = await contract.peak_handler.refresh_data()
+
+        assert data["codeTarif"] == "DPC"
+
+        assert isinstance(contract.peak_handler.raw_data, list)
+        assert contract.peak_handler.winter_start_date.day == 1
+        assert contract.peak_handler.winter_start_date.month == 12
+        assert contract.peak_handler.winter_end_date.day == 31
+        assert contract.peak_handler.winter_end_date.month == 3
+        assert isinstance(contract.peak_handler.peaks, list)
+        assert len(contract.peak_handler.peaks) <= 4
+        assert (
+            contract.peak_handler.current_peak in [None] + contract.peak_handler.peaks
+        )
+        assert (
+            contract.peak_handler.current_state == "peak"
+            if contract.peak_handler.current_peak
+            else "normal"
+        )
+        assert contract.peak_handler.preheat_in_progress in {True, False}
+
+        assert contract.peak_handler.next_peak in [None] + contract.peak_handler.peaks
+        assert (
+            contract.peak_handler.today_morning_peak
+            in [None] + contract.peak_handler.peaks
+        )
+        assert (
+            contract.peak_handler.today_evening_peak
+            in [None] + contract.peak_handler.peaks
+        )
+        assert (
+            contract.peak_handler.tomorrow_morning_peak
+            in [None] + contract.peak_handler.peaks
+        )
+        assert (
+            contract.peak_handler.tomorrow_evening_peak
+            in [None] + contract.peak_handler.peaks
+        )

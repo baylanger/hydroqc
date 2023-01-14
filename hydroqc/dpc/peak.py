@@ -37,7 +37,7 @@ class Peak(TimeRange):
         super().__init__(self.start_date, self.end_date, is_critical=True)
 
     @property
-    def day(self) -> datetime.date:
+    def date(self) -> datetime.date:
         """Get the day, without time, of the peak."""
         return self._start_date.date()
 

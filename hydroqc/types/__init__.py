@@ -15,6 +15,10 @@ from hydroqc.types.info_compte import (
     ContractSummaryTyping,
     InfoCompteTyping,
     ListContractsTyping,
+    OutageCause,
+    OutageListTyping,
+    OutageStatus,
+    OutageTyping,
     listeComptesContratsTyping,
     listeContratModelTyping,
 )
@@ -43,5 +47,9 @@ __all__ = [
     "DTDataTyping",
     "DPCPeakListDataTyping",
     "DPCPeakDataTyping",
+    "OutageListTyping",
+    "OutageTyping",
+    "OutageCause",
+    "OutageStatus",
     "Rates",
 ]

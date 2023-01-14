@@ -2,3 +2,4 @@
 source =
 	./
 	/builds/*/hydroqc-test/hydroqc/
+	/builds/*/*-hydroqc-test/hydroqc/
