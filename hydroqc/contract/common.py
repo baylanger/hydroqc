@@ -1,10 +1,13 @@
 """Hydroquebec contract module."""
+import functools
 import logging
 from abc import ABC
 from collections.abc import Callable, Iterator
 from datetime import date, datetime, timedelta
 from io import StringIO
+from typing import ParamSpec, TypeVar, cast
 
+from hydroqc.contract.outage import Outage
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
 from hydroqc.winter_credit.consts import EST_TIMEZONE
@@ -14,9 +17,13 @@ from hydroqc.types import (
     ConsoDailyTyping,
     ConsoHourlyTyping,
     ConsoMonthlyTyping,
+    OutageListTyping,
     PeriodDataTyping,
     listeContratModelTyping,
 )
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 
 def check_period_data_present(
@@ -64,6 +71,21 @@ def check_annual_data_present(
     return wrapper
 
 
+def check_outages_data_present(method: Callable[P, T]) -> Callable[P, T]:
+    """Check if contract's data are present."""
+
+    @functools.wraps(method)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+        contract = cast("Contract", args[0])
+        if hasattr(contract, "_outages_data"):
+            return method(*args, **kwargs)
+
+        contract._logger.warning("You need to call refresh_outages method first")
+        return cast(T, None)
+
+    return wrapper
+
+
 class Contract(ABC):
     """Hydroquebec contract.
 
@@ -77,6 +99,7 @@ class Contract(ABC):
     _address: str
     _raw_info_data: listeContratModelTyping
     _annual_info_data: ConsoAnnualTyping
+    _outages_data: OutageListTyping
 
     def __init__(
         self,
@@ -100,6 +123,7 @@ class Contract(ABC):
         self._hydro_client: HydroClient = hydro_client
         self._address: str = ""
         self._all_period_data: list[PeriodDataTyping] = []
+        self._outages: list[Outage] = []
 
     # Main attributes
     @property
@@ -155,6 +179,12 @@ class Contract(ABC):
         )
         return start_date
 
+    @property
+    @check_info_data_present
+    def consumption_location_id(self) -> str:
+        """Get consumption location id."""
+        return self._raw_info_data["idLieuConsommation"]
+
     # Main methods
     async def get_info(self) -> listeContratModelTyping:
         """Fetch info about this contract."""
@@ -179,6 +209,33 @@ class Contract(ABC):
         if self._all_period_data:
             return self._all_period_data[0]
         return {}
+
+    async def refresh_outages(self) -> None:
+        """Fetch contract outages."""
+        if self.consumption_location_id is not None:
+            res = await self._hydro_client.get_planned_outages(
+                str(self.consumption_location_id)
+            )
+            if res is not None:
+                self._outages_data = res
+                self._outages = []
+                for raw_outage in self._outages_data["interruptions"]:
+                    self._outages.append(Outage(raw_outage, self._logger))
+                self._outages.sort(key=lambda x: x.start_date)
+
+    @property
+    @check_outages_data_present
+    def outages(self) -> list[Outage]:
+        """Return the list of the contract outages."""
+        return self._outages
+
+    @property
+    @check_outages_data_present
+    def next_outage(self) -> Outage | None:
+        """Get next or first contract outage."""
+        if self._outages:
+            return self.outages[0]
+        return None
 
     # Consumption methods
     async def get_today_hourly_consumption(self) -> ConsoHourlyTyping:

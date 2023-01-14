@@ -7,7 +7,13 @@ import typing
 import pytest
 from hydroqc.account import Account
 from hydroqc.contract import ContractDCPC
-from hydroqc.contract.common import Contract
+from hydroqc.contract.common import (
+    Contract,
+    check_annual_data_present,
+    check_info_data_present,
+    check_outages_data_present,
+)
+from hydroqc.contract.contract_dpc import check_dpc_data_present
 from hydroqc.customer import Customer
 from hydroqc.error import HydroQcError
 from hydroqc.webuser import WebUser
@@ -80,6 +86,48 @@ class SubTestCommon:
         await webuser.close_session()
 
     @pytest.mark.asyncio
+    async def test_error_cases(self) -> None:
+        """Test some edge cases."""
+
+        class FakeContract(Contract):
+            """Fake contract class based on Contract just for tests."""
+
+            _rate_option_code = "BAD"
+
+            @property
+            @check_info_data_present
+            def fake_bad_property1(self) -> str:
+                """Fake property 1 for test."""
+                return "True"
+
+            @property
+            @check_annual_data_present
+            def fake_bad_property2(self) -> str:
+                """Fake property 2 for test."""
+                return "True"
+
+            @property
+            @check_dpc_data_present
+            def fake_bad_property3(self) -> str:
+                """Fake property 3 for test."""
+                return "True"
+
+            @property
+            @check_outages_data_present
+            def fake_bad_property4(self) -> str:
+                """Fake property 4 for test."""
+                return "True"
+
+        fake_contract = FakeContract("aid", "cid", "aid", "cid", None)  # type: ignore[arg-type]
+        fake_contract._all_period_data = [{"coutCentkWh": None}]  # type: ignore[typeddict-item]
+        assert fake_contract.fake_bad_property1 is None
+        assert fake_contract.fake_bad_property2 is None
+        assert fake_contract.fake_bad_property3 is None
+        assert fake_contract.fake_bad_property4 is None
+        assert fake_contract.rate == "Unknown rate"
+        assert fake_contract.cp_kwh_cost_mean is None
+
+    @pytest.mark.asyncio
     async def test_good_credentials(self, webuser: WebUser) -> None:
         """Test credentials main."""
         assert webuser.session_expired is True, "The session should be expired"
@@ -144,6 +192,8 @@ class SubTestCommon:
         assert repr(customer).startswith("<Customer - ")
         assert customer.customer_id is not None, "No customer id found"
         assert customer.infocompte_enabled is None
+
+        await webuser.fetch_customers_info()
         await customer.get_info()
         assert customer.infocompte_enabled in set((True, False))
         if self.HYDROQC_RATE == "M":
@@ -366,3 +416,35 @@ class SubTestCommon:
                 "Température moyenne (°C)",
                 "Code de température",
             ], "Bad get_hourly_energy CSV headers"
+        # get_daily_energy
+        data_csv = await contract.get_daily_energy(yesterday_str, today_str)
+        first_line = next(data_csv)
+        if contract.rate in set(("DT", "DPC")):
+            assert first_line == [
+                "Contrat",
+                "Tarif",
+                "Date",
+                "kWh bas",
+                "kWh Haut",
+                "Code de consommation",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_daily_energy CSV headers"
+        else:
+            assert first_line == [
+                "Contrat",
+                "Tarif",
+                "Date",
+                "kWh",
+                "Code de consommation",
+                "Température moyenne (°C)",
+                "Code de température",
+            ], "Bad get_hourly_energy CSV headers"
+
+    @pytest.mark.asyncio
+    async def test_outages(self, contract: Contract) -> None:
+        """Test outages."""
+        await contract.refresh_outages()
+
+        assert isinstance(contract.outages, list)
+        assert contract.next_outage in [None] + contract.outages

@@ -7,7 +7,7 @@ from hydroqc.dpc.peak import Peak
 from hydroqc.error import HydroQcDPCPeakError
 from hydroqc.hydro_api.client import HydroClient
 
-from hydroqc.types import DPCPeakDataTyping
+from hydroqc.types import DPCPeakDataTyping, DPCPeakListDataTyping
 
 
 def _now() -> datetime.datetime:
@@ -64,7 +64,7 @@ class DPCPeakHandler:
         self._preheat_duration = duration
 
     # Fetch raw data
-    async def refresh_data(self) -> None:
+    async def refresh_data(self) -> DPCPeakListDataTyping:
         """Get data from HydroQuebec web site."""
         self._logger.debug("Fetching data from HydroQuebec...")
         _raw_data = await self._hydro_client.get_dpc_peak_data(
@@ -80,6 +80,7 @@ class DPCPeakHandler:
             self._raw_data += _raw_data["listePeriodePointeCritiqueDemain"]
 
         self._raw_data.sort(key=lambda x: x["dateDebut"])
+        return _raw_data
 
     @property
     def raw_data(self) -> list[DPCPeakDataTyping]:
@@ -200,7 +201,7 @@ class DPCPeakHandler:
         """Get the peak of today morning."""
         now = _now()
         peaks: list[Peak] = [
-            p for p in self.peaks if p.day == now.date() and p.start_date.hour < 12
+            p for p in self.peaks if p.date == now.date() and p.start_date.hour < 12
         ]
         if len(peaks) > 1:
             raise HydroQcDPCPeakError("There is more than one morning peak today !")
@@ -213,7 +214,7 @@ class DPCPeakHandler:
         """Get the peak of today evening."""
         now = _now()
         peaks: list[Peak] = [
-            p for p in self.peaks if p.day == now.date() and p.start_date.hour > 12
+            p for p in self.peaks if p.date == now.date() and p.start_date.hour > 12
         ]
         if len(peaks) > 1:
             raise HydroQcDPCPeakError("There is more than one evening peak today !")
@@ -229,7 +230,7 @@ class DPCPeakHandler:
         peaks: list[Peak] = [
             p
             for p in self.peaks
-            if p.day == now.date() + datetime.timedelta(days=1)
+            if p.date == now.date() + datetime.timedelta(days=1)
             and p.start_date.hour < 12
         ]
         if len(peaks) > 1:
@@ -245,7 +246,7 @@ class DPCPeakHandler:
         peaks: list[Peak] = [
             p
             for p in self.peaks
-            if p.day == now.date() + datetime.timedelta(days=1)
+            if p.date == now.date() + datetime.timedelta(days=1)
             and p.start_date.hour > 12
         ]
         if len(peaks) > 1:

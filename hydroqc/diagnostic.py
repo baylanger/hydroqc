@@ -85,7 +85,7 @@ class Diagnostic:
         """Get diagnostic http ID."""
         return self.webuser._hydro_client._diag_id
 
-    async def run(self) -> None:
+    async def run(self) -> None:  # pylint: disable=too-many-statements
         """Run diagnostic."""
         today = datetime.date.today()
         day_1 = today - datetime.timedelta(days=1)
@@ -135,6 +135,24 @@ class Diagnostic:
                 self.logger.error("Selected contract %s not found", self.contract_id)
                 return
             self.logger.info("Selected contract is present")
+
+            # Outages
+            self.logger.info(
+                "%02d - Checking if fetching outages is working", self.diag_id
+            )
+            await self.contract.refresh_outages()
+            self.logger.info("%02d - Fetching outages is working", self.diag_id - 1)
+            if self.contract.next_outage:
+                self.logger.info(
+                    "Next outage cause: %s", self.contract.next_outage.cause
+                )
+                self.logger.info(
+                    "Next outage status: %s", self.contract.next_outage.status
+                )
+                self.logger.info(
+                    "Next outage emergency: %s",
+                    self.contract.next_outage.emergency_level,
+                )
 
             # Period
             self.logger.info("%02d - Trying to get period info", self.diag_id)

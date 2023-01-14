@@ -97,6 +97,7 @@ class Customer:
                             "This contract has basic features and could crash anytime. "
                             "Please open an issue to support it."
                         )
+                        contract_class_name = "ContractFallBack"
                     contract = getattr(contractModule, contract_class_name)(
                         self.applicant_id,
                         self.customer_id,

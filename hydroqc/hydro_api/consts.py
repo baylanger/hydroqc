@@ -13,7 +13,10 @@ HOST_SESSION = "https://session.hydroquebec.com"
 HOST_SERVICES = "https://cl-services.idp.hydroquebec.com"
 HOST_SPRING = "https://cl-ec-spring.hydroquebec.com"
 HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
+HOST_OUTAGES = "https://infopannes-services.solutions.hydroquebec.com"
 
+# Outages
+PLANNED_OUTAGES = f"{HOST_OUTAGES}/web/api/v1/lieux-conso/etats/"
 # OAUTH PATHS
 LOGIN_URL_1 = f"{HOST_LOGIN}/hqam/XUI/"  # not used
 LOGIN_URL_2 = f"{HOST_LOGIN}/hqam/json/serverinfo/*"  # not used

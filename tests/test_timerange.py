@@ -2,12 +2,24 @@
 import datetime
 
 import pytest
+from hydroqc.dpc.peak import Peak as DPCPeak
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.timerange import TimeRange
 from hydroqc.winter_credit.consts import EST_TIMEZONE
 from hydroqc.winter_credit.peak import Anchor, Peak, PreHeat
 
 from hydroqc.types import CriticalPeakDataTyping
+
+
+def test_dpcpeak() -> None:
+    """Test DPC peaks."""
+    tmp_date = datetime.datetime.now().astimezone(EST_TIMEZONE)
+    start_date = tmp_date - datetime.timedelta(days=7)
+    end_date = tmp_date - datetime.timedelta(days=6)
+    preheat = 10
+    peak = DPCPeak(start_date, end_date, preheat)
+    assert peak.date.day == start_date.day
+    assert peak.preheat.start_date == start_date - datetime.timedelta(minutes=preheat)
 
 
 def test_timerange() -> None:
