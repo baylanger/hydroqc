@@ -116,11 +116,13 @@ class HydroClient:
         """Get http client user_agent."""
         try:
             hydroqc_version = version("Hydro_Quebec_API_Wrapper")
-        except PackageNotFoundError as exp:
+        except PackageNotFoundError:
             # package is not installed
-            raise HydroQcHTTPError(
-                "Python package `Hydro_Quebec_API_Wrapper` is not installed. Install it using pip"
-            ) from exp
+            self._logger.warning(
+                "Python package `Hydro_Quebec_API_Wrapper` is not installed. "
+                "Install it using pip"
+            )
+            hydroqc_version = "unkwown"
         os_name = platform.system()
         return f"Hydroqc/{hydroqc_version} (dev@hydroqc.ca; https://gitlab.com/hydroqc) {os_name}"
 
