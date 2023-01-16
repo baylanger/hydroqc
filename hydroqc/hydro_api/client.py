@@ -39,8 +39,8 @@ from hydroqc.hydro_api.consts import (
     HOURLY_CONSUMPTION_API_URL,
     LOGIN_URL_6,
     MONTHLY_DATA_URL,
+    OUTAGES,
     PERIOD_DATA_URL,
-    PLANNED_OUTAGES,
     PORTRAIT_URL,
     RELATION_URL,
     REQUESTS_TIMEOUT,
@@ -576,13 +576,12 @@ class HydroClient:
         data: WinterCreditDataTyping = await api_call_response.json()
         return data
 
-    async def get_planned_outages(
+    @CCached(ttl=900)
+    async def get_outages(
         self, consumption_location_id: str
     ) -> OutageListTyping | None:
-        """Return planned outage for a give consumption location id."""
-        response = await self.http_request(
-            PLANNED_OUTAGES + consumption_location_id, "get"
-        )
+        """Return outages for a given consumption location id."""
+        response = await self.http_request(OUTAGES + consumption_location_id, "get")
         res: list[OutageListTyping] = await response.json()
         return res[0] if res else None
 
