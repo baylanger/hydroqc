@@ -213,7 +213,7 @@ class Contract(ABC):
     async def refresh_outages(self) -> None:
         """Fetch contract outages."""
         if self.consumption_location_id is not None:
-            res = await self._hydro_client.get_planned_outages(
+            res = await self._hydro_client.get_outages(
                 str(self.consumption_location_id)
             )
             if res is not None:

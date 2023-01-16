@@ -148,20 +148,37 @@ class SubTestContractDPC:
         )
         assert contract.peak_handler.preheat_in_progress in {True, False}
 
-        assert contract.peak_handler.next_peak in [None] + contract.peak_handler.peaks
-        assert (
-            contract.peak_handler.today_morning_peak
-            in [None] + contract.peak_handler.peaks
-        )
-        assert (
-            contract.peak_handler.today_evening_peak
-            in [None] + contract.peak_handler.peaks
-        )
-        assert (
-            contract.peak_handler.tomorrow_morning_peak
-            in [None] + contract.peak_handler.peaks
-        )
-        assert (
-            contract.peak_handler.tomorrow_evening_peak
-            in [None] + contract.peak_handler.peaks
-        )
+        if contract.peak_handler.next_peak is not None:
+            assert contract.peak_handler.next_peak.start_date in [
+                p.start_date for p in contract.peak_handler.peaks
+            ]
+        else:
+            assert contract.peak_handler.next_peak is None
+
+        if contract.peak_handler.today_morning_peak is not None:
+            assert contract.peak_handler.today_morning_peak.start_date in [
+                p.start_date for p in contract.peak_handler.peaks
+            ]
+        else:
+            assert contract.peak_handler.today_morning_peak is None
+
+        if contract.peak_handler.today_evening_peak is not None:
+            assert contract.peak_handler.today_evening_peak.start_date in [
+                p.start_date for p in contract.peak_handler.peaks
+            ]
+        else:
+            assert contract.peak_handler.today_evening_peak is None
+
+        if contract.peak_handler.tomorrow_morning_peak is not None:
+            assert contract.peak_handler.tomorrow_morning_peak.start_date in [
+                p.start_date for p in contract.peak_handler.peaks
+            ]
+        else:
+            assert contract.peak_handler.tomorrow_morning_peak is None
+
+        if contract.peak_handler.tomorrow_evening_peak is not None:
+            assert contract.peak_handler.tomorrow_evening_peak.start_date in [
+                p.start_date for p in contract.peak_handler.peaks
+            ]
+        else:
+            assert contract.peak_handler.tomorrow_evening_peak is None

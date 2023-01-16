@@ -103,7 +103,13 @@ class SubTestContractDCPC:
         assert isinstance(winter_credit.preheat_in_progress, bool)
         assert isinstance(winter_credit.is_any_critical_peak_coming, bool)
         assert isinstance(winter_credit.next_peak_is_critical, bool)
-        assert winter_credit.next_critical_peak in [None] + winter_credit.critical_peaks
+        if winter_credit.next_critical_peak is not None:
+            assert winter_credit.next_critical_peak.start_date in [
+                p.start_date for p in winter_credit.critical_peaks
+            ]
+        else:
+            assert winter_credit.next_critical_peak is None
+
         if (
             today <= winter_credit.winter_start_date.date()
             or today >= winter_credit.winter_end_date.date()
