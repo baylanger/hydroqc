@@ -34,15 +34,17 @@ class Outage:
         return datetime.datetime.fromisoformat(start_date)
 
     @property
-    def end_date(self) -> datetime.datetime:
+    def end_date(self) -> datetime.datetime | None:
         """Get outage end date.
 
         Tries to use `dateFinReport` key if exists, then falls back to `dateFin` key.
         """
         end_date = self._raw_data.get(
             "dateFinEstimeeMax",
-            self._raw_data.get("dateFinReport", self._raw_data["dateFin"]),
+            self._raw_data.get("dateFinReport", self._raw_data.get("dateFin")),
         )
+        if end_date is None:
+            return end_date
         return datetime.datetime.fromisoformat(end_date)
 
     @property
