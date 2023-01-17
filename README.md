@@ -12,17 +12,22 @@ This is a package to access some functionalities of Hydro Quebec API that are no
 
 We started a discord server for the project where you can come to discuss and find help with the project on our [#development](https://discord.gg/NWnfdfRZ7T) channel
 
-## Account Scenarios
+## Donations
 
-Each account and contracts are different and we do our best to integrate all available options. Currently the account combinations listed below are supported and tested automaticaly by our CI/CD pipeline. If your account scenario is not currently tested and listed as **Needed** feel free to reach out to us on our discord [#development](https://discord.gg/NWnfdfRZ7T) channel if you want to volunter for testing. We provide a way to setup CI/CD tests in your own account in a way that keep your account info private to you (more details [here](https://gitlab.com/hydroqc/hydroqc-test-template)). Keep in mind that this process is a bit involved technicaly so it is best if you have some working knowledge with Gitlab.
+We put a lot of hearth and effort in this project, any contribution is greatly appreciated!
+
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GRFRXT6L8GCR8)
+
+## Tested Rates
+
+Each account, contracts and rates are different and we do our best to integrate all available options. Currently the account combinations listed below are supported and tested automaticaly by our CI/CD pipeline. If your account scenario is not currently tested and listed as **Needed** feel free to reach out to us on our discord [#development](https://discord.gg/NWnfdfRZ7T) channel if you want to volunter for testing. We provide a way to setup CI/CD tests in your own account in a way that keep your account info private to you (more details [here](https://gitlab.com/hydroqc/hydroqc-test-template)). Keep in mind that this process is a bit involved technicaly so it is best if you have some working knowledge with Gitlab.
 
 ### Rate D
 
 | Base Rate | Rate Option | EPP* | Tester | Test result | Last run | Multi Contract | Multi Customer | Comment |
 | - | - | - | - | - | - | - | - | - |
 | D |  | No | @weimdall | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-job-end-date.svg?job=private_tests_done) | Yes | | |
-| D |  | Yes | @devzwf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-job-end-date.svg?job=private_tests_done) | | | |
-| D | CPC** | Yes | @zepiaf |  ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35331048-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35331048-job-end-date.svg?job=private_tests_done) | | | |
+| D |  | Yes | @devzwf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-job-end-date.svg?job=private_tests_done) | | | Hilo |
 | D | CPC** | No | @titilambert |![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done)  | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | | Yes | |
 
 *EPP = Equal Payment Plan
@@ -32,14 +37,14 @@ Each account and contracts are different and we do our best to integrate all ava
 
 | Base Rate | EPP | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
 | - | - | - | - | - | - | - | - |
-| DPC | No | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | Flex-D specifics not tested yet |
+| DPC | No | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | |
 
 *EPP = Equal Payment Plan
 #### Dual Energy (DT)
 
 | Base Rate | EPP | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
 | - | - | - | - | - | - | - | - |
-| DT | Yes | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | DT specifics No tested yet |
+| DT | Yes | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | |
 
 *EPP = Equal Payment Plan
 
@@ -75,7 +80,7 @@ An example script that extracts the data available from Hydro-Quebec is availabl
 
 ### Basic setup
 
-This uses python 3 (tested with 3.8)
+This uses python 3.10
 
 1. Clone the repo
 
@@ -98,14 +103,6 @@ This uses python 3 (tested with 3.8)
    ```bash
    examples/hydro.py
    ```
-
-## Available features
-
-- Services.getWinterCredit() to get raw winter credit data
-- Services.getTodayHourlyConsumption() to get raw hourly consumption for current day
-- Services.getHourlyConsumption(date = 'YYYY-MM-DD') to get hourly consumption for specific day
-- Services.getDailyConsumption(start_date = 'YYYY-MM-DD',end_date = 'YYYY-MM-DD') to get a range of daily consumption
-- WinterCredit.getFutureEvents() to get a list of JSON object with future peak events
 
 ## NOTES
 
