@@ -92,7 +92,9 @@ class Customer:
                     contract_class_name = f"Contract{rate}{rate_option}"
                     if not hasattr(contractModule, contract_class_name):
                         self._logger.warning(
-                            f"Contract rate `{rate}` with option `{rate_option}` "
+                            f"Contract {contract_id} for account.account_id for "
+                            f"customer {account.customer_id} has rate `{rate}` "
+                            f"with option `{rate_option}` "
                             "is not supported, falling back to Fallback Contract. "
                             "This contract has basic features and could crash anytime. "
                             "Please open an issue to support it."

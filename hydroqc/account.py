@@ -89,7 +89,10 @@ class Account:
         if not (
             contracts := [c for c in self.contracts if c.contract_id == contract_id]
         ):
-            raise HydroQcError(f"Contract {contract_id} not found")
+            raise HydroQcError(
+                f"Contract {contract_id} not found for account {self.account_id} "
+                f"for customer {self.customer_id}"
+            )
         return contracts[0]
 
     def __repr__(self) -> str:
