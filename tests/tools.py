@@ -6,8 +6,9 @@ from collections.abc import Callable
 from typing import ParamSpec, TypeVar, cast
 
 import pytest
+
 from hydroqc.contract.common import Contract
-from hydroqc.winter_credit.consts import EST_TIMEZONE
+from hydroqc.utils import EST_TIMEZONE
 
 PARAMS_PREFIX = "HYDROQC"
 PARAMS_LIST = (

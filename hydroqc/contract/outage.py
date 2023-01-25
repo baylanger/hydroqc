@@ -8,6 +8,7 @@ See:
 import datetime
 import logging
 
+from hydroqc import utils
 from hydroqc.types import OutageCause, OutageStatus, OutageTyping
 
 
@@ -30,8 +31,12 @@ class Outage:
 
         Tries to use `dateDebutReport` key if exists, then falls back to `dateDebut` key.
         """
-        start_date = self._raw_data.get("dateDebutReport", self._raw_data["dateDebut"])
-        return datetime.datetime.fromisoformat(start_date)
+        if (
+            utils.now() > datetime.datetime.fromisoformat(self._raw_data["dateFin"])
+            and "dateDebutReport" in self._raw_data
+        ):
+            return datetime.datetime.fromisoformat(self._raw_data["dateDebutReport"])
+        return datetime.datetime.fromisoformat(self._raw_data["dateDebut"])
 
     @property
     def end_date(self) -> datetime.datetime | None:
@@ -39,11 +44,17 @@ class Outage:
 
         Tries to use `dateFinReport` key if exists, then falls back to `dateFin` key.
         """
-        end_date = self._raw_data.get(
-            "dateFinEstimeeMax",
-            self._raw_data.get("dateFinReport", self._raw_data.get("dateFin")),
-        )
-        if end_date is None:
+        if end_date_str := self._raw_data.get("dateFinEstimeeMax", ""):
+            # Should works only for unplanned outages
+            return datetime.datetime.fromisoformat(end_date_str)
+
+        if (
+            utils.now() > datetime.datetime.fromisoformat(self._raw_data["dateFin"])
+            and "dateFinReport" in self._raw_data
+        ):
+            return datetime.datetime.fromisoformat(self._raw_data["dateFinReport"])
+
+        if (end_date := self._raw_data.get("dateFin")) is None:
             return end_date
         return datetime.datetime.fromisoformat(end_date)
 
