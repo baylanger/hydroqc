@@ -8,7 +8,7 @@ pytest-asyncio==0.20.3
 black==22.12.0
 mypy==0.991
 types-pytz==2022.7.1.0
-types-PyYAML==6.0.12.2
-types-python-dateutil==2.8.19.5
-pyright==1.1.289
+types-PyYAML==6.0.12.3
+types-python-dateutil==2.8.19.6
+pyright==1.1.290
 lxml==4.9.2
