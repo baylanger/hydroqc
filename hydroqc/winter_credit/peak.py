@@ -3,6 +3,8 @@ import datetime
 
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.timerange import TimeRange
+from hydroqc.types import CriticalPeakDataTyping
+from hydroqc.utils import EST_TIMEZONE
 from hydroqc.winter_credit.consts import (
     DEFAULT_ANCHOR_DURATION,
     DEFAULT_ANCHOR_START_OFFSET,
@@ -11,11 +13,8 @@ from hydroqc.winter_credit.consts import (
     DEFAULT_MORNING_PEAK_END,
     DEFAULT_MORNING_PEAK_START,
     DEFAULT_PRE_HEAT_DURATION,
-    EST_TIMEZONE,
     MORNING_EVENING,
 )
-
-from hydroqc.types import CriticalPeakDataTyping
 
 __all__ = ["Anchor", "PreHeat", "Peak"]
 

@@ -10,8 +10,6 @@ from typing import ParamSpec, TypeVar, cast
 from hydroqc.contract.outage import Outage
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
-from hydroqc.winter_credit.consts import EST_TIMEZONE
-
 from hydroqc.types import (
     ConsoAnnualTyping,
     ConsoDailyTyping,
@@ -21,6 +19,7 @@ from hydroqc.types import (
     PeriodDataTyping,
     listeContratModelTyping,
 )
+from hydroqc.utils import EST_TIMEZONE
 
 T = TypeVar("T")
 P = ParamSpec("P")

@@ -2,22 +2,16 @@
 import datetime
 import logging
 
+from hydroqc import utils
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.hydro_api.client import HydroClient
+from hydroqc.types import CriticalPeakDataTyping, WinterCreditDataTyping
 from hydroqc.winter_credit.consts import (
     DEFAULT_EVENING_PEAK_START,
     DEFAULT_MORNING_PEAK_START,
     DEFAULT_PRE_HEAT_DURATION,
-    EST_TIMEZONE,
 )
 from hydroqc.winter_credit.peak import Anchor, Peak
-
-from hydroqc.types import CriticalPeakDataTyping, WinterCreditDataTyping
-
-
-def _now() -> datetime.datetime:
-    """Get EST localized now datetime."""
-    return EST_TIMEZONE.localize(datetime.datetime.now())
 
 
 class WinterCreditHandler:
@@ -221,7 +215,7 @@ class WinterCreditHandler:
         Return None if no peak is currently running
         FIXME This could be USELESS
         """
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [p for p in self.peaks if p.start_date < now < p.end_date]
         if len(peaks) > 1:
             raise HydroQcWinterCreditError("There is more than one current peak !")
@@ -244,7 +238,7 @@ class WinterCreditHandler:
         It returns critical_anchor, anchor, critical_peak, peak or normal
         This value should help for automation.
         """
-        now = _now()
+        now = utils.now()
         current_anchors = [
             p.anchor
             for p in self.peaks
@@ -268,7 +262,7 @@ class WinterCreditHandler:
 
         Returns True if we have a preheat period is in progress.
         """
-        now = _now()
+        now = utils.now()
         if self.next_peak is None:
             return False
         return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
@@ -292,7 +286,7 @@ class WinterCreditHandler:
 
     def _get_next_peak(self) -> Peak | None:
         """Get next peak or current peak."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [p for p in self.peaks if now < p.end_date]
         if not peaks:  # pylint: disable=consider-using-assignment-expr
             return None
@@ -321,7 +315,7 @@ class WinterCreditHandler:
     @property
     def next_critical_peak(self) -> Peak | None:
         """Get next peak or current peak."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [p for p in self.critical_peaks if now < p.end_date]
         if not peaks:  # pylint: disable=consider-using-assignment-expr
             return None
@@ -332,7 +326,7 @@ class WinterCreditHandler:
     @property
     def today_morning_peak(self) -> Peak | None:
         """Get the peak of today morning."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p for p in self.peaks if p.day == now.date() and p.is_morning
         ]
@@ -347,7 +341,7 @@ class WinterCreditHandler:
     @property
     def today_evening_peak(self) -> Peak | None:
         """Get the peak of today evening."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p for p in self.peaks if p.day == now.date() and p.is_evening
         ]
@@ -363,7 +357,7 @@ class WinterCreditHandler:
     @property
     def tomorrow_morning_peak(self) -> Peak | None:
         """Get the peak of tomorrow morning."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p
             for p in self.peaks
@@ -380,7 +374,7 @@ class WinterCreditHandler:
     @property
     def tomorrow_evening_peak(self) -> Peak | None:
         """Get the peak of tomorrow evening."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p
             for p in self.peaks
@@ -398,7 +392,7 @@ class WinterCreditHandler:
     @property
     def yesterday_morning_peak(self) -> Peak | None:
         """Get the peak of yesterday morning."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p
             for p in self.peaks
@@ -415,7 +409,7 @@ class WinterCreditHandler:
     @property
     def yesterday_evening_peak(self) -> Peak | None:
         """Get the peak of yesterday evening."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p
             for p in self.peaks
@@ -433,7 +427,7 @@ class WinterCreditHandler:
     @property
     def next_anchor(self) -> Anchor | None:
         """Next or current anchor."""
-        now = _now()
+        now = utils.now()
         anchors: list[Anchor] = [
             p.anchor for p in self.peaks if now < p.anchor.end_date
         ]

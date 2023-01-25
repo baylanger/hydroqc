@@ -2,17 +2,12 @@
 import datetime
 import logging
 
-from hydroqc.dpc.consts import DEFAULT_PRE_HEAT_DURATION, EST_TIMEZONE
+from hydroqc import utils
+from hydroqc.dpc.consts import DEFAULT_PRE_HEAT_DURATION
 from hydroqc.dpc.peak import Peak
 from hydroqc.error import HydroQcDPCPeakError
 from hydroqc.hydro_api.client import HydroClient
-
 from hydroqc.types import DPCPeakDataTyping, DPCPeakListDataTyping
-
-
-def _now() -> datetime.datetime:
-    """Get EST localized now datetime."""
-    return EST_TIMEZONE.localize(datetime.datetime.now())
 
 
 class DPCPeakHandler:
@@ -148,7 +143,7 @@ class DPCPeakHandler:
         Return None if no peak is currently running
         FIXME This could be USELESS
         """
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [p for p in self.peaks if p.start_date < now < p.end_date]
         if len(peaks) > 1:
             raise HydroQcDPCPeakError("There is more than one current peak !")
@@ -164,7 +159,7 @@ class DPCPeakHandler:
         It returns peak or normal
         This value should help for automation.
         """
-        now = _now()
+        now = utils.now()
         if [p for p in self.peaks if p.start_date < now < p.end_date]:
             return "peak"
         return "normal"
@@ -175,7 +170,7 @@ class DPCPeakHandler:
 
         Returns True if we have a preheat period is in progress.
         """
-        now = _now()
+        now = utils.now()
         if self.next_peak is None:
             return False
         return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
@@ -188,7 +183,7 @@ class DPCPeakHandler:
 
     def _get_next_peak(self) -> Peak | None:
         """Get next peak or current peak."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [p for p in self.peaks if now < p.end_date]
         if not peaks:  # pylint: disable=consider-using-assignment-expr
             return None
@@ -199,7 +194,7 @@ class DPCPeakHandler:
     @property
     def today_morning_peak(self) -> Peak | None:
         """Get the peak of today morning."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p for p in self.peaks if p.date == now.date() and p.start_date.hour < 12
         ]
@@ -212,7 +207,7 @@ class DPCPeakHandler:
     @property
     def today_evening_peak(self) -> Peak | None:
         """Get the peak of today evening."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p for p in self.peaks if p.date == now.date() and p.start_date.hour > 12
         ]
@@ -226,7 +221,7 @@ class DPCPeakHandler:
     @property
     def tomorrow_morning_peak(self) -> Peak | None:
         """Get the peak of tomorrow morning."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p
             for p in self.peaks
@@ -242,7 +237,7 @@ class DPCPeakHandler:
     @property
     def tomorrow_evening_peak(self) -> Peak | None:
         """Get the peak of tomorrow evening."""
-        now = _now()
+        now = utils.now()
         peaks: list[Peak] = [
             p
             for p in self.peaks

@@ -2,13 +2,13 @@
 import datetime
 
 import pytest
+
 from hydroqc.dpc.peak import Peak as DPCPeak
 from hydroqc.error import HydroQcWinterCreditError
 from hydroqc.timerange import TimeRange
-from hydroqc.winter_credit.consts import EST_TIMEZONE
-from hydroqc.winter_credit.peak import Anchor, Peak, PreHeat
-
 from hydroqc.types import CriticalPeakDataTyping
+from hydroqc.utils import EST_TIMEZONE
+from hydroqc.winter_credit.peak import Anchor, Peak, PreHeat
 
 
 def test_dpcpeak() -> None:

@@ -21,6 +21,7 @@ from json import dumps as json_dumps
 from typing import Any
 
 import aiohttp
+
 from hydroqc.error import HydroQcError, HydroQcHTTPError
 from hydroqc.hydro_api.cache import CCached
 from hydroqc.hydro_api.consts import (
@@ -49,8 +50,6 @@ from hydroqc.hydro_api.consts import (
     SESSION_URL,
 )
 from hydroqc.logger import get_logger
-from hydroqc.winter_credit.consts import EST_TIMEZONE
-
 from hydroqc.types import (
     ComptesTyping,
     ConsoAnnualTyping,
@@ -69,6 +68,7 @@ from hydroqc.types import (
     listeComptesContratsTyping,
     listeContratModelTyping,
 )
+from hydroqc.utils import EST_TIMEZONE
 
 
 class HydroClient:

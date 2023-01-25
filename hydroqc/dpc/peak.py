@@ -2,7 +2,8 @@
 import datetime
 
 from hydroqc.timerange import TimeRange
-from hydroqc.winter_credit.consts import DEFAULT_PRE_HEAT_DURATION, EST_TIMEZONE
+from hydroqc.utils import EST_TIMEZONE
+from hydroqc.winter_credit.consts import DEFAULT_PRE_HEAT_DURATION
 
 __all__ = ["PreHeat", "Peak"]
 
