@@ -1,21 +1,21 @@
-"""Winter credit processing."""
+"""CPC processing."""
 import datetime
 import logging
 
 from hydroqc import utils
-from hydroqc.error import HydroQcWinterCreditError
+from hydroqc.error import HydroQcCPCPeakError
 from hydroqc.hydro_api.client import HydroClient
-from hydroqc.types import CriticalPeakDataTyping, WinterCreditDataTyping
-from hydroqc.winter_credit.consts import (
+from hydroqc.peak.cpc.consts import (
     DEFAULT_EVENING_PEAK_START,
     DEFAULT_MORNING_PEAK_START,
     DEFAULT_PRE_HEAT_DURATION,
 )
-from hydroqc.winter_credit.peak import Anchor, Peak
+from hydroqc.peak.cpc.peak import Anchor, Peak
+from hydroqc.types import CPCDataTyping, CriticalPeakDataTyping
 
 
-class WinterCreditHandler:
-    """Winter Credit extra logic.
+class CPCPeakHandler:
+    """CPC extra logic.
 
     This class supplements Hydro API data by providing calculated values for pre_heat period,
     anchor period detection as well as next event information.
@@ -31,14 +31,14 @@ class WinterCreditHandler:
         hydro_client: HydroClient,
         logger: logging.Logger,
     ):
-        """Winter Credit constructor."""
+        """CPC constructor."""
         self._no_partenaire_demandeur: str = applicant_id
         self._no_partenaire_titulaire: str = customer_id
         self._no_contrat: str = contract_id
         self._hydro_client: HydroClient = hydro_client
         self._logger: logging.Logger = logger
 
-        self._raw_data: WinterCreditDataTyping = {}
+        self._raw_data: CPCDataTyping = {}
         self._preheat_duration = DEFAULT_PRE_HEAT_DURATION
         self._is_enabled: bool = False
 
@@ -66,7 +66,7 @@ class WinterCreditHandler:
     async def refresh_data(self) -> None:
         """Get data from HydroQuebec web site."""
         self._logger.debug("Fetching data from HydroQuebec...")
-        self._raw_data = await self._hydro_client.get_winter_credit(
+        self._raw_data = await self._hydro_client.get_cpc_credit(
             self.applicant_id, self.customer_id, self.contract_id
         )
         self._logger.debug("Data fetched from HydroQuebec...")
@@ -77,7 +77,7 @@ class WinterCreditHandler:
             ].sort(key=lambda x: (x["dateEffacement"], x["heureDebut"]))
 
     @property
-    def raw_data(self) -> WinterCreditDataTyping:
+    def raw_data(self) -> CPCDataTyping:
         """Return raw collected data."""
         return self._raw_data
 
@@ -98,7 +98,7 @@ class WinterCreditHandler:
         elif peak.morning_evening.upper() == "MORNING":
             default_start_time_str = DEFAULT_MORNING_PEAK_START.strftime("%H:%M:%S")
         else:
-            raise HydroQcWinterCreditError("Bad morning_evening value")
+            raise HydroQcCPCPeakError("Bad morning_evening value")
 
         for critical_peak in self._raw_critical_peaks:
             critical_peak_date = datetime.datetime.strptime(
@@ -115,7 +115,7 @@ class WinterCreditHandler:
     # general data
     @property
     def winter_start_date(self) -> datetime.datetime:
-        """Get start date of the winter credits."""
+        """Get start date of the cpc peaks period."""
         if not self._raw_data["periodesEffacementsHivers"]:
             today = datetime.date.today()
             if today.month >= 12:
@@ -135,7 +135,7 @@ class WinterCreditHandler:
 
     @property
     def winter_end_date(self) -> datetime.datetime:
-        """Get end date of the winter credits."""
+        """Get end date of the cpc peaks period."""
         if not self._raw_data["periodesEffacementsHivers"]:
             today = datetime.date.today()
             if today.month >= 12:
@@ -166,7 +166,7 @@ class WinterCreditHandler:
         try:
             return float(self._raw_data["montantEffaceProjete"])
         except ValueError as exp:
-            raise HydroQcWinterCreditError("Bad cumulated credit raw value") from exp
+            raise HydroQcCPCPeakError("Bad cumulated credit raw value") from exp
 
     # Peaks data
     @property
@@ -218,7 +218,7 @@ class WinterCreditHandler:
         now = utils.now()
         peaks: list[Peak] = [p for p in self.peaks if p.start_date < now < p.end_date]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError("There is more than one current peak !")
+            raise HydroQcCPCPeakError("There is more than one current peak !")
         if len(peaks) == 1:
             return peaks[0]
         return None
@@ -233,7 +233,7 @@ class WinterCreditHandler:
     # In progress
     @property
     def current_state(self) -> str:
-        """Get the current state of the winter credit handler.
+        """Get the current state of the cpc handler.
 
         It returns critical_anchor, anchor, critical_peak, peak or normal
         This value should help for automation.
@@ -301,11 +301,11 @@ class WinterCreditHandler:
 
         * we need to write::
 
-            contract.winter_credit.next_peak_is_critical
+            contract.peak_handler.next_peak_is_critical
 
         * but it equivalent to::
 
-            contract.winter_credit.next_peak.is_critical
+            contract.peak_handler.next_peak.is_critical
 
         """
         if (next_peak := self._get_next_peak()) is None:
@@ -331,9 +331,7 @@ class WinterCreditHandler:
             p for p in self.peaks if p.day == now.date() and p.is_morning
         ]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError(
-                "There is more than one morning peak today !"
-            )
+            raise HydroQcCPCPeakError("There is more than one morning peak today !")
         if len(peaks) == 1:
             return peaks[0]
         return None
@@ -346,9 +344,7 @@ class WinterCreditHandler:
             p for p in self.peaks if p.day == now.date() and p.is_evening
         ]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError(
-                "There is more than one evening peak today !"
-            )
+            raise HydroQcCPCPeakError("There is more than one evening peak today !")
         if len(peaks) == 1:
             return peaks[0]
         return None
@@ -364,9 +360,7 @@ class WinterCreditHandler:
             if p.day == now.date() + datetime.timedelta(days=1) and p.is_morning
         ]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError(
-                "There is more than one morning peak tomorrow !"
-            )
+            raise HydroQcCPCPeakError("There is more than one morning peak tomorrow !")
         if len(peaks) == 1:
             return peaks[0]
         return None
@@ -381,9 +375,7 @@ class WinterCreditHandler:
             if p.day == now.date() + datetime.timedelta(days=1) and p.is_evening
         ]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError(
-                "There is more than one evening peak tomorrow !"
-            )
+            raise HydroQcCPCPeakError("There is more than one evening peak tomorrow !")
         if len(peaks) == 1:
             return peaks[0]
         return None
@@ -399,9 +391,7 @@ class WinterCreditHandler:
             if p.day == now.date() - datetime.timedelta(days=1) and p.is_morning
         ]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError(
-                "There is more than one morning peak yesterday !"
-            )
+            raise HydroQcCPCPeakError("There is more than one morning peak yesterday !")
         if len(peaks) == 1:
             return peaks[0]
         return None
@@ -416,9 +406,7 @@ class WinterCreditHandler:
             if p.day == now.date() - datetime.timedelta(days=1) and p.is_evening
         ]
         if len(peaks) > 1:
-            raise HydroQcWinterCreditError(
-                "There is more than one evening peak yesterday !"
-            )
+            raise HydroQcCPCPeakError("There is more than one evening peak yesterday !")
         if len(peaks) == 1:
             return peaks[0]
         return None

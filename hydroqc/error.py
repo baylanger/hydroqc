@@ -13,8 +13,8 @@ class HydroQcAnnualError(HydroQcError):
     """Annual HydroQc Error."""
 
 
-class HydroQcWinterCreditError(HydroQcError):
-    """Winter Credit HydroQc Error."""
+class HydroQcCPCPeakError(HydroQcError):
+    """CPC peak HydroQc Error."""
 
 
 class HydroQcDPCPeakError(HydroQcError):

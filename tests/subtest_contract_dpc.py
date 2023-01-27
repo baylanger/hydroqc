@@ -2,9 +2,10 @@
 import datetime
 
 import pytest
+
 from hydroqc.contract import ContractDPC
 
-from .tools import SkipIfBadRate, today_str, yesterday_str
+from .tools import SkipIfBadRate, today, yesterday
 
 
 class SubTestContractDPC:
@@ -56,10 +57,7 @@ class SubTestContractDPC:
 
         assert isinstance(contract.peak_handler.winter_end_date, datetime.datetime)
 
-        assert isinstance(contract.last_update_date, str)
-        assert isinstance(
-            datetime.date.fromisoformat(contract.last_update_date), datetime.date
-        )
+        assert isinstance(contract.last_update_date, datetime.date)
 
         assert isinstance(contract.critical_called_hours, int)
         assert contract.critical_called_hours >= 0
@@ -80,7 +78,7 @@ class SubTestContractDPC:
         assert isinstance(contract.winter_state, str)
 
         # get_hourly_energy
-        data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
+        data_csv = await contract.get_hourly_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",
@@ -93,7 +91,7 @@ class SubTestContractDPC:
         ], "Bad get_daily_energy CSV headers"
 
         # get_daily_energy
-        data_csv = await contract.get_daily_energy(yesterday_str, today_str)
+        data_csv = await contract.get_daily_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",

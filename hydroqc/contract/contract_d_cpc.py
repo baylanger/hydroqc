@@ -1,7 +1,7 @@
 """Hydroquebec contract module."""
 from hydroqc.contract.contract_d import ContractD
 from hydroqc.hydro_api.client import HydroClient
-from hydroqc.winter_credit.handler import WinterCreditHandler
+from hydroqc.peak.cpc.handler import CPCPeakHandler
 
 
 class ContractDCPC(ContractD):
@@ -32,7 +32,7 @@ class ContractDCPC(ContractD):
             log_level,
         )
         wch_logger = self._logger.getChild("wch")
-        self._wch: WinterCreditHandler = WinterCreditHandler(
+        self._wch: CPCPeakHandler = CPCPeakHandler(
             self.applicant_id,
             self.customer_id,
             self.contract_id,
@@ -41,8 +41,8 @@ class ContractDCPC(ContractD):
         )
 
     @property
-    def winter_credit(self) -> WinterCreditHandler:
-        """Get winter credit helper object."""
+    def peak_handler(self) -> CPCPeakHandler:
+        """Get peak helper object."""
         return self._wch
 
     def set_preheat_duration(self, duration: int) -> None:

@@ -11,13 +11,13 @@ from hydroqc.contract.outage import Outage
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
 from hydroqc.types import (
-    ConsoAnnualTyping,
-    ConsoDailyTyping,
-    ConsoHourlyTyping,
-    ConsoMonthlyTyping,
+    ConsumpAnnualTyping,
+    ConsumpDailyTyping,
+    ConsumpHourlyTyping,
+    ConsumpMonthlyTyping,
+    ContractTyping,
     OutageListTyping,
     PeriodDataTyping,
-    listeContratModelTyping,
 )
 from hydroqc.utils import EST_TIMEZONE
 
@@ -96,8 +96,8 @@ class Contract(ABC):
     _rate_option_code: str
     _meter_id: str
     _address: str
-    _raw_info_data: listeContratModelTyping
-    _annual_info_data: ConsoAnnualTyping
+    _raw_info_data: ContractTyping
+    _annual_info_data: ConsumpAnnualTyping
     _outages_data: OutageListTyping
 
     def __init__(
@@ -185,7 +185,7 @@ class Contract(ABC):
         return self._raw_info_data["idLieuConsommation"]
 
     # Main methods
-    async def get_info(self) -> listeContratModelTyping:
+    async def get_info(self) -> ContractTyping:
         """Fetch info about this contract."""
         self._logger.debug("Getting contract info")
         self._raw_info_data = await self._hydro_client.get_contract_info(
@@ -237,27 +237,27 @@ class Contract(ABC):
         return None
 
     # Consumption methods
-    async def get_today_hourly_consumption(self) -> ConsoHourlyTyping:
+    async def get_today_hourly_consumption(self) -> ConsumpHourlyTyping:
         """Fetch hourly consumption for today."""
         return await self._hydro_client.get_today_hourly_consumption(
             self.applicant_id, self.customer_id, self.contract_id
         )
 
-    async def get_hourly_consumption(self, date_wanted: str) -> ConsoHourlyTyping:
+    async def get_hourly_consumption(self, date_wanted: date) -> ConsumpHourlyTyping:
         """Fetch hourly consumption for a date."""
         return await self._hydro_client.get_hourly_consumption(
             self.applicant_id, self.customer_id, self.contract_id, date_wanted
         )
 
     async def get_daily_consumption(
-        self, start_date: str, end_date: str
-    ) -> ConsoDailyTyping:
+        self, start_date: date, end_date: date
+    ) -> ConsumpDailyTyping:
         """Fetch daily consumption."""
         return await self._hydro_client.get_daily_consumption(
             self.applicant_id, self.customer_id, self.contract_id, start_date, end_date
         )
 
-    async def get_today_daily_consumption(self) -> ConsoDailyTyping:
+    async def get_today_daily_consumption(self) -> ConsumpDailyTyping:
         """TODO ????.
 
         .. todo::
@@ -265,17 +265,15 @@ class Contract(ABC):
         """
         today = datetime.today().astimezone(EST_TIMEZONE)
         yesterday = today - timedelta(days=1)
-        start_date = yesterday.strftime("%Y-%m-%d")
-        end_date = today.strftime("%Y-%m-%d")
-        return await self.get_daily_consumption(start_date, end_date)
+        return await self.get_daily_consumption(yesterday, today)
 
-    async def get_monthly_consumption(self) -> ConsoMonthlyTyping:
+    async def get_monthly_consumption(self) -> ConsumpMonthlyTyping:
         """Fetch monthly consumption."""
         return await self._hydro_client.get_monthly_consumption(
             self.applicant_id, self.customer_id, self.contract_id
         )
 
-    async def get_annual_consumption(self) -> ConsoAnnualTyping:
+    async def get_annual_consumption(self) -> ConsumpAnnualTyping:
         """Fetch annual consumption."""
         self._annual_info_data = await self._hydro_client.get_annual_consumption(
             self.applicant_id, self.customer_id, self.contract_id
@@ -285,8 +283,8 @@ class Contract(ABC):
     # CSV methods
     async def get_daily_energy(
         self,
-        start_date: str,
-        end_date: str,
+        start_date: date,
+        end_date: date,
         raw_output: bool = False,
     ) -> Iterator[list[str | int | float]] | StringIO:
         """Get daily energy and power data on a specific date range.
@@ -306,8 +304,8 @@ class Contract(ABC):
 
     async def get_hourly_energy(
         self,
-        start_date: str,
-        end_date: str,
+        start_date: date,
+        end_date: date,
         raw_output: bool = False,
     ) -> Iterator[list[str | int | float]] | StringIO:
         """Get hourly energy on a specific date range.

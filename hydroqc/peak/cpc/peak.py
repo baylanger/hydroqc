@@ -1,11 +1,8 @@
 """Class describing a period."""
 import datetime
 
-from hydroqc.error import HydroQcWinterCreditError
-from hydroqc.timerange import TimeRange
-from hydroqc.types import CriticalPeakDataTyping
-from hydroqc.utils import EST_TIMEZONE
-from hydroqc.winter_credit.consts import (
+from hydroqc.error import HydroQcCPCPeakError
+from hydroqc.peak.cpc.consts import (
     DEFAULT_ANCHOR_DURATION,
     DEFAULT_ANCHOR_START_OFFSET,
     DEFAULT_EVENING_PEAK_END,
@@ -15,6 +12,9 @@ from hydroqc.winter_credit.consts import (
     DEFAULT_PRE_HEAT_DURATION,
     MORNING_EVENING,
 )
+from hydroqc.timerange import TimeRange
+from hydroqc.types import CriticalPeakDataTyping
+from hydroqc.utils import EST_TIMEZONE
 
 __all__ = ["Anchor", "PreHeat", "Peak"]
 
@@ -62,7 +62,7 @@ class Peak(TimeRange):
         """Period constructor."""
         if morning_evening not in MORNING_EVENING:
             msg = f"Peak type {morning_evening} needs be one of {MORNING_EVENING}"
-            raise HydroQcWinterCreditError(msg)
+            raise HydroQcCPCPeakError(msg)
         self._morning_evening: str = morning_evening
         self._date: datetime.datetime = date.astimezone(EST_TIMEZONE)
         self._preheat_duration: int = preheat_duration
@@ -123,7 +123,7 @@ class Peak(TimeRange):
         """Get the start date of the peak."""
         if self._morning_evening not in ("morning", "evening"):
             msg = f"Peak type {self._morning_evening} needs be one of {MORNING_EVENING}"
-            raise HydroQcWinterCreditError(msg)
+            raise HydroQcCPCPeakError(msg)
         if self._morning_evening == "morning":
             start_date = self._date.replace(
                 hour=DEFAULT_MORNING_PEAK_START.hour,
@@ -144,7 +144,7 @@ class Peak(TimeRange):
         """Get the end date of the peak."""
         if self._morning_evening not in ("morning", "evening"):
             msg = f"Peak type {self._morning_evening} needs be one of {MORNING_EVENING}"
-            raise HydroQcWinterCreditError(msg)
+            raise HydroQcCPCPeakError(msg)
         if self._morning_evening == "morning":
             end_date = self._date.replace(
                 hour=DEFAULT_MORNING_PEAK_END.hour,
@@ -202,7 +202,7 @@ class Peak(TimeRange):
 
     @property
     def is_billed(self) -> bool | None:
-        """Return True if the winter credit was billed.
+        """Return True if the cpc was billed.
 
         Return None if the peak is not critical.
         """

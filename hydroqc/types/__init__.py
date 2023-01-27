@@ -1,47 +1,45 @@
 """Hydroqc custom types."""
+from hydroqc.types.account import (
+    AccountContractSummaryTyping,
+    AccountTyping,
+    InfoAccountTyping,
+    ListAccountsContractsTyping,
+)
 from hydroqc.types.common import IDTokenTyping, Rates
-from hydroqc.types.conso import (
-    ConsoAnnualTyping,
-    ConsoDailyTyping,
-    ConsoHourlyTyping,
-    ConsoMonthlyTyping,
+from hydroqc.types.consump import (
+    ConsumpAnnualTyping,
+    ConsumpDailyTyping,
+    ConsumpHourlyTyping,
+    ConsumpMonthlyTyping,
     DPCDataTyping,
     DPCPeakDataTyping,
     DPCPeakListDataTyping,
     DTDataTyping,
 )
-from hydroqc.types.info_compte import (
-    ComptesTyping,
-    ContractSummaryTyping,
-    InfoCompteTyping,
-    ListContractsTyping,
+from hydroqc.types.contract import ContractTyping, ListContractsTyping
+from hydroqc.types.cpc import CPCDataTyping, CriticalPeakDataTyping, PeriodDataTyping
+from hydroqc.types.outage import (
     OutageCause,
+    OutageCode,
     OutageListTyping,
     OutageStatus,
     OutageTyping,
-    listeComptesContratsTyping,
-    listeContratModelTyping,
-)
-from hydroqc.types.winter_credit import (
-    CriticalPeakDataTyping,
-    PeriodDataTyping,
-    WinterCreditDataTyping,
 )
 
 __all__ = [
-    "InfoCompteTyping",
-    "ConsoHourlyTyping",
-    "ConsoDailyTyping",
-    "ConsoMonthlyTyping",
-    "ConsoAnnualTyping",
+    "InfoAccountTyping",
+    "ConsumpHourlyTyping",
+    "ConsumpDailyTyping",
+    "ConsumpMonthlyTyping",
+    "ConsumpAnnualTyping",
     "CriticalPeakDataTyping",
     "PeriodDataTyping",
-    "WinterCreditDataTyping",
-    "listeComptesContratsTyping",
-    "listeContratModelTyping",
-    "ComptesTyping",
+    "CPCDataTyping",
+    "ListAccountsContractsTyping",
+    "ContractTyping",
+    "AccountTyping",
     "IDTokenTyping",
-    "ContractSummaryTyping",
+    "AccountContractSummaryTyping",
     "ListContractsTyping",
     "DPCDataTyping",
     "DTDataTyping",
@@ -51,5 +49,6 @@ __all__ = [
     "OutageTyping",
     "OutageCause",
     "OutageStatus",
+    "OutageCode",
     "Rates",
 ]

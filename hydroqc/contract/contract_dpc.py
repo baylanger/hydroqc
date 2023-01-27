@@ -4,9 +4,8 @@ from datetime import date
 
 from hydroqc.contract.common import check_period_data_present
 from hydroqc.contract.contract_residential import ContractResidential
-from hydroqc.dpc.handler import DPCPeakHandler
 from hydroqc.hydro_api.client import HydroClient
-
+from hydroqc.peak.dpc.handler import DPCPeakHandler
 from hydroqc.types import DPCDataTyping
 
 
@@ -65,7 +64,7 @@ class ContractDPC(ContractResidential):
 
     @property
     def peak_handler(self) -> DPCPeakHandler:
-        """Get winter credit helper object."""
+        """Get peak handler object."""
         return self._peakh
 
     def set_preheat_duration(self, duration: int) -> None:
@@ -93,9 +92,9 @@ class ContractDPC(ContractResidential):
 
     @property
     @check_dpc_data_present
-    def last_update_date(self) -> str:
+    def last_update_date(self) -> date:
         """DPC data last update."""
-        return self._dpc_data["results"][0]["dateDernMaj"]
+        return date.fromisoformat(self._dpc_data["results"][0]["dateDernMaj"])
 
     @property
     @check_dpc_data_present

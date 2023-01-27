@@ -1,9 +1,9 @@
 """Class describing a period."""
 import datetime
 
+from hydroqc.peak.dpc.consts import DEFAULT_PRE_HEAT_DURATION
 from hydroqc.timerange import TimeRange
 from hydroqc.utils import EST_TIMEZONE
-from hydroqc.winter_credit.consts import DEFAULT_PRE_HEAT_DURATION
 
 __all__ = ["PreHeat", "Peak"]
 

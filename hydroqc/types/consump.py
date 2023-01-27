@@ -5,7 +5,7 @@ from typing import TypedDict
 
 # API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
 # portrait-de-consommation/resourceObtenirDonneesConsommationHoraires
-class ConsoHourlyResultTyping(TypedDict, total=True):
+class ConsumpHourlyResultTyping(TypedDict, total=True):
     """Consumption Hourly json sub output format."""
 
     heure: "str"
@@ -17,7 +17,7 @@ class ConsoHourlyResultTyping(TypedDict, total=True):
     zoneMessageHTMLEnergie: str | None
 
 
-class ConsoHourlyResultsTyping(TypedDict, total=True):
+class ConsumpHourlyResultsTyping(TypedDict, total=True):
     """Consumption Hourly json sub output format."""
 
     codeTarif: str
@@ -29,19 +29,19 @@ class ConsoHourlyResultsTyping(TypedDict, total=True):
     zoneMsgHTMLNonDispPuissance: str | None
     indErreurJourneeEnergie: bool
     indErreurJourneePuissance: bool
-    listeDonneesConsoEnergieHoraire: list[ConsoHourlyResultTyping]
+    listeDonneesConsoEnergieHoraire: list[ConsumpHourlyResultTyping]
 
 
-class ConsoHourlyTyping(TypedDict, total=True):
+class ConsumpHourlyTyping(TypedDict, total=True):
     """Consumption Hourly json output format."""
 
     success: bool
-    results: ConsoHourlyResultsTyping
+    results: ConsumpHourlyResultsTyping
 
 
 # API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
 # portrait-de-consommation/resourceObtenirDonneesQuotidiennesConsommation
-class ConsoDailyResultTyping(TypedDict, total=True):
+class ConsumpDailyResultTyping(TypedDict, total=True):
     """Consumption Daily json sub output format."""
 
     dateJourConso: str
@@ -56,23 +56,23 @@ class ConsoDailyResultTyping(TypedDict, total=True):
     codeEvenementQuot: str
 
 
-class ConsoDailyResultsTyping(TypedDict, total=True):
+class ConsumpDailyResultsTyping(TypedDict, total=True):
     """Consumption Daily json sub output format."""
 
-    courant: ConsoDailyResultTyping
-    compare: ConsoDailyResultTyping
+    courant: ConsumpDailyResultTyping
+    compare: ConsumpDailyResultTyping
 
 
-class ConsoDailyTyping(TypedDict, total=True):
+class ConsumpDailyTyping(TypedDict, total=True):
     """Consumption Daily json output format."""
 
     success: bool
-    results: list[ConsoDailyResultsTyping]
+    results: list[ConsumpDailyResultsTyping]
 
 
 # API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
 # portrait-de-consommation/resourceObtenirDonneesConsommationMensuelles
-class ConsoMonthlyResultTyping(TypedDict, total=True):
+class ConsumpMonthlyResultTyping(TypedDict, total=True):
     """Consumption Monthly json sub output format."""
 
     dateDebutMois: str
@@ -90,23 +90,23 @@ class ConsoMonthlyResultTyping(TypedDict, total=True):
     indPresenceCodeEvenementMois: bool
 
 
-class ConsoMonthlyResultsTyping(TypedDict, total=True):
+class ConsumpMonthlyResultsTyping(TypedDict, total=True):
     """Consumption Monthly json sub output format."""
 
-    courant: ConsoMonthlyResultTyping
-    compare: ConsoMonthlyResultTyping
+    courant: ConsumpMonthlyResultTyping
+    compare: ConsumpMonthlyResultTyping
 
 
-class ConsoMonthlyTyping(TypedDict, total=True):
+class ConsumpMonthlyTyping(TypedDict, total=True):
     """Consumption Monthly json output format."""
 
     success: bool
-    results: list[ConsoMonthlyResultsTyping]
+    results: list[ConsumpMonthlyResultsTyping]
 
 
 # API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
 # portrait-de-consommation/resourceObtenirDonneesConsommationAnnuelles
-class ConsoAnnualCompareTyping(TypedDict, total=True):
+class ConsumpAnnualCompareTyping(TypedDict, total=True):
     """Consumption Annual json sub output format."""
 
     dateDebutAnnee: str
@@ -128,7 +128,7 @@ class ConsoAnnualCompareTyping(TypedDict, total=True):
     coutCentkWh: float
 
 
-class ConsoAnnualCurrentTyping(ConsoAnnualCompareTyping, total=True):
+class ConsumpAnnualCurrentTyping(ConsumpAnnualCompareTyping, total=True):
     """Consumption Annual json sub output format."""
 
     zoneMsgHTMLAnneeSuiviDT: str
@@ -140,18 +140,18 @@ class ConsoAnnualCurrentTyping(ConsoAnnualCompareTyping, total=True):
     tooltipIdClimatisationComparaison: str
 
 
-class ConsoAnnualResultsTyping(TypedDict, total=True):
+class ConsumpAnnualResultsTyping(TypedDict, total=True):
     """Consumption Annual json sub output format."""
 
-    courant: ConsoAnnualCurrentTyping
-    compare: ConsoAnnualCompareTyping
+    courant: ConsumpAnnualCurrentTyping
+    compare: ConsumpAnnualCompareTyping
 
 
-class ConsoAnnualTyping(TypedDict, total=True):
+class ConsumpAnnualTyping(TypedDict, total=True):
     """Consumption Annual json output format."""
 
     success: bool
-    results: list[ConsoAnnualResultsTyping]
+    results: list[ConsumpAnnualResultsTyping]
 
 
 class DPCDataResultsTyping(TypedDict, total=True):

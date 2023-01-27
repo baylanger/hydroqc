@@ -3,8 +3,7 @@ from hydroqc.contract.common import Contract
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
-
-from hydroqc.types import listeComptesContratsTyping, listeContratModelTyping
+from hydroqc.types import ContractTyping, ListAccountsContractsTyping
 
 
 class Account:
@@ -55,7 +54,7 @@ class Account:
         """Get account id."""
         return self._no_compte_contrat
 
-    async def get_info(self) -> listeComptesContratsTyping:
+    async def get_info(self) -> ListAccountsContractsTyping:
         """Fetch latest data of this account."""
         self._logger.debug("Getting account info")
         data = await self._hydro_client.get_account_info(
@@ -76,7 +75,7 @@ class Account:
         """Get current balance."""
         return self._balance
 
-    async def get_contract_info(self, contract_id: str) -> listeContratModelTyping:
+    async def get_contract_info(self, contract_id: str) -> ContractTyping:
         """Fetch info about a contract."""
         self._logger.info("Get contract info")
         _raw_info_data = await self._hydro_client.get_contract_info(

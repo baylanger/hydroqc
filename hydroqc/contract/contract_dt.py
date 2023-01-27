@@ -37,18 +37,24 @@ class ContractDT(ContractResidential):
     @check_period_data_present
     def cp_lower_price_consumption(self) -> float:
         """Total lower priced consumption since the current period started."""
+        if not self._all_period_data:
+            return 0.0
         return self._all_period_data[0]["consoRegPeriode"]
 
     @property
     @check_period_data_present
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
+        if not self._all_period_data:
+            return 0.0
         return self._all_period_data[0]["consoHautPeriode"]
 
     @property
     @check_annual_data_present
     def amount_saved_vs_base_rate(self) -> float:
         """Annual money saved vs D base rate."""
+        if not self._all_period_data:
+            return 0.0
         return self._annual_info_data["results"][0]["courant"][
             "montantGainPerteDTversusBaseAnnee"
         ]

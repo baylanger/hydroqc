@@ -1,5 +1,6 @@
 """Hydroquebec contract module."""
 from collections.abc import Iterator
+from datetime import date
 from io import StringIO
 
 from hydroqc.contract.common import Contract
@@ -37,14 +38,11 @@ class ContractM(Contract):
 
     async def get_power_demand_per_15min(
         self,
-        start_date: str,
-        end_date: str,
+        start_date: date,
+        end_date: date,
         raw_output: bool = False,
     ) -> Iterator[list[str | int | float]] | StringIO:
-        """Get power demand per 15 min on a specific date range.
-
-        date format: 2022-11-23
-        """
+        """Get power demand per 15 min on a specific date range."""
         data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,
@@ -58,14 +56,11 @@ class ContractM(Contract):
 
     async def get_daily_energy_and_power(
         self,
-        start_date: str,
-        end_date: str,
+        start_date: date,
+        end_date: date,
         raw_output: bool = False,
     ) -> Iterator[list[str | int | float]] | StringIO:
-        """Get daily energy and power data on a specific date range.
-
-        date format: 2022-11-23
-        """
+        """Get daily energy and power data on a specific date range."""
         data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,

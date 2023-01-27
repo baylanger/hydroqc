@@ -1,8 +1,9 @@
 """Contract D tests module."""
 import pytest
+
 from hydroqc.contract import ContractD
 
-from .tools import SkipIfBadRate, today_str, yesterday_str
+from .tools import SkipIfBadRate, today, yesterday
 
 
 class SubTestContractD:
@@ -37,7 +38,7 @@ class SubTestContractD:
         )
 
         # get_hourly_energy
-        data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
+        data_csv = await contract.get_hourly_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",
@@ -49,7 +50,7 @@ class SubTestContractD:
         ], "Bad get_hourly_energy CSV headers"
 
         # get_daily_energy
-        data_csv = await contract.get_daily_energy(yesterday_str, today_str)
+        data_csv = await contract.get_daily_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",

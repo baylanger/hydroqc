@@ -48,7 +48,6 @@ CONSO_OVERVIEW_CSV_URL = (
 SESSION_URL = f"{HOST_SPRING}/portail/prive/maj-session/"
 # TODO avoid all the /portail/ URLs
 CONTRACT_HTML_URL = f"{HOST_SPRING}/portail/fr/group/clientele/gerer-mon-compte"
-
 #
 INFOBASE_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/infoBase"
 CONTRACT_SUMMARY_URL = (
@@ -98,6 +97,10 @@ HOURLY_DATA_URL_2 = (
     "resourceObtenirDonneesMeteoHoraires"  # not used
 )
 
-GET_WINTER_CREDIT_API_URL = (
+# CPC
+GET_CPC_API_URL = (
     f"{HOST_SERVICES}/cl/prive/api/v3_0/tarificationDynamique/creditPointeCritique"
 )
+
+# IS PORTAL RUNNING
+IS_HYDRO_PORTAL_UP_URL = f"{HOST_SESSION}/portail/fr/group/clientele/gerer-mon-compte"

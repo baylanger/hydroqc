@@ -1,12 +1,11 @@
 """Hydroquebec customer module."""
 import logging
 
+from hydroqc import contract as contractModule
 from hydroqc.account import Account
 from hydroqc.error import HydroQcError
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.logger import get_logger
-
-from hydroqc import contract as contractModule
 
 
 class Customer:

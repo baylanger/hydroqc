@@ -39,3 +39,10 @@ class Rates(Enum):
     DT: str = "DT"
     DPC: str = "DPC"
     M: str = "M"
+
+
+class RateOptions(Enum):
+    """Contract Rate Options."""
+
+    CPC: str = "CPC"
+    GDP: str = "GDP"
