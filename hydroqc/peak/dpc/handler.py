@@ -1,17 +1,17 @@
-"""Winter credit processing."""
+"""DPC processing."""
 import datetime
 import logging
 
 from hydroqc import utils
-from hydroqc.dpc.consts import DEFAULT_PRE_HEAT_DURATION
-from hydroqc.dpc.peak import Peak
 from hydroqc.error import HydroQcDPCPeakError
 from hydroqc.hydro_api.client import HydroClient
+from hydroqc.peak.dpc.consts import DEFAULT_PRE_HEAT_DURATION
+from hydroqc.peak.dpc.peak import Peak
 from hydroqc.types import DPCPeakDataTyping, DPCPeakListDataTyping
 
 
 class DPCPeakHandler:
-    """Winter Credit extra logic.
+    """DPC extra logic.
 
     This class supplements Hydro API data by providing calculated values for pre_heat period,
     anchor period detection as well as next event information.
@@ -27,7 +27,7 @@ class DPCPeakHandler:
         hydro_client: HydroClient,
         logger: logging.Logger,
     ):
-        """Winter Credit constructor."""
+        """DPC Peak constructor."""
         self._no_partenaire_demandeur: str = applicant_id
         self._no_partenaire_titulaire: str = customer_id
         self._no_contrat: str = contract_id
@@ -87,7 +87,7 @@ class DPCPeakHandler:
     # general data
     @property
     def winter_start_date(self) -> datetime.datetime:
-        """Get start date of the winter credits."""
+        """Get start date of the dpc peaks period."""
         today = datetime.date.today()
         if today.month >= 12:
             return datetime.datetime.strptime(
@@ -102,7 +102,7 @@ class DPCPeakHandler:
 
     @property
     def winter_end_date(self) -> datetime.datetime:
-        """Get end date of the winter credits."""
+        """Get end date of the dpc peaks period."""
         today = datetime.date.today()
         if today.month >= 12:
             return datetime.datetime.strptime(
@@ -154,7 +154,7 @@ class DPCPeakHandler:
     # In progress
     @property
     def current_state(self) -> str:
-        """Get the current state of the winter credit handler.
+        """Get the current state of the cpc handler.
 
         It returns peak or normal
         This value should help for automation.

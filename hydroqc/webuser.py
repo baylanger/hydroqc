@@ -37,6 +37,10 @@ class WebUser:
         self._logger: None | logging.Logger = None
         self._log_file: str | None = log_file
 
+    async def check_hq_portal_status(self) -> bool:
+        """Check if the Hydro Quebec website/portal is available."""
+        return await self._hydro_client.check_portal_status()
+
     async def login(self) -> bool:
         """Login to Hydroquebec website."""
         return await self._hydro_client.login()

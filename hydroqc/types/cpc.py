@@ -3,7 +3,7 @@ from typing import TypedDict
 
 
 class PeriodDataTyping(TypedDict, total=True):
-    """Winter Credit Period json output format."""
+    """CPC Period json output format."""
 
     nbJourLecturePeriode: int
     nbJourPrevuPeriode: int
@@ -21,9 +21,8 @@ class PeriodDataTyping(TypedDict, total=True):
     indMVEPeriode: bool
 
 
-# Winter credits
 class CriticalPeakDataTyping(TypedDict, total=False):
-    """Winter Credit json sub output format."""
+    """CPC json sub output format."""
 
     dateEffacement: str
     heureDebut: str
@@ -37,7 +36,7 @@ class CriticalPeakDataTyping(TypedDict, total=False):
 
 
 class CriticalPeaksDataTyping(TypedDict, total=True):
-    """Winter Credit json sub output format."""
+    """CPC json sub output format."""
 
     dateDebutPeriodeHiver: str
     dateFinPeriodeHiver: str
@@ -45,15 +44,15 @@ class CriticalPeaksDataTyping(TypedDict, total=True):
 
 
 class TotalCriticalPeaksDataTyping(TypedDict, total=True):
-    """Winter Credit json sub output format."""
+    """CPC json sub output format."""
 
     dateDebutPeriodeHiver: str
     consoEffacee: float
     montantEfface: float
 
 
-class WinterCreditDataTyping(TypedDict, total=False):
-    """Winter Credit json output format."""
+class CPCDataTyping(TypedDict, total=False):
+    """CPC json output format."""
 
     adresseCourriel: str
     adresseLieuConso1: str

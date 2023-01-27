@@ -1,8 +1,9 @@
 """Contract M GDP tests module."""
 import pytest
+
 from hydroqc.contract import ContractMGDP
 
-from .tools import SkipIfBadRate, today_str, yesterday_str
+from .tools import SkipIfBadRate, today, yesterday
 
 
 class SubTestContractMGDP:
@@ -22,7 +23,7 @@ class SubTestContractMGDP:
         assert contract.cp_projected_total_consumption is None
 
         # get_hourly_energy
-        data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
+        data_csv = await contract.get_hourly_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",
@@ -34,7 +35,7 @@ class SubTestContractMGDP:
         ], "Bad get_hourly_energy CSV headers"
 
         # get_power_demand_per_15min
-        data_csv = await contract.get_power_demand_per_15min(yesterday_str, today_str)
+        data_csv = await contract.get_power_demand_per_15min(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",
@@ -46,7 +47,7 @@ class SubTestContractMGDP:
         ], "Bad get_power_demand_per_15min headers"
 
         # get_daily_energy_and_power
-        data_csv = await contract.get_daily_energy_and_power(yesterday_str, today_str)
+        data_csv = await contract.get_daily_energy_and_power(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",

@@ -2,16 +2,17 @@
 import datetime
 
 import pytest
+
 from hydroqc.account import Account
 from hydroqc.contract import ContractDCPC
-from hydroqc.winter_credit.consts import (
+from hydroqc.peak.cpc.consts import (
     DEFAULT_EVENING_PEAK_END,
     DEFAULT_EVENING_PEAK_START,
     DEFAULT_MORNING_PEAK_END,
     DEFAULT_MORNING_PEAK_START,
 )
 
-from .tools import SkipIfBadRate, today, today_str, yesterday_str
+from .tools import SkipIfBadRate, today, yesterday
 
 
 class SubTestContractDCPC:
@@ -48,36 +49,34 @@ class SubTestContractDCPC:
         )
 
         contract.set_preheat_duration(60)
-        winter_credit = contract.winter_credit
-        assert winter_credit.applicant_id == contract.applicant_id
-        assert winter_credit.customer_id == account.customer_id
-        assert winter_credit.contract_id == contract.contract_id
+        peak_handler = contract.peak_handler
+        assert peak_handler.applicant_id == contract.applicant_id
+        assert peak_handler.customer_id == account.customer_id
+        assert peak_handler.contract_id == contract.contract_id
 
         assert (
-            len(winter_credit.raw_data) == 0
+            len(peak_handler.raw_data) == 0
         ), "Raw data should be empty, data not fetched yet"
 
-        await winter_credit.refresh_data()
+        await peak_handler.refresh_data()
 
-        assert winter_credit.winter_start_date.month == 12
-        assert winter_credit.winter_start_date.day == 1
-        assert winter_credit.winter_end_date.month == 3
-        assert winter_credit.winter_end_date.day == 31
-        assert len(winter_credit.peaks) > 0
-        assert len(winter_credit.sonic) > 0
-        assert len(winter_credit.critical_peaks) >= 0
-        assert len(winter_credit.critical_peaks) <= len(winter_credit.peaks)
-        assert winter_credit.cumulated_credit >= 0
-        assert winter_credit.projected_cumulated_credit >= 0
-        assert (
-            winter_credit.projected_cumulated_credit >= winter_credit.cumulated_credit
-        )
+        assert peak_handler.winter_start_date.month == 12
+        assert peak_handler.winter_start_date.day == 1
+        assert peak_handler.winter_end_date.month == 3
+        assert peak_handler.winter_end_date.day == 31
+        assert len(peak_handler.peaks) > 0
+        assert len(peak_handler.sonic) > 0
+        assert len(peak_handler.critical_peaks) >= 0
+        assert len(peak_handler.critical_peaks) <= len(peak_handler.peaks)
+        assert peak_handler.cumulated_credit >= 0
+        assert peak_handler.projected_cumulated_credit >= 0
+        assert peak_handler.projected_cumulated_credit >= peak_handler.cumulated_credit
 
         if (
-            today <= winter_credit.winter_start_date.date()
-            or today >= winter_credit.winter_end_date.date()
+            today <= peak_handler.winter_start_date.date()
+            or today >= peak_handler.winter_end_date.date()
         ):
-            assert winter_credit.current_peak is None
+            assert peak_handler.current_peak is None
         else:
             # We are in winter
             now = datetime.datetime.now().time()
@@ -85,14 +84,14 @@ class SubTestContractDCPC:
                 DEFAULT_EVENING_PEAK_START <= now <= DEFAULT_EVENING_PEAK_END
             ):
                 assert (
-                    winter_credit.current_peak is not None
-                    and winter_credit.current_peak.start_date
-                    in [p.start_date for p in winter_credit.peaks]
+                    peak_handler.current_peak is not None
+                    and peak_handler.current_peak.start_date
+                    in [p.start_date for p in peak_handler.peaks]
                 )
             else:
-                assert winter_credit.current_peak is None
-        assert winter_credit.current_peak_is_critical in {None, True, False}
-        assert winter_credit.current_state in {
+                assert peak_handler.current_peak is None
+        assert peak_handler.current_peak_is_critical in {None, True, False}
+        assert peak_handler.current_state in {
             "critical_anchor",
             "anchor",
             "critical_peak",
@@ -100,67 +99,67 @@ class SubTestContractDCPC:
             "normal",
         }
 
-        assert isinstance(winter_credit.preheat_in_progress, bool)
-        assert isinstance(winter_credit.is_any_critical_peak_coming, bool)
-        assert isinstance(winter_credit.next_peak_is_critical, bool)
-        if winter_credit.next_critical_peak is not None:
-            assert winter_credit.next_critical_peak.start_date in [
-                p.start_date for p in winter_credit.critical_peaks
+        assert isinstance(peak_handler.preheat_in_progress, bool)
+        assert isinstance(peak_handler.is_any_critical_peak_coming, bool)
+        assert isinstance(peak_handler.next_peak_is_critical, bool)
+        if peak_handler.next_critical_peak is not None:
+            assert peak_handler.next_critical_peak.start_date in [
+                p.start_date for p in peak_handler.critical_peaks
             ]
         else:
-            assert winter_credit.next_critical_peak is None
+            assert peak_handler.next_critical_peak is None
 
         if (
-            today <= winter_credit.winter_start_date.date()
-            or today >= winter_credit.winter_end_date.date()
+            today <= peak_handler.winter_start_date.date()
+            or today >= peak_handler.winter_end_date.date()
         ):
-            assert winter_credit.today_morning_peak is None
-            assert winter_credit.today_evening_peak is None
-            assert winter_credit.tomorrow_morning_peak is None
-            assert winter_credit.tomorrow_evening_peak is None
-            assert winter_credit.yesterday_morning_peak is None
-            assert winter_credit.yesterday_evening_peak is None
-            assert winter_credit.next_anchor is None
+            assert peak_handler.today_morning_peak is None
+            assert peak_handler.today_evening_peak is None
+            assert peak_handler.tomorrow_morning_peak is None
+            assert peak_handler.tomorrow_evening_peak is None
+            assert peak_handler.yesterday_morning_peak is None
+            assert peak_handler.yesterday_evening_peak is None
+            assert peak_handler.next_anchor is None
         else:
             # We are in winter
             assert (
-                winter_credit.today_morning_peak is not None
-                and winter_credit.today_morning_peak.start_date
-                in [p.start_date for p in winter_credit.peaks]
+                peak_handler.today_morning_peak is not None
+                and peak_handler.today_morning_peak.start_date
+                in [p.start_date for p in peak_handler.peaks]
             )
             assert (
-                winter_credit.today_evening_peak is not None
-                and winter_credit.today_evening_peak.start_date
-                in [p.start_date for p in winter_credit.peaks]
+                peak_handler.today_evening_peak is not None
+                and peak_handler.today_evening_peak.start_date
+                in [p.start_date for p in peak_handler.peaks]
             )
             assert (
-                winter_credit.tomorrow_morning_peak is not None
-                and winter_credit.tomorrow_morning_peak.start_date
-                in [p.start_date for p in winter_credit.peaks]
+                peak_handler.tomorrow_morning_peak is not None
+                and peak_handler.tomorrow_morning_peak.start_date
+                in [p.start_date for p in peak_handler.peaks]
             )
             assert (
-                winter_credit.tomorrow_evening_peak is not None
-                and winter_credit.tomorrow_evening_peak.start_date
-                in [p.start_date for p in winter_credit.peaks]
+                peak_handler.tomorrow_evening_peak is not None
+                and peak_handler.tomorrow_evening_peak.start_date
+                in [p.start_date for p in peak_handler.peaks]
             )
             assert (
-                winter_credit.yesterday_morning_peak is not None
-                and winter_credit.yesterday_morning_peak.start_date
-                in [p.start_date for p in winter_credit.peaks]
+                peak_handler.yesterday_morning_peak is not None
+                and peak_handler.yesterday_morning_peak.start_date
+                in [p.start_date for p in peak_handler.peaks]
             )
             assert (
-                winter_credit.yesterday_evening_peak is not None
-                and winter_credit.yesterday_evening_peak.start_date
-                in [p.start_date for p in winter_credit.peaks]
+                peak_handler.yesterday_evening_peak is not None
+                and peak_handler.yesterday_evening_peak.start_date
+                in [p.start_date for p in peak_handler.peaks]
             )
             assert (
-                winter_credit.next_anchor is not None
-                and winter_credit.next_anchor.start_date
-                in [p.anchor.start_date for p in winter_credit.peaks]
+                peak_handler.next_anchor is not None
+                and peak_handler.next_anchor.start_date
+                in [p.anchor.start_date for p in peak_handler.peaks]
             )
 
         # get_hourly_energy
-        data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
+        data_csv = await contract.get_hourly_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",
@@ -172,7 +171,7 @@ class SubTestContractDCPC:
         ], "Bad get_hourly_energy CSV headers"
 
         # get_daily_energy
-        data_csv = await contract.get_daily_energy(yesterday_str, today_str)
+        data_csv = await contract.get_daily_energy(yesterday, today)
         first_line = next(data_csv)
         assert first_line == [
             "Contrat",

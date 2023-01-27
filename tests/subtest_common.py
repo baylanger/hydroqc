@@ -5,6 +5,7 @@ import time
 import typing
 
 import pytest
+
 from hydroqc.account import Account
 from hydroqc.contract import ContractDCPC
 from hydroqc.contract.common import (
@@ -16,10 +17,17 @@ from hydroqc.contract.common import (
 from hydroqc.contract.contract_dpc import check_dpc_data_present
 from hydroqc.customer import Customer
 from hydroqc.error import HydroQcError
+from hydroqc.peak.cpc.handler import CPCPeakHandler
 from hydroqc.webuser import WebUser
-from hydroqc.winter_credit.handler import WinterCreditHandler
 
-from .tools import lastweekday_str, today, today_str, yesterday_str
+from .tools import (
+    lastweekday,
+    lastweekday_str,
+    today,
+    today_str,
+    yesterday,
+    yesterday_str,
+)
 
 
 async def is_young_contract(contract: Contract) -> bool:
@@ -250,7 +258,7 @@ class SubTestCommon:
             assert contract.rate_option == (
                 self.HYDROQC_RATE_OPTION if self.HYDROQC_RATE_OPTION else ""
             ), "Bad Rate option, please check the value of self.HYDROQC_RATE_OPTION"
-            # assert contract.winter_credit.is_enabled == (
+            # assert contract.peak_handler.is_enabled == (
             #    self.HYDROQC_RATE_OPTION == "CPC"
             # )
 
@@ -274,16 +282,14 @@ class SubTestCommon:
     @pytest.mark.asyncio
     async def test_total_hourly_consumption(self, contract: Contract) -> None:
         """Test total hourly consumption stats."""
-        hourly_consumption = await contract.get_hourly_consumption(yesterday_str)
+        hourly_consumption = await contract.get_hourly_consumption(yesterday)
         assert hourly_consumption.get("success") is True
         assert hourly_consumption.get("results", {}).get("dateJour") == yesterday_str
 
     @pytest.mark.asyncio
     async def test_daily_consumption(self, contract: Contract) -> None:
         """Test daily consumption stats."""
-        daily_consumption = await contract.get_daily_consumption(
-            lastweekday_str, yesterday_str
-        )
+        daily_consumption = await contract.get_daily_consumption(lastweekday, yesterday)
         assert daily_consumption.get("success") is True
         assert len(daily_consumption.get("results", [])) == 7
         assert (
@@ -381,11 +387,11 @@ class SubTestCommon:
         ), "Bad EPP status, please check the value of self.HYDROQC_EPP_ENABLED"
 
     @pytest.fixture(scope="module")
-    def winter_credit(self, contract: Contract) -> WinterCreditHandler | None:
-        """Fixture to keep the winter credit instance through all tests."""
+    def cpc(self, contract: Contract) -> CPCPeakHandler | None:
+        """Fixture to keep the cpc instance through all tests."""
         if self.HYDROQC_RATE == "D" and self.HYDROQC_RATE_OPTION == "CPC":
             contract_dcpc = typing.cast(ContractDCPC, contract)
-            return contract_dcpc.winter_credit
+            return contract_dcpc.peak_handler
         return None
 
     @pytest.mark.asyncio
@@ -395,7 +401,7 @@ class SubTestCommon:
     ) -> None:
         """Test CSV downloads."""
         # get_hourly_energy
-        data_csv = await contract.get_hourly_energy(yesterday_str, today_str)
+        data_csv = await contract.get_hourly_energy(yesterday, today)
         first_line = next(data_csv)
         if contract.rate in set(("DT", "DPC")):
             assert first_line == [
@@ -417,7 +423,7 @@ class SubTestCommon:
                 "Code de température",
             ], "Bad get_hourly_energy CSV headers"
         # get_daily_energy
-        data_csv = await contract.get_daily_energy(yesterday_str, today_str)
+        data_csv = await contract.get_daily_energy(yesterday, today)
         first_line = next(data_csv)
         if contract.rate in set(("DT", "DPC")):
             assert first_line == [

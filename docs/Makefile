@@ -23,4 +23,4 @@ help:
 update_apidoc:
 	rm -rf source/reference/
 	mkdir -p source/reference/
-	sphinx-apidoc  -o source/reference/ ../src/hydroqc -H Reference
+	sphinx-apidoc  -o source/reference/ ../hydroqc -H Reference

@@ -9,7 +9,7 @@ import datetime
 import logging
 
 from hydroqc import utils
-from hydroqc.types import OutageCause, OutageStatus, OutageTyping
+from hydroqc.types import OutageCause, OutageCode, OutageStatus, OutageTyping
 
 
 class Outage:
@@ -31,8 +31,11 @@ class Outage:
 
         Tries to use `dateDebutReport` key if exists, then falls back to `dateDebut` key.
         """
+        # TODO: maybe it's more stable if we use self.status to know which
+        # date we should use ?
         if (
-            utils.now() > datetime.datetime.fromisoformat(self._raw_data["dateFin"])
+            "dateFin" in self._raw_data
+            and utils.now() > datetime.datetime.fromisoformat(self._raw_data["dateFin"])
             and "dateDebutReport" in self._raw_data
         ):
             return datetime.datetime.fromisoformat(self._raw_data["dateDebutReport"])
@@ -44,12 +47,15 @@ class Outage:
 
         Tries to use `dateFinReport` key if exists, then falls back to `dateFin` key.
         """
+        # TODO: maybe it's more stable if we use self.status to know which
+        # date we should use ?
         if end_date_str := self._raw_data.get("dateFinEstimeeMax", ""):
-            # Should works only for unplanned outages
+            # dateFinEstimeeMax is used when the outage is currently running
             return datetime.datetime.fromisoformat(end_date_str)
 
         if (
-            utils.now() > datetime.datetime.fromisoformat(self._raw_data["dateFin"])
+            "dateFin" in self._raw_data
+            and utils.now() > datetime.datetime.fromisoformat(self._raw_data["dateFin"])
             and "dateFinReport" in self._raw_data
         ):
             return datetime.datetime.fromisoformat(self._raw_data["dateFinReport"])
@@ -76,9 +82,14 @@ class Outage:
         return datetime.timedelta(minutes=self._raw_data["dureePrevu"])
 
     @property
+    def code(self) -> OutageCode:
+        """Get outage code."""
+        return OutageCode(self._raw_data.get("codeIntervention", "_"))
+
+    @property
     def status(self) -> OutageStatus:
         """Get outage status."""
-        return OutageStatus(self._raw_data.get("codeIntervention", "_"))
+        return OutageStatus(self._raw_data["etat"])
 
     @property
     def emergency_level(self) -> str | None:
