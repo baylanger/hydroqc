@@ -15,6 +15,8 @@ class PeriodDataTyping(TypedDict, total=True):
     consoTotalProjetePeriode: float
     consoRegPeriode: float
     consoHautPeriode: float
+    nbKwhConsoHautTarifFlexPeriode: float
+    montantVentePointeCritique: float
     tempMoyennePeriode: float
     coutCentkWh: float | None
     dernierTarif: str

@@ -15,11 +15,17 @@ def check_dpc_data_present(
     """Check if contractDPC's data are present."""
 
     def wrapper(contract: "ContractDPC") -> None | str | bool | float | date:
-        if hasattr(contract, "_dpc_data"):
-            return method(contract)
+        if not hasattr(contract, "_dpc_data"):
+            contract._logger.warning("You need to call get_dpc_data method first")
+            return None
 
-        contract._logger.warning("You need to call get_dpc_data method first")
-        return None
+        if not contract._dpc_data:
+            contract._logger.info(
+                "It seems Hydro-Québec didn't provided some data. "
+                "Maybe you did a rate change recently. "
+                "This message should disappear at the beginning of the next bill period."
+            )
+        return method(contract)
 
     return wrapper
 
@@ -82,13 +88,22 @@ class ContractDPC(ContractResidential):
     @check_period_data_present
     def cp_lower_price_consumption(self) -> float:
         """Total lower priced consumption since the current period started."""
-        return self._all_period_data[0]["consoRegPeriode"]
+        return (
+            self._all_period_data[0]["consoTotalPeriode"]
+            - self._all_period_data[0]["nbKwhConsoHautTarifFlexPeriode"]
+        )
+
+    @property
+    @check_period_data_present
+    def cp_higher_price_consumption_cost(self) -> float:
+        """Total cost of critical peak consumption since the current period started."""
+        return self._all_period_data[0]["montantVentePointeCritique"]
 
     @property
     @check_period_data_present
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
-        return self._all_period_data[0]["consoHautPeriode"]
+        return self._all_period_data[0]["nbKwhConsoHautTarifFlexPeriode"]
 
     @property
     @check_dpc_data_present
@@ -129,5 +144,9 @@ class ContractDPC(ContractResidential):
     @property
     @check_dpc_data_present
     def winter_state(self) -> str:
-        """TODO: unknown."""
+        """Get winter state.
+
+        C: started
+        ?: ???????
+        """
         return self._dpc_data["results"][0]["etatHiver"]

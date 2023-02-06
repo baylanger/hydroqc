@@ -40,13 +40,12 @@ class SubTestContractDPC:
             isinstance(contract.cp_kwh_cost_mean, float)
             and contract.cp_kwh_cost_mean >= 0
         )
-
         assert (
-            isinstance(contract.cp_lower_price_consumption, int)
+            isinstance(contract.cp_lower_price_consumption, float)
             and contract.cp_lower_price_consumption >= 0
         )
         assert (
-            isinstance(contract.cp_higher_price_consumption, int)
+            isinstance(contract.cp_higher_price_consumption, float)
             and contract.cp_higher_price_consumption >= 0
         )
 

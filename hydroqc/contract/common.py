@@ -26,16 +26,21 @@ P = ParamSpec("P")
 
 
 def check_period_data_present(
-    method: Callable[..., None | str | bool | float]
-) -> Callable[..., None | str | bool | float]:
+    method: Callable[..., None | str | bool | float | PeriodDataTyping]
+) -> Callable[..., None | str | bool | float | PeriodDataTyping]:
     """Check if contract's data are present."""
 
-    def wrapper(contract: "Contract") -> None | str | bool | float:
-        if len(contract._all_period_data):
-            return method(contract)
-
-        contract._logger.warning("You need to call get_latest_period_info method first")
-        return None
+    def wrapper(contract: "Contract") -> None | str | bool | float | PeriodDataTyping:
+        if not hasattr(contract, "_all_period_data"):
+            contract._logger.warning("You need to call get_period_info method first")
+            return None
+        if not contract._all_period_data:
+            contract._logger.info(
+                "It seems Hydro-Québec didn't provided some data. "
+                "Maybe you did a rate change recently. "
+                "This message should disappear at the beginning of the next bill period."
+            )
+        return method(contract)
 
     return wrapper
 
@@ -46,11 +51,16 @@ def check_info_data_present(
     """Check if contract's data are present."""
 
     def wrapper(contract: "Contract") -> None | str | bool | float | date:
-        if hasattr(contract, "_raw_info_data"):
-            return method(contract)
-
-        contract._logger.warning("You need to call get_info method first")
-        return None
+        if not hasattr(contract, "_raw_info_data"):
+            contract._logger.warning("You need to call get_info method first")
+            return None
+        if not contract._raw_info_data:
+            contract._logger.info(
+                "It seems Hydro-Québec didn't provided some data. "
+                "Maybe you did a rate change recently. "
+                "This message should disappear at the beginning of the next bill period."
+            )
+        return method(contract)
 
     return wrapper
 
@@ -61,11 +71,19 @@ def check_annual_data_present(
     """Check if contract's data are present."""
 
     def wrapper(contract: "Contract") -> None | str | bool | float | date:
-        if hasattr(contract, "_annual_info_data"):
-            return method(contract)
-
-        contract._logger.warning("You need to call get_annual_consumption method first")
-        return None
+        if not hasattr(contract, "_annual_info_data"):
+            contract._logger.warning(
+                "You need to call get_annual_consumption method first"
+            )
+            return None
+        if not contract._annual_info_data:
+            contract._logger.info(
+                "It seems Hydro-Québec didn't provided some data. "
+                "Maybe you did a rate change recently. "
+                "This message should disappear at the beginning of the next bill period."
+            )
+            return None
+        return method(contract)
 
     return wrapper
 
@@ -99,6 +117,7 @@ class Contract(ABC):
     _raw_info_data: ContractTyping
     _annual_info_data: ConsumpAnnualTyping
     _outages_data: OutageListTyping
+    _all_period_data: list[PeriodDataTyping]
 
     def __init__(
         self,
@@ -121,7 +140,6 @@ class Contract(ABC):
         self._no_contrat: str = contract_id
         self._hydro_client: HydroClient = hydro_client
         self._address: str = ""
-        self._all_period_data: list[PeriodDataTyping] = []
         self._outages: list[Outage] = []
 
     # Main attributes
@@ -203,11 +221,11 @@ class Contract(ABC):
         self._logger.debug("Got contract periods info")
         return self._all_period_data
 
-    def get_latest_period_info(self) -> PeriodDataTyping | dict[None, None]:
+    @property
+    @check_period_data_present
+    def latest_period_info(self) -> PeriodDataTyping:
         """Fetch latest period info."""
-        if self._all_period_data:
-            return self._all_period_data[0]
-        return {}
+        return self._all_period_data[0]
 
     async def refresh_outages(self) -> None:
         """Fetch contract outages."""

@@ -172,13 +172,6 @@ class Diagnostic:
             await self.contract.get_periods_info()
             self.logger.info("%02d - Got period info", self.diag_id - 1)
 
-            # Hourly today consumption
-            self.logger.info(
-                "%02d - Trying to get today hourly consumption", self.diag_id
-            )
-            await self.contract.get_today_hourly_consumption()
-            self.logger.info("%02d - Got today hourly consumption", self.diag_id - 1)
-
             # Hourly yesterday consumption
             self.logger.info(
                 "%02d - Trying to get yesterday hourly consumption", self.diag_id
@@ -187,6 +180,13 @@ class Diagnostic:
             self.logger.info(
                 "%02d - Got yesterday hourly consumption", self.diag_id - 1
             )
+
+            # Hourly today consumption
+            self.logger.info(
+                "%02d - Trying to get today hourly consumption", self.diag_id
+            )
+            await self.contract.get_today_hourly_consumption()
+            self.logger.info("%02d - Got today hourly consumption", self.diag_id - 1)
 
             # Daily consumption
             self.logger.info("%02d - Trying to get daily consumption", self.diag_id)

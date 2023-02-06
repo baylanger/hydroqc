@@ -97,8 +97,11 @@ class DPCPeakHandler:
             return datetime.datetime.strptime(
                 f"{today.year-1}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
             )
+        # TODO ensure the value
         # today.month > 4
-        raise ValueError("Please fix me")
+        return datetime.datetime.strptime(
+            f"{today.year}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+        )
 
     @property
     def winter_end_date(self) -> datetime.datetime:
@@ -112,8 +115,11 @@ class DPCPeakHandler:
             return datetime.datetime.strptime(
                 f"{today.year}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
             )
+        # TODO ensure the value
         # today.month > 4
-        raise ValueError("Please fix me")
+        return datetime.datetime.strptime(
+            f"{today.year+1}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+        )
 
     # Peaks data
     @property

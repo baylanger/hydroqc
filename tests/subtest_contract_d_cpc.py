@@ -20,7 +20,7 @@ class SubTestContractDCPC:
 
     @SkipIfBadRate(["D"], "CPC")
     @pytest.mark.asyncio
-    async def test_contract_d_cpc_specific(
+    async def test_contract_d_cpc_specific(  # pylint: disable=too-many-statements
         self, account: Account, contract: ContractDCPC
     ) -> None:
         """Test total hourly consumption stats."""
@@ -28,24 +28,29 @@ class SubTestContractDCPC:
         assert contract.rate_option == "CPC"
 
         assert (
-            isinstance(contract.cp_current_bill, float)
-            and contract.cp_current_bill >= 0
-        )
-        assert (
             isinstance(contract.cp_projected_bill, float)
             and contract.cp_projected_bill >= 0
         )
-        assert (
-            isinstance(contract.cp_daily_bill_mean, float)
-            and contract.cp_daily_bill_mean >= 0
-        )
+        if contract.cp_current_bill is not None:
+            # Data could be None if HQ is not able to return a negative value
+            # Because of too much WC cumulated
+            assert (
+                isinstance(contract.cp_current_bill, float)
+                and contract.cp_current_bill >= 0
+            )
+            # Data could be None if HQ is not able to return a negative value
+            # Because of too much WC cumulated
+            assert (
+                isinstance(contract.cp_daily_bill_mean, float)
+                and contract.cp_daily_bill_mean >= 0
+            )
+            assert (
+                isinstance(contract.cp_kwh_cost_mean, float)
+                and contract.cp_kwh_cost_mean >= 0
+            )
         assert (
             isinstance(contract.cp_projected_total_consumption, int)
             and contract.cp_projected_total_consumption >= 0
-        )
-        assert (
-            isinstance(contract.cp_kwh_cost_mean, float)
-            and contract.cp_kwh_cost_mean >= 0
         )
 
         contract.set_preheat_duration(60)
@@ -71,6 +76,8 @@ class SubTestContractDCPC:
         assert peak_handler.cumulated_credit >= 0
         assert peak_handler.projected_cumulated_credit >= 0
         assert peak_handler.projected_cumulated_credit >= peak_handler.cumulated_credit
+        assert peak_handler.cumulated_critical_hours >= 0
+        assert peak_handler.cumulated_curtailed_energy >= 0
 
         if (
             today <= peak_handler.winter_start_date.date()
