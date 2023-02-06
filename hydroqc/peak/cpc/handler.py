@@ -21,8 +21,6 @@ class CPCPeakHandler:
     anchor period detection as well as next event information.
     """
 
-    # peaks: list[Peak]
-
     def __init__(
         self,
         applicant_id: str,
@@ -126,8 +124,11 @@ class CPCPeakHandler:
                 return datetime.datetime.strptime(
                     f"{today.year-1}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
                 )
+            # TODO ensure the value
             # today.month > 4
-            raise ValueError("Please fix me")
+            return datetime.datetime.strptime(
+                f"{today.year}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+            )
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateDebutPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
@@ -146,8 +147,11 @@ class CPCPeakHandler:
                 return datetime.datetime.strptime(
                     f"{today.year}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
                 )
+            # TODO ensure the value
             # today.month > 4
-            raise ValueError("Please fix me")
+            return datetime.datetime.strptime(
+                f"{today.year+1}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
+            )
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateFinPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
@@ -157,6 +161,24 @@ class CPCPeakHandler:
     def cumulated_credit(self) -> float:
         """Get cumulated credits."""
         return round(sum(p["montantEffacee"] for p in self._raw_critical_peaks), 2)
+
+    @property
+    def cumulated_critical_hours(self) -> float:
+        """Get total number of hours as critical peak."""
+        total = sum(
+            [
+                datetime.datetime.strptime(p["heureFin"], "%H:%M:%S")
+                - datetime.datetime.strptime(p["heureDebut"], "%H:%M:%S")
+                for p in self._raw_critical_peaks
+            ],
+            datetime.timedelta(),
+        )
+        return total.total_seconds() / 3600
+
+    @property
+    def cumulated_curtailed_energy(self) -> float:
+        """Get total number of curtailed energy in kWh."""
+        return sum(p["consoEffacee"] for p in self._raw_critical_peaks)
 
     @property
     def projected_cumulated_credit(self) -> float:

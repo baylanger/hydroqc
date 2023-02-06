@@ -36,13 +36,22 @@ test:
       - packages.mmd
       - packages.html
   rules:
+    # Disable if CI_SKIP is set
     - if: '$CI_SKIP =~ /test/'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
+    # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       when: never
-    - when: on_success
+    # Enabled for main branch
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
+    - when: never
 
 .private_test_script: &private_test_script
   stage: private_tests
@@ -146,12 +155,19 @@ test:
     reports:
       junit: hydroqc/tests_result_junit.*.xml
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
+    # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       when: never
-    - when: on_success
-
+    # Enabled for main branch
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
+    - when: never
 
 D_CPC_titilambert:
   variables:
@@ -233,13 +249,22 @@ private_tests_done:
       - "*-badge.svg"
       - "*-job-end-date.svg"
   rules:
+    # Disable if CI_SKIP is set
     - if: '$CI_SKIP =~ /done/'
       when: never
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-      when: manual
+    # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       when: never
-    - when: on_success
+    # Enabled for main branch
+    - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
+      when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
+    - when: never
 
 package:
   stage: test
@@ -254,12 +279,21 @@ package:
     - python3 -m twine check --strict dist/*
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --verbose --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   rules:
+    # Disable if CI_SKIP is set
     - if: '$CI_SKIP =~ /package/'
       when: never
+    # Disable if it's a tag pipeline
     - if: '$CI_COMMIT_TAG'
       when: never
+    # Enabled for main branch
     - if: '$CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH'
       when: on_success
+    # Enable for all other branches if it's a MR pipeline
+    - if: '$CI_COMMIT_REF_NAME != $CI_DEFAULT_BRANCH && $CI_MERGE_REQUEST_IID'
+      when: on_success
+    # Make it manual for external MR
+    - if: '$CI_MERGE_REQUEST_IID && $CI_MERGE_REQUEST_PROJECT_PATH != $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH'
+      when: manual
     - when: never
 
 promote2pypi:

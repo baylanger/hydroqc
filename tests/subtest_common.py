@@ -357,10 +357,10 @@ class SubTestCommon:
         """Test latest_period."""
         assert (
             contract.cp_current_day is None
-        ), "Method get_latest_period_info is already called but it should not"
+        ), "Method get_period_info is already called but it should not"
         assert (
-            not contract.get_latest_period_info()
-        ), "Method get_latest_period_info is already called but it should not"
+            not contract.latest_period_info
+        ), "Method get_period_info is already called but it should not"
 
     @typing.no_type_check
     @pytest.mark.asyncio
@@ -375,7 +375,7 @@ class SubTestCommon:
             contract._hydro_client.selected_contract == contract.contract_id
         ), "Bad selected contract"
 
-        assert len(contract.get_latest_period_info()) > 0, "No period info found"
+        assert len(contract.latest_period_info) > 0, "No period info found"
         assert contract.cp_current_day >= 0
         assert contract.cp_duration >= 0
         assert contract.cp_daily_consumption_mean >= 0
