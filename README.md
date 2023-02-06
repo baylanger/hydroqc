@@ -24,36 +24,30 @@ Each account, contracts and rates are different and we do our best to integrate 
 
 ### Rate D
 
-| Base Rate | Rate Option | EPP* | Tester | Test result | Last run | Multi Contract | Multi Customer | Comment |
-| - | - | - | - | - | - | - | - | - |
-| D |  | No | @weimdall | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-job-end-date.svg?job=private_tests_done) | Yes | | |
-| D |  | Yes | @devzwf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-job-end-date.svg?job=private_tests_done) | | | Hilo |
-| D | CPC** | No | @titilambert |![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done)  | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | | Yes | |
+| Base Rate | Rate Option | Tester | Test result | Last run | Comment |
+| - | - | - | - | - | - |
+| D | - | @weimdall | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-job-end-date.svg?job=private_tests_done) | |
+| D | - | @devzwf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-job-end-date.svg?job=private_tests_done) | Hilo |
+| D | CPC | @titilambert |![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done)  | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | |
 
-*EPP = Equal Payment Plan
-
-**CPC = Crédit Pointe Critique (Winter Credits)
 #### Flex D (DPC)
 
-| Base Rate | EPP | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
-| - | - | - | - | - | - | - | - |
-| DPC | No | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | |
+| Base Rate | Rate Option  | Tester | Test result | Last run | Comment |
+| - | - | - | - | - | - |
+| DPC | - | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | |
 
-*EPP = Equal Payment Plan
 #### Dual Energy (DT)
 
-| Base Rate | EPP | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
-| - | - | - | - | - | - | - | - |
-| DT | Yes | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | No | No | |
-
-*EPP = Equal Payment Plan
+| Base Rate | Rate Option | Tester | Test result | Last run | Comment |
+| - | - | - | - | - | - |
+| DT | - | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) |
 
 #### Rate M
 
-| Base Rate | Rate Option | Tester | Test result | Last run | Multi contract | Multi Customer | Comment |
-| - | - | - | - | - | - | - | - |
-| M | - | @hdenergy | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/41155894-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | Yes | Yes | [HD Énergie](https://hd.energy) |
-| M | GDP | @hdenergy | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/41155894-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | Yes | Yes | [HD Énergie](https://hd.energy) |
+| Base Rate | Rate Option | Tester | Test result | Last run | Comment |
+| - | - | - | - | - | - |
+| M | - | @hdenergy | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/41155894-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | [HD Énergie](https://hd.energy) |
+| M | GDP | @hdenergy | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/41155894-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) | [HD Énergie](https://hd.energy) |
 
 Thanks to [HD Énergie](https://hd.energy) for sponsoring developpement of the Rate M support.
 
