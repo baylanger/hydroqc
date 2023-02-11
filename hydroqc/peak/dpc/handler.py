@@ -157,6 +157,12 @@ class DPCPeakHandler:
             return peaks[0]
         return None
 
+    # Peak in progress
+    @property
+    def peak_in_progress(self) -> bool:
+        """Is there a peak in progress."""
+        return bool(self.current_peak)
+
     # In progress
     @property
     def current_state(self) -> str:
