@@ -67,6 +67,9 @@ class Outage:
     @property
     def cause(self) -> OutageCause:
         """Get outage cause."""
+        if "codeCause" not in self._raw_data:
+            self._logger.warning("Outage code cause not provided. Fallback to unknown")
+            return OutageCause(0)
         try:
             return OutageCause(int(self._raw_data["codeCause"]))
         except ValueError:
