@@ -90,6 +90,7 @@ class OutageCode(Enum):
     travaux_assignes = "A"
     equipe_au_travail = "L"
     equipe_en_route = "R"
+    non_disponible = "N"
 
 
 class OutageStatus(Enum):
