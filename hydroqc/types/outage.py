@@ -55,7 +55,7 @@ class OutageCause(IntEnum):
     subtance_sel = 31
     pollution_industriel = 32
     vetuste = 33
-    indencie_fuite_de_gaz = 34
+    incendie_fuite_de_gaz = 34
     erreur_de_manoeuvre = 41
     contact_accidentel = 42
     essai = 43
