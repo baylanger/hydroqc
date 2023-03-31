@@ -1,17 +1,14 @@
 """HydroQc Client Module."""
 import base64
 import csv
-import importlib.resources
 import json
 import logging
 import os
-import pathlib
 import platform
 import random
 import ssl
 import string
 import time
-import urllib
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta
