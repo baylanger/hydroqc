@@ -156,13 +156,7 @@ class HydroClient:
 
         ssl_context: ssl.SSLContext | None = None
         if verify_ssl:
-            # TODO check if `host`.pem exits
-            host = urllib.parse.urlparse(url).netloc
-            pem_file = importlib.resources.path(__package__, f"{host}.pem")
-            if isinstance(pem_file, pathlib.PosixPath) and os.path.exists(pem_file):
-                ssl_context = ssl.create_default_context(cafile=pem_file)
-            else:
-                ssl_context = ssl.create_default_context()
+            ssl_context = ssl.create_default_context()
             ssl_context.set_ciphers("DEFAULT")  # Needed for python3.10
 
         # Query Diagnostic
