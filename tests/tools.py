@@ -43,6 +43,8 @@ yesterday = today - datetime.timedelta(days=1)
 yesterday_str = yesterday.strftime("%Y-%m-%d")
 lastweekday = today - datetime.timedelta(days=7)
 lastweekday_str = lastweekday.strftime("%Y-%m-%d")
+tomorrow = today + datetime.timedelta(days=1)
+tomorrow_str = tomorrow.strftime("%Y-%m-%d")
 
 
 def get_env_vars() -> list[list[str | bool | int | None]]:

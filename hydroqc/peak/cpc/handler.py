@@ -201,7 +201,7 @@ class CPCPeakHandler:
         current_date = self.winter_start_date
         delta = datetime.timedelta(days=1)
         peak_list: list[Peak] = []
-        while current_date < self.winter_end_date:
+        while current_date.date() <= self.winter_end_date.date():
             # Morning
             peak = Peak(
                 current_date, "morning", preheat_duration=self._preheat_duration
