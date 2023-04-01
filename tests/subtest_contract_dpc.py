@@ -8,7 +8,7 @@ from hydroqc.contract import ContractDPC
 from .tools import SkipIfBadRate, today, yesterday
 
 
-class SubTestContractDPC:
+class SubTestContractDPC:  # pylint: disable=too-many-statements
     """Contract DPC tests class."""
 
     @SkipIfBadRate(["DPC"], "")
@@ -66,7 +66,10 @@ class SubTestContractDPC:
 
         assert contract.max_critical_called_hours >= contract.critical_called_hours
 
-        assert isinstance(contract.amount_saved_vs_base_rate, float)
+        if contract.peak_handler.is_winter:
+            assert isinstance(contract.amount_saved_vs_base_rate, float)
+        else:
+            assert contract.amount_saved_vs_base_rate is None
 
         assert isinstance(contract.winter_total_days, int)
         assert contract.winter_total_days >= 0

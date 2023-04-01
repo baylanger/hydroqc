@@ -121,6 +121,11 @@ class DPCPeakHandler:
             f"{today.year+1}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
         )
 
+    @property
+    def is_winter(self) -> bool:
+        """Return true if we are in winter period."""
+        return self.winter_start_date >= utils.now() >= self.winter_end_date
+
     # Peaks data
     @property
     def peaks(self) -> list[Peak]:
