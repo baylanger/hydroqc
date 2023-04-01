@@ -116,10 +116,7 @@ class SubTestContractDCPC:
         else:
             assert peak_handler.next_critical_peak is None
 
-        if (
-            today <= peak_handler.winter_start_date.date()
-            or today > peak_handler.winter_end_date.date()
-        ):
+        if not peak_handler.is_winter:
             assert peak_handler.today_morning_peak is None
             assert peak_handler.today_evening_peak is None
             assert peak_handler.next_anchor is None
@@ -142,12 +139,13 @@ class SubTestContractDCPC:
                     in [p.anchor.start_date for p in peak_handler.peaks]
                 )
         if (
-            tomorrow <= peak_handler.winter_start_date.date()
+            tomorrow < peak_handler.winter_start_date.date()
             or tomorrow > peak_handler.winter_end_date.date()
         ):
             assert peak_handler.tomorrow_morning_peak is None
             assert peak_handler.tomorrow_evening_peak is None
         else:
+            # We are in winter
             assert (
                 peak_handler.tomorrow_morning_peak is not None
                 and peak_handler.tomorrow_morning_peak.start_date
@@ -159,12 +157,13 @@ class SubTestContractDCPC:
                 in [p.start_date for p in peak_handler.peaks]
             )
         if (
-            yesterday <= peak_handler.winter_start_date.date()
+            yesterday < peak_handler.winter_start_date.date()
             or yesterday > peak_handler.winter_end_date.date()
         ):
             assert peak_handler.yesterday_morning_peak is None
             assert peak_handler.yesterday_evening_peak is None
         else:
+            # We are in winter
             assert (
                 peak_handler.yesterday_morning_peak is not None
                 and peak_handler.yesterday_morning_peak.start_date
