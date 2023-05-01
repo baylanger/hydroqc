@@ -10,8 +10,8 @@ REQUESTS_TTL = 1
 
 HOST_LOGIN = "https://connexion.hydroquebec.com"
 HOST_SESSION = "https://session.hydroquebec.com"
-HOST_SERVICES = "https://cl-services.idp.hydroquebec.com"
-HOST_SPRING = "https://cl-ec-spring.hydroquebec.com"
+HOST_SERVICES = "https://cl-services.solutions.hydroquebec.com"
+HOST_SPRING = "https://cl-ec-lsw.solutions.hydroquebec.com"
 HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
 HOST_OUTAGES = "https://infopannes-services.solutions.hydroquebec.com"
 
@@ -25,10 +25,10 @@ SECURITY_URL = f"{HOST_SESSION}/config/security.json"
 TOKEN_URL = f"{HOST_LOGIN}/hqam/oauth2/access_token"
 SESSION_REFRESH_URL = f"{HOST_SESSION}/oauth2/callback/silent-refresh"
 AUTHORIZE_URL = f"{HOST_LOGIN}/hqam/oauth2/authorize"
-LOGIN_URL_6 = f"{HOST_SERVICES}/cl/prive/api/v3_0/conversion/codeAcces"
+LOGIN_URL_6 = f"{HOST_SERVICES}/web/prive/api/v3_0/conversion/codeAcces"
 CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
 # Initialization uri
-RELATION_URL = f"{HOST_SERVICES}/cl/prive/api/v1_0/relations"
+RELATION_URL = f"{HOST_SERVICES}/web/prive/api/v1_0/relations"
 
 FLEXD_DATA_URL = (
     f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
@@ -49,16 +49,16 @@ SESSION_URL = f"{HOST_SPRING}/portail/prive/maj-session/"
 # TODO avoid all the /portail/ URLs
 CONTRACT_HTML_URL = f"{HOST_SPRING}/portail/fr/group/clientele/gerer-mon-compte"
 #
-INFOBASE_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/infoBase"
+INFOBASE_URL = f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/infoBase"
 CONTRACT_SUMMARY_URL = (
-    f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/"
+    f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/"
     "calculerSommaireContractuel?indMAJNombres=true"
 )
-CONTRACT_LIST_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/contrats"
-# CONTRACT_URL_4 = (f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/"
+CONTRACT_LIST_URL = f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/contrats"
+# CONTRACT_URL_4 = (f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/"
 #                  "calculerSommaireContractuel")
 
-CUSTOMER_INFO_URL = f"{HOST_SERVICES}/cl/prive/api/v3_0/partenaires/infoCompte"
+CUSTOMER_INFO_URL = f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/infoCompte"
 
 # TODO avoid all the /portail/ URLs
 PORTRAIT_URL = f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation"
@@ -99,7 +99,7 @@ HOURLY_DATA_URL_2 = (
 
 # CPC
 GET_CPC_API_URL = (
-    f"{HOST_SERVICES}/cl/prive/api/v3_0/tarificationDynamique/creditPointeCritique"
+    f"{HOST_SERVICES}/web/prive/api/v3_0/tarificationDynamique/creditPointeCritique"
 )
 
 # IS PORTAL RUNNING

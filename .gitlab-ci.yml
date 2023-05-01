@@ -16,7 +16,7 @@ test:
   stage: test
   tags:
   - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230425000953
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/build:20230425000953  
   script:
     #- apt-get update && apt-get install git --no-install-recommends -y graphviz jq python3.10 python3-venv python3-pip git
     - cat renovate.json |jq > /dev/null 2&>1 || ( echo "renovate.json not valid" && exit 1 )
