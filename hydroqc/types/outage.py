@@ -79,6 +79,7 @@ class OutageCause(IntEnum):
     interruption_demande_client = 76
     reforcement_de_reseau = 68
     programme_special = 69
+    travaux_vegetation = 77
 
 
 # TODO use strEnum on python 3.11
@@ -100,6 +101,7 @@ class OutageStatus(Enum):
     commence = "C"
     reporte = "R"
     termine = "T"
+    non_confirme = "N"
 
 
 class OutageIdTyping(TypedDict, total=True):
