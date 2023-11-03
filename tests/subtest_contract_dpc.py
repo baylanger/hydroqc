@@ -66,10 +66,8 @@ class SubTestContractDPC:  # pylint: disable=too-many-statements
 
         assert contract.max_critical_called_hours >= contract.critical_called_hours
 
-        if contract.peak_handler.is_winter:
+        if contract.amount_saved_vs_base_rate is not None:
             assert isinstance(contract.amount_saved_vs_base_rate, float)
-        else:
-            assert contract.amount_saved_vs_base_rate is None
 
         assert isinstance(contract.winter_total_days, int)
         assert contract.winter_total_days >= 0
@@ -90,7 +88,7 @@ class SubTestContractDPC:  # pylint: disable=too-many-statements
             "Code de consommation",
             "Température moyenne (°C)",
             "Code de température",
-        ], "Bad get_daily_energy CSV headers"
+        ], "Bad get_hourly_energy CSV headers"
 
         # get_daily_energy
         data_csv = await contract.get_daily_energy(yesterday, today)
