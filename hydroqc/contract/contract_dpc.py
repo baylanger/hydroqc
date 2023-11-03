@@ -88,7 +88,7 @@ class ContractDPC(ContractResidential):
     @check_period_data_present
     def cp_lower_price_consumption(self) -> float:
         """Total lower priced consumption since the current period started."""
-        return (
+        return float(
             self._all_period_data[0]["consoTotalPeriode"]
             - self._all_period_data[0]["nbKwhConsoHautTarifFlexPeriode"]
         )
@@ -103,7 +103,7 @@ class ContractDPC(ContractResidential):
     @check_period_data_present
     def cp_higher_price_consumption(self) -> float:
         """Total higher priced consumption since the current period started."""
-        return self._all_period_data[0]["nbKwhConsoHautTarifFlexPeriode"]
+        return float(self._all_period_data[0]["nbKwhConsoHautTarifFlexPeriode"])
 
     @property
     @check_dpc_data_present
