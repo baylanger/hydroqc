@@ -27,6 +27,7 @@ Each account, contracts and rates are different and we do our best to integrate 
 | Base Rate | Rate Option | Tester | Test result | Last run | Comment |
 | - | - | - | - | - | - |
 | D | - | @weimdall | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39038345-job-end-date.svg?job=private_tests_done) | |
+| D | - | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/52728916-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/52728916-job-end-date.svg?job=private_tests_done) | |
 | D | - | @devzwf | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39310934-job-end-date.svg?job=private_tests_done) | Hilo |
 | D | CPC | @titilambert |![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-badge.svg?job=private_tests_done)  | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/35085986-job-end-date.svg?job=private_tests_done) | |
 
@@ -40,7 +41,7 @@ Each account, contracts and rates are different and we do our best to integrate 
 
 | Base Rate | Rate Option | Tester | Test result | Last run | Comment |
 | - | - | - | - | - | - |
-| DT | - | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/39503160-job-end-date.svg?job=private_tests_done) |
+| DT | - | @mdallaire1 | ![Test Result](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/52729124-badge.svg?job=private_tests_done) | ![Timestamp](https://gitlab.com/api/v4/projects/hydroqc%2Fhydroqc/jobs/artifacts/main/raw/52729124-job-end-date.svg?job=private_tests_done) |
 
 #### Rate M
 
