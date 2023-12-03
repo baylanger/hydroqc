@@ -16,7 +16,7 @@ HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
 HOST_OUTAGES = "https://services-bs.solutions.hydroquebec.com"
 
 # Outages
-OUTAGES = f"{HOST_OUTAGES}/web/api/v1/lieux-conso/etats/"
+OUTAGES = f"{HOST_OUTAGES}/pan/web/api/v1/lieux-conso/etats/"
 # OAUTH PATHS
 LOGIN_URL_1 = f"{HOST_LOGIN}/hqam/XUI/"  # not used
 LOGIN_URL_2 = f"{HOST_LOGIN}/hqam/json/serverinfo/*"  # not used
