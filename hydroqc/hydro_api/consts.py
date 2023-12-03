@@ -13,7 +13,7 @@ HOST_SESSION = "https://session.hydroquebec.com"
 HOST_SERVICES = "https://cl-services.solutions.hydroquebec.com"
 HOST_SPRING = "https://cl-ec-lsw.solutions.hydroquebec.com"
 HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
-HOST_OUTAGES = "https://infopannes-services.solutions.hydroquebec.com"
+HOST_OUTAGES = "https://services-bs.solutions.hydroquebec.com"
 
 # Outages
 OUTAGES = f"{HOST_OUTAGES}/web/api/v1/lieux-conso/etats/"
