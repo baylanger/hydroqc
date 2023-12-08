@@ -375,10 +375,10 @@ class HydroClient:
         #}
         #import ipdb;ipdb.set_trace()
         res = await self.http_request(
-            f"{AUTH_URL}?tx={dict_settings['transId']}&p=B2C_1A_PRD_signup_signin", "post", url_encoded=True, headers=headers, data=data, status=400
+            f"{AUTH_URL}?tx={dict_settings['transId']}&p=B2C_1A_PRD_signup_signin", "post", url_encoded=True, headers=headers, data=data
         )
-        import ipdb;ipdb.set_trace()
         data = await res.text()
+        import ipdb;ipdb.set_trace()
         #data = await res.json()
 
         # Check if we are already logged in
