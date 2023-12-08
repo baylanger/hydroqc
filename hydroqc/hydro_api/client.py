@@ -347,10 +347,9 @@ class HydroClient:
         url = f"{AUTHORIZE_URL.lower()}?{params_str}"
         res = await self.http_request(url, "get", url_encoded=True)
         data = await res.text()
-        print(data)
         # Get the callback template
         headers = {
-            # "Content-Type": "application/json",
+            #"Content-Type": "application/json",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
             # "X-NoSession": "true",
             # "X-Password": "anonymous",
@@ -369,16 +368,18 @@ class HydroClient:
             "request_type": "RESPONSE",
             "signInName": self.username,
             "password": self.password,
-            'tx': dict_settings['transId'],
-            'p': 'B2C_1A_PRD_signup_signin',
-        }
+            }
+        #params={
+        #    'tx': dict_settings['transId'],
+        #    'p': 'B2C_1A_PRD_signup_signin',
+        #}
         #import ipdb;ipdb.set_trace()
         res = await self.http_request(
-            AUTH_URL, "post", headers=headers, data=data, status=400
+            f"{AUTH_URL}?tx={dict_settings['transId']}&p=B2C_1A_PRD_signup_signin", "post", url_encoded=True, headers=headers, data=data, status=400
         )
-        #import ipdb;ipdb.set_trace()
+        import ipdb;ipdb.set_trace()
         data = await res.text()
-        data = await res.json()
+        #data = await res.json()
 
         # Check if we are already logged in
         if "tokenId" not in data:
