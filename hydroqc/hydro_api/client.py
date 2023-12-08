@@ -360,18 +360,23 @@ class HydroClient:
                 "x-ms-cpim-csrf"
             ],
         }
+        # Get stateproperties
+        start_index = data.find('SETTINGS =')
+        end_index = data[start_index:].find(";\r")
+        raw_settings = data[start_index+len("SETTINGS = "):start_index+end_index]
+        dict_settings = json.loads(raw_settings)
         data = {
             "request_type": "RESPONSE",
             "signInName": self.username,
             "password": self.password,
-            #'tx': 'StateProperties=eyJUSUQiOiJkNDdlYjVhMy0yYWQ5LTRkOTgtOTI4Yy1mMDg3NTE5MjgzZTMifQ',
-            #'p': 'B2C_1A_PRD_signup_signin',
+            'tx': dict_settings['transId'],
+            'p': 'B2C_1A_PRD_signup_signin',
         }
-        # import ipdb;ipdb.set_trace()
+        #import ipdb;ipdb.set_trace()
         res = await self.http_request(
             AUTH_URL, "post", headers=headers, data=data, status=400
         )
-        # import ipdb;ipdb.set_trace()
+        #import ipdb;ipdb.set_trace()
         data = await res.text()
         data = await res.json()
 
