@@ -17,7 +17,7 @@ HOST_OUTAGES = "https://services-bs.solutions.hydroquebec.com"
 
 # Azure B2C
 AZB2C_TENANT_ID = "32bf9b91-0a36-4385-b231-d9a8fa3b05ab"
-AZB2C_POLICY = "b2c_1a_prd_signup_signin"
+AZB2C_POLICY = "B2C_1A_PRD_signup_signin"
 AZB2C_CLIENT_ID_WEB = "09b0ae72-6db8-4ecc-a1be-041b67afc1cd"
 AZB2C_CLIENT_ID_MOBILE = "70cd7b23-de9a-4d74-8592-d378afbfb863"
 AZB2C_RESPONSE_TYPE = "code"
@@ -28,7 +28,8 @@ AZB2C_CODE_CHALLENGE_METHOD = "S256"
 OUTAGES = f"{HOST_OUTAGES}/pan/web/api/v1/lieux-conso/etats/"
 # OAUTH PATHS
 TOKEN_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/oauth2/v2.0/token"
-AUTH_URL = f"{HOST_LOGIN}/{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/oauth2/v2.0/SelfAsserted"
+AUTH_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/SelfAsserted"
+
 CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
 AUTHORIZE_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/oauth2/v2.0/authorize"
 

@@ -9,6 +9,7 @@ import random
 import ssl
 import string
 import time
+import urllib
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta
@@ -18,6 +19,7 @@ from json import dumps as json_dumps
 from typing import Any
 
 import aiohttp
+import yarl
 
 from hydroqc.error import HydroQcError, HydroQcHTTPError
 from hydroqc.hydro_api.cache import CCached
@@ -134,6 +136,7 @@ class HydroClient:
         verify_ssl: bool | None = None,
         cookies: dict[str, Any] | None = None,
         status: int | None = 200,
+        url_encoded: bool = False,
     ) -> aiohttp.ClientResponse:
         """Prepare and run HTTP/S request."""
         site = url.split("/")[2]
@@ -177,8 +180,9 @@ class HydroClient:
                 )
 
         self._logger.debug("HTTP query %s to %s", url, method)
+        url_url = yarl.URL(url, encoded=url_encoded)
         raw_res: aiohttp.ClientResponse = await getattr(self._session, method)(
-            url,
+            url_url,
             params=params,
             data=data,
             allow_redirects=False,
@@ -294,21 +298,81 @@ class HydroClient:
         Hydroquebec is using ForgeRock solution for authentication.
         """
         self._logger.info("Login using %s", self.username)
+        # Generate some random strings
+        state = "".join(
+            random.choice(string.digits + string.ascii_letters) for i in range(40)
+        )
+        nonce = state
+
+        # code challenge
+        code_challenge = "".join(
+            random.choice(string.digits + string.ascii_letters) for i in range(128)
+        )
+        from hashlib import sha256
+
+        code_challenge = sha256(code_challenge.encode("utf-8")).hexdigest()
+        import base64
+
+        code_challenge = base64.b64encode(code_challenge.encode("utf-8"))
+
+        # import ipdb;ipdb.set_trace()
+
         # Reset cache
         self.reset()
 
         # Get http session
         self._get_httpsession()
-
+        params = {
+            "response_type": "code",
+            "client_id": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
+            # "state": "Z2l-U1NOcjBNSjRVLkl0eVEzNktSR1FDM3VhUHdRMldvMGJBOUtkcmJCWGZ4%3B%7B%22state%22%3A%22%7B%5C%22url%5C%22%3A%5C%22%2Fclient%2Fgroup%2Frelation-affaires%5C%22%7D%22%2C%22stateStore%22%3A%22url%22%7D",
+            "state": urllib.parse.quote_plus(
+                nonce
+                + ';{"state":"{"url":"/client/group/relation-affaires"}","stateStore":"url"}'
+            ),
+            # "state": 'Z2l-U1NOcjBNSjRVLkl0eVEzNktSR1FDM3VhUHdRMldvMGJBOUtkcmJCWGZ4;{"state":"{\\"url\\":\\"/client/group/relation-affaires\\"}","stateStore":"url"}',
+            "redirect_uri": "https%3A%2F%2Fsession.hydroquebec.com%2Foauth2%2Fcallback",
+            # "scope": "openid%20https%3A%2F%2Fconnexionhq.onmicrosoft.com%2Fhq-clientele%2FEspace.Client",
+            "scope": urllib.parse.quote_plus(
+                "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client"
+            ),
+            # "scope": "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client",
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+            "nonce": nonce,
+            "ui_locales": "fr",
+            "mobile": "false",
+        }
+        params_str = "&".join(f"{key}={value}" for key, value in params.items())
+        url = f"{AUTHORIZE_URL.lower()}?{params_str}"
+        res = await self.http_request(url, "get", url_encoded=True)
+        data = await res.text()
+        print(data)
         # Get the callback template
         headers = {
-            "Content-Type": "application/json",
-            "X-NoSession": "true",
-            "X-Password": "anonymous",
+            # "Content-Type": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+            # "X-NoSession": "true",
+            # "X-Password": "anonymous",
             "X-Requested-With": "XMLHttpRequest",
-            "X-Username": "anonymous",
+            # "X-Username": "anonymous",
+            "x-csrf-token": self.cookies["connexion.solutions.hydroquebec.com"][
+                "x-ms-cpim-csrf"
+            ],
         }
-        res = await self.http_request(AUTH_URL, "post", headers=headers)
+        data = {
+            "request_type": "RESPONSE",
+            "signInName": self.username,
+            "password": self.password,
+            #'tx': 'StateProperties=eyJUSUQiOiJkNDdlYjVhMy0yYWQ5LTRkOTgtOTI4Yy1mMDg3NTE5MjgzZTMifQ',
+            #'p': 'B2C_1A_PRD_signup_signin',
+        }
+        # import ipdb;ipdb.set_trace()
+        res = await self.http_request(
+            AUTH_URL, "post", headers=headers, data=data, status=400
+        )
+        # import ipdb;ipdb.set_trace()
+        data = await res.text()
         data = await res.json()
 
         # Check if we are already logged in
