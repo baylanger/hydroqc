@@ -1,6 +1,7 @@
 """HydroQc Client Module."""
 import base64
 import csv
+import re
 import json
 import logging
 import os
@@ -49,6 +50,7 @@ from hydroqc.hydro_api.consts import (
     SESSION_REFRESH_URL,
     SESSION_URL,
 )
+from hydroqc.hydro_api.auth import generate_code_verifier, generate_pkce_pair, get_code_challenge
 from hydroqc.logger import get_logger
 from hydroqc.types import (
     AccountContractSummaryTyping,
@@ -215,11 +217,13 @@ class HydroClient:
             self._logger.debug(data)
             raise HydroQcHTTPError(f"Error Fetching {url} - {raw_res.status}")
 
-        for cookie, cookie_content in raw_res.cookies.items():
-            if hasattr(cookie_content, "value"):
-                self.cookies[site][cookie] = cookie_content.value
-            else:
-                self.cookies[site][cookie] = cookie_content
+        self.cookies[site] = raw_res.cookies
+#        for cookie, cookie_content in raw_res.cookies.items():
+#            import ipdb;ipdb.set_trace()
+#            if hasattr(cookie_content, "value"):
+#                self.cookies[site][cookie] = cookie_content.value
+#            else:
+#                self.cookies[site][cookie] = cookie_content
 
         return raw_res
 
@@ -298,22 +302,8 @@ class HydroClient:
         Hydroquebec is using ForgeRock solution for authentication.
         """
         self._logger.info("Login using %s", self.username)
-        # Generate some random strings
-        state = "".join(
-            random.choice(string.digits + string.ascii_letters) for i in range(40)
-        )
-        nonce = state
 
-        # code challenge
-        code_challenge = "".join(
-            random.choice(string.digits + string.ascii_letters) for i in range(128)
-        )
-        from hashlib import sha256
-
-        code_challenge = sha256(code_challenge.encode("utf-8")).hexdigest()
-        import base64
-
-        code_challenge = base64.b64encode(code_challenge.encode("utf-8"))
+        code_verifier, code_challenge = generate_pkce_pair()
 
         # import ipdb;ipdb.set_trace()
 
@@ -322,91 +312,102 @@ class HydroClient:
 
         # Get http session
         self._get_httpsession()
-        params = {
-            "response_type": "code",
-            "client_id": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
-            # "state": "Z2l-U1NOcjBNSjRVLkl0eVEzNktSR1FDM3VhUHdRMldvMGJBOUtkcmJCWGZ4%3B%7B%22state%22%3A%22%7B%5C%22url%5C%22%3A%5C%22%2Fclient%2Fgroup%2Frelation-affaires%5C%22%7D%22%2C%22stateStore%22%3A%22url%22%7D",
-            "state": urllib.parse.quote_plus(
-                nonce
-                + ';{"state":"{"url":"/client/group/relation-affaires"}","stateStore":"url"}'
-            ),
-            # "state": 'Z2l-U1NOcjBNSjRVLkl0eVEzNktSR1FDM3VhUHdRMldvMGJBOUtkcmJCWGZ4;{"state":"{\\"url\\":\\"/client/group/relation-affaires\\"}","stateStore":"url"}',
-            "redirect_uri": "https%3A%2F%2Fsession.hydroquebec.com%2Foauth2%2Fcallback",
-            # "scope": "openid%20https%3A%2F%2Fconnexionhq.onmicrosoft.com%2Fhq-clientele%2FEspace.Client",
-            "scope": urllib.parse.quote_plus(
-                "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client"
-            ),
-            # "scope": "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client",
-            "code_challenge": code_challenge,
-            "code_challenge_method": "S256",
-            "nonce": nonce,
-            "ui_locales": "fr",
-            "mobile": "false",
-        }
-        params_str = "&".join(f"{key}={value}" for key, value in params.items())
-        url = f"{AUTHORIZE_URL.lower()}?{params_str}"
-        res = await self.http_request(url, "get", url_encoded=True)
+
+        url = 'https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/authorize'
+        headers = {'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'}
+        params = {'redirect_uri': 'https://session.hydroquebec.com/oauth2/callback',
+                        'client_id': '09b0ae72-6db8-4ecc-a1be-041b67afc1cd',
+                        'response_type': 'code',
+                        'scope': 'openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client',
+                        'prompt': 'login',
+                        'ui_locales': 'fr',
+                        'code_challenge': code_challenge,
+                        'code_challenge_method': 'S256',
+                        'mobile': 'false'}
+
+        res = await self.http_request(url, "get", headers=headers, params=params)
+ 
         data = await res.text()
-        # Get the callback template
+
+        # Extract the CSRF token
+        csrf_token = re.search(r'csrf":"(.+?)"', data).group(1)
+
+        # Extract the transId
+        transId = re.search(r'transId":"(.+?)"', data).group(1)
+
+        ## POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/SelfAsserted?tx=(transId value previously extracted)&p=B2C_1A_PRD_signup_signin
+        url = 'https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/SelfAsserted?tx=' + transId + '&p=B2C_1A_PRD_signup_signin'
         headers = {
-            #"Content-Type": "application/json",
-            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-            # "X-NoSession": "true",
-            # "X-Password": "anonymous",
-            "X-Requested-With": "XMLHttpRequest",
-            # "X-Username": "anonymous",
-            "x-csrf-token": self.cookies["connexion.solutions.hydroquebec.com"][
-                "x-ms-cpim-csrf"
-            ],
+            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'accept': 'application/json, text/javascript, */*; q=0.01',
+            'x-csrf-token': csrf_token
         }
-        # Get stateproperties
-        start_index = data.find('SETTINGS =')
-        end_index = data[start_index:].find(";\r")
-        raw_settings = data[start_index+len("SETTINGS = "):start_index+end_index]
-        dict_settings = json.loads(raw_settings)
+
         data = {
             "request_type": "RESPONSE",
             "signInName": self.username,
             "password": self.password,
             }
-        #params={
-        #    'tx': dict_settings['transId'],
-        #    'p': 'B2C_1A_PRD_signup_signin',
-        #}
-        #import ipdb;ipdb.set_trace()
-        res = await self.http_request(
-            f"{AUTH_URL}?tx={dict_settings['transId']}&p=B2C_1A_PRD_signup_signin", "post", url_encoded=True, headers=headers, data=data
-        )
+        res = await self.http_request(url, "post", headers=headers, data=data)
         data = await res.text()
-        import ipdb;ipdb.set_trace()
-        #data = await res.json()
 
-        # Check if we are already logged in
-        if "tokenId" not in data:
-            # Fill the callback template
-            data["callbacks"][0]["input"][0]["value"] = self.username
-            data["callbacks"][1]["input"][0]["value"] = self.password
 
-            data_str = json_dumps(data)
 
-            try:
-                res = await self.http_request(
-                    AUTH_URL, "post", data=data_str, headers=headers
-                )
-            except HydroQcHTTPError:
-                self._logger.critical("Unable to connect. Check your credentials")
-                return False
-            json_res = await res.json()
 
-            if "tokenId" not in json_res:
-                self._logger.error(
-                    "Unable to authenticate."
-                    "You can retry and/or check your credentials."
-                )
-                return False
+        # Call GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=(previously extracted csrf token)&tx=(previously extracted transId value)&p=B2C_1A_PRD_signup_signin
+        # with the session cookies
+        # and the following http headers
+        # accept:           text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+        #
+        # and extract the code attribute from the location header of the response which has the following format:
+        # location:                   msauth.com.hydroquebec.infos-pannes://auth/?state=%257B%2522redirectUrl%2522%3a%2522CONSO%2522%257D&code=(code value)
 
-        # Get oauth2 token
-        await self._get_oauth2_token()
+        # Set the HTTP request parameters
+        url = 'https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=' + csrf_token + '&tx=' + transId + '&p=B2C_1A_PRD_signup_signin'
+        headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+        }
+
+        # Execute the http request
+        res = await self.http_request(url, "get", headers=headers, status=302)
+
+        # Extract the code attribute from the location header
+        code = re.search(r'code=(.+?)$', res.headers['Location']).group(1)
+
+
+        # Call POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token HTTP/2.0
+        # with the following URLEncoded Form data
+        # grant_type:    authorization_code
+        # client_id:     09b0ae72-6db8-4ecc-a1be-041b67afc1cd
+        # redirect_uri:  msauth.com.hydroquebec.infos-pannes://auth
+        # code:        (previously extracted code)
+        # code_verifier: (previously generated code_verifier)
+
+        # and the following http headers
+        # content-type: application/x-www-form-urlencoded
+        # accept:      */*
+        #
+
+        # Set the HTTP request parameters
+        url = 'https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token'
+        headers = {'content-type': 'application/x-www-form-urlencoded', 'accept': '*/*'}
+
+        data = {'grant_type': 'authorization_code',
+                'client_id': '09b0ae72-6db8-4ecc-a1be-041b67afc1cd',
+                'redirect_uri': 'https://session.hydroquebec.com/oauth2/callback',
+                'code': code,
+                'code_verifier': code_verifier}
+
+        # Execute the http request
+        res = await self.http_request(url, "post", headers=headers, data=data)
+
+        res_json = await res.json()
+        # pretty print the response body encoded in JSON
+        print(json.dumps(res_json, indent=4, sort_keys=True))
+
+
+        self._id_token = res_json["id_token"]
+        self.access_token =  res_json['access_token']
 
         headers = {
             "Content-Type": "application/json",
