@@ -218,12 +218,6 @@ class HydroClient:
             raise HydroQcHTTPError(f"Error Fetching {url} - {raw_res.status}")
 
         self.cookies[site] = raw_res.cookies
-#        for cookie, cookie_content in raw_res.cookies.items():
-#            import ipdb;ipdb.set_trace()
-#            if hasattr(cookie_content, "value"):
-#                self.cookies[site][cookie] = cookie_content.value
-#            else:
-#                self.cookies[site][cookie] = cookie_content
 
         return raw_res
 
@@ -303,12 +297,11 @@ class HydroClient:
         """
         self._logger.info("Login using %s", self.username)
 
-        code_verifier, code_challenge = generate_pkce_pair()
-
-        # import ipdb;ipdb.set_trace()
-
         # Reset cache
         self.reset()
+
+        # Get code verifier and challenge
+        code_verifier, code_challenge = generate_pkce_pair()
 
         # Get http session
         self._get_httpsession()
@@ -336,6 +329,19 @@ class HydroClient:
         transId = re.search(r'transId":"(.+?)"', data).group(1)
 
         ## POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/SelfAsserted?tx=(transId value previously extracted)&p=B2C_1A_PRD_signup_signin
+        # with the following URLEncoded Form data
+
+        # request_type: RESPONSE
+        # signInName:   loginemail
+        # password:     password
+        #
+        # The following http headers
+        # content-type:      application/x-www-form-urlencoded; charset=UTF-8
+        # accept:            application/json, text/javascript, */*; q=0.01
+        #
+        # Set the x-csrf-token header with the value previously extracted
+        #
+        # and the cookies captured in the last request
         url = 'https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/SelfAsserted?tx=' + transId + '&p=B2C_1A_PRD_signup_signin'
         headers = {
             'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -349,10 +355,6 @@ class HydroClient:
             "password": self.password,
             }
         res = await self.http_request(url, "post", headers=headers, data=data)
-        data = await res.text()
-
-
-
 
         # Call GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=(previously extracted csrf token)&tx=(previously extracted transId value)&p=B2C_1A_PRD_signup_signin
         # with the session cookies
@@ -373,7 +375,6 @@ class HydroClient:
 
         # Extract the code attribute from the location header
         code = re.search(r'code=(.+?)$', res.headers['Location']).group(1)
-
 
         # Call POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token HTTP/2.0
         # with the following URLEncoded Form data
@@ -400,14 +401,11 @@ class HydroClient:
 
         # Execute the http request
         res = await self.http_request(url, "post", headers=headers, data=data)
-
         res_json = await res.json()
-        # pretty print the response body encoded in JSON
-        print(json.dumps(res_json, indent=4, sort_keys=True))
-
 
         self._id_token = res_json["id_token"]
         self.access_token =  res_json['access_token']
+        self.refresh_token =  res_json['refresh_token']
 
         headers = {
             "Content-Type": "application/json",
@@ -415,72 +413,32 @@ class HydroClient:
         }
         await self.http_request(LOGIN_URL_6, "get", headers=headers)
         self._logger.info("Login completed using %s", self.username)
+
         return True
 
-    async def _get_oauth2_token(self, refresh: bool = False) -> bool:
-        """Retrieve a oauth2 token.
+    async def _refresh_token(self) -> bool:
+        url = 'https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token'
+        headers = {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json, text/plain, */*',
+                }
+        data = {'grant_type': 'refresh_token',
+                'scope': 'openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client',
+                'client_id': '09b0ae72-6db8-4ecc-a1be-041b67afc1cd',
+                'refresh_token': self.refresh_token,
+                }
 
-        .. todo::
-            Explain where 'id_token token' response type comes from
-        """
-        # Find settings for the authorize
-        res = await self.http_request(SECURITY_URL, "get")
-
-        sec_config = await res.json()
-        oauth2_config = sec_config["oauth2"][0]
-
-        client_id = oauth2_config["clientId"]
-        redirect_uri = oauth2_config["redirectUri"]
-        scope = oauth2_config["scope"]
-        # Generate some random strings
-        state = "".join(
-            random.choice(string.digits + string.ascii_letters) for i in range(40)
-        )
-        nonce = state
-        # TODO find where this setting comes from
-        response_type = "id_token token"
-
-        # Get bearer token
-        params = {
-            "response_type": response_type,
-            "client_id": client_id,
-            "state": state,
-            "redirect_uri": redirect_uri,
-            "scope": scope,
-            "nonce": nonce,
-            "locale": "en",
-        }
-        if refresh:
-            params["grant_type"] = "refresh_token"
-            params["refresh_token"] = self.access_token
-            params["redirect_uri"] = SESSION_REFRESH_URL
-
-        res = await self.http_request(AUTHORIZE_URL, "get", params=params, status=302)
-        # Go to Callback URL
-        callback_url = res.headers["Location"]
-        await self.http_request(callback_url, "get")
-
-        if not refresh:
-            raw_callback_params = callback_url.split("/callback#", 1)[-1].split("&")
-        else:
-            raw_callback_params = callback_url.split("/silent-refresh#", 1)[-1].split(
-                "&"
-            )
-        callback_params = dict([p.split("=", 1) for p in raw_callback_params])
-
-        # Check if we have the access token
-        if "access_token" not in callback_params or not callback_params["access_token"]:
-            self._logger.critical("Access token not found")
-            raise HydroQcHTTPError("Access token not found")
-
-        self._id_token = callback_params["id_token"]
-        self.access_token = callback_params["access_token"]
+        res = await self.http_request(url, "post", headers=headers, data=data)
+        res_json = await res.json()
+        self._id_token = res_json["id_token"]
+        self.access_token =  res_json['access_token']
+        self.refresh_token =  res_json['refresh_token']
         return True
 
     @CCached(ttl=600)
     async def refresh_session(self) -> bool:
         """Refresh current session."""
-        return await self._get_oauth2_token(True)
+        return await self._refresh_token()
 
     @property
     def selected_customer(self) -> str:
