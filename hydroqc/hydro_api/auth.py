@@ -16,15 +16,15 @@
 # and the following request http headers
 # accept:           text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
 
-import requests
-import json
-import re
-import os
-
-import secrets
-import hashlib
 import base64
+import hashlib
+import json
+import os
+import re
+import secrets
 from typing import Tuple
+
+import requests
 
 
 def generate_code_verifier(length: int = 128) -> str:
@@ -46,7 +46,7 @@ def generate_code_verifier(length: int = 128) -> str:
         When `43 <= length <= 128` is not verified.
     """
     if not 43 <= length <= 128:
-        msg = 'Parameter `length` must verify `43 <= length <= 128`.'
+        msg = "Parameter `length` must verify `43 <= length <= 128`."
         raise ValueError(msg)
     code_verifier = secrets.token_urlsafe(96)[:length]
     return code_verifier
@@ -72,8 +72,8 @@ def generate_pkce_pair(code_verifier_length: int = 128) -> Tuple[str, str]:
         When `43 <= code_verifier_length <= 128` is not verified.
     """
     if not 43 <= code_verifier_length <= 128:
-        msg = 'Parameter `code_verifier_length` must verify '
-        msg += '`43 <= code_verifier_length <= 128`.'
+        msg = "Parameter `code_verifier_length` must verify "
+        msg += "`43 <= code_verifier_length <= 128`."
         raise ValueError(msg)
     code_verifier = generate_code_verifier(code_verifier_length)
     code_challenge = get_code_challenge(code_verifier)
@@ -99,10 +99,10 @@ def get_code_challenge(code_verifier: str) -> str:
         When `43 <= len(code_verifier) <= 128` is not verified.
     """
     if not 43 <= len(code_verifier) <= 128:
-        msg = 'Parameter `code_verifier` must verify '
-        msg += '`43 <= len(code_verifier) <= 128`.'
+        msg = "Parameter `code_verifier` must verify "
+        msg += "`43 <= len(code_verifier) <= 128`."
         raise ValueError(msg)
-    hashed = hashlib.sha256(code_verifier.encode('ascii')).digest()
+    hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
     encoded = base64.urlsafe_b64encode(hashed)
-    code_challenge = encoded.decode('ascii')[:-1]
+    code_challenge = encoded.decode("ascii")[:-1]
     return code_challenge

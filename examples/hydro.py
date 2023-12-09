@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 import asyncio
 import os
+
 from hydroqc.webuser import WebUser
 
-USERNAME = os.getenv('hydroQcUsername')
-PASSWORD = os.getenv('hydroQcPassword')
+USERNAME = os.getenv("hydroQcUsername")
+PASSWORD = os.getenv("hydroQcPassword")
 
-webuser = WebUser(USERNAME,PASSWORD, verify_ssl=False, log_level="ERROR", http_log_level="ERROR")
+webuser = WebUser(
+    USERNAME, PASSWORD, verify_ssl=False, log_level="ERROR", http_log_level="ERROR"
+)
+
+
 async def async_func():
     await webuser.login()
     await webuser.get_info()
@@ -41,10 +46,10 @@ async def async_func():
     await contract.winter_credit.refresh_data()
     wc = contract.winter_credit.__dict__
     for k in wc.keys():
-        if not k.startswith('value_'):
+        if not k.startswith("value_"):
             continue
         else:
-            print(k + ' : ' + str(wc[k]))
+            print(k + " : " + str(wc[k]))
     # Still accessible through the data property
     data = contract.winter_credit.raw_data
     print(data)
