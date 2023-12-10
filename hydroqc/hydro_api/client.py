@@ -24,12 +24,12 @@ from hydroqc.hydro_api.auth import generate_pkce_pair
 from hydroqc.hydro_api.cache import CCached
 from hydroqc.hydro_api.consts import (
     ANNUAL_DATA_URL,
-    AUTH_URL,
     AUTH_CALLBACK_URL,
+    AUTH_URL,
     AUTHORIZE_URL,
     AZB2C_CLIENT_ID_WEB,
-    AZB2C_SCOPE_WEB,
     AZB2C_POLICY,
+    AZB2C_SCOPE_WEB,
     CONSO_CSV_URL,
     CONSO_OVERVIEW_CSV_URL,
     CONTRACT_LIST_URL,
