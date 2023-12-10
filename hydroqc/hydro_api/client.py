@@ -324,13 +324,20 @@ class HydroClient:
 
         res = await self.http_request(url, "get", headers=headers, params=params)
 
-        data = await res.text()
+        html_data = await res.text()
 
         # Extract the CSRF token
-        csrf_token = re.search(r'csrf":"(.+?)"', data).group(1)
+
+        if csrf_match := re.search(r'csrf":"(.+?)"', html_data):
+            csrf_token = csrf_match.group(1)
+        else:
+            raise
 
         # Extract the transId
-        transid = re.search(r'transId":"(.+?)"', data).group(1)
+        if transid_match := re.search(r'transId":"(.+?)"', html_data):
+            transid = transid_match.group(1)
+        else:
+            raise
 
         # POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
         # B2C_1A_PRD_signup_signin/SelfAsserted?tx=(transId value previously extracted)
@@ -394,7 +401,10 @@ class HydroClient:
         res = await self.http_request(url, "get", headers=headers, status=302)
 
         # Extract the code attribute from the location header
-        code = re.search(r"code=(.+?)$", res.headers["Location"]).group(1)
+        if code_match := re.search(r"code=(.+?)$", res.headers["Location"]):
+            code = code_match.group(1)
+        else:
+            raise
 
         # POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
         # b2c_1a_prd_signup_signin/oauth2/v2.0/token HTTP/2.0
@@ -411,10 +421,10 @@ class HydroClient:
         #
 
         # Set the HTTP request parameters
-        url = {
+        url = (
             "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/"
             + "b2c_1a_prd_signup_signin/oauth2/v2.0/token"
-        }
+        )
         headers = {"content-type": "application/x-www-form-urlencoded", "accept": "*/*"}
 
         data = {
