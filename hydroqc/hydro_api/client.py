@@ -5,12 +5,9 @@ import json
 import logging
 import os
 import platform
-import random
 import re
 import ssl
-import string
 import time
-import urllib
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta
@@ -23,16 +20,16 @@ import aiohttp
 import yarl
 
 from hydroqc.error import HydroQcError, HydroQcHTTPError
-from hydroqc.hydro_api.auth import (
-    generate_code_verifier,
-    generate_pkce_pair,
-    get_code_challenge,
-)
+from hydroqc.hydro_api.auth import generate_pkce_pair
 from hydroqc.hydro_api.cache import CCached
 from hydroqc.hydro_api.consts import (
     ANNUAL_DATA_URL,
     AUTH_URL,
+    AUTH_CALLBACK_URL,
     AUTHORIZE_URL,
+    AZB2C_CLIENT_ID_WEB,
+    AZB2C_SCOPE_WEB,
+    AZB2C_POLICY,
     CONSO_CSV_URL,
     CONSO_OVERVIEW_CSV_URL,
     CONTRACT_LIST_URL,
@@ -51,9 +48,8 @@ from hydroqc.hydro_api.consts import (
     PORTRAIT_URL,
     RELATION_URL,
     REQUESTS_TIMEOUT,
-    SECURITY_URL,
-    SESSION_REFRESH_URL,
     SESSION_URL,
+    TOKEN_URL,
 )
 from hydroqc.logger import get_logger
 from hydroqc.types import (
@@ -310,15 +306,15 @@ class HydroClient:
         # Get http session
         self._get_httpsession()
 
-        url = "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/authorize"
+        url = f"{AUTHORIZE_URL}"
         headers = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
         params = {
-            "redirect_uri": "https://session.hydroquebec.com/oauth2/callback",
-            "client_id": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
+            "redirect_uri": AUTH_CALLBACK_URL,
+            "client_id": AZB2C_CLIENT_ID_WEB,
             "response_type": "code",
-            "scope": "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client",
+            "scope": AZB2C_SCOPE_WEB,
             "prompt": "login",
             "ui_locales": "fr",
             "code_challenge": code_challenge,
@@ -334,9 +330,11 @@ class HydroClient:
         csrf_token = re.search(r'csrf":"(.+?)"', data).group(1)
 
         # Extract the transId
-        transId = re.search(r'transId":"(.+?)"', data).group(1)
+        transid = re.search(r'transId":"(.+?)"', data).group(1)
 
-        ## POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/SelfAsserted?tx=(transId value previously extracted)&p=B2C_1A_PRD_signup_signin
+        # POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
+        # B2C_1A_PRD_signup_signin/SelfAsserted?tx=(transId value previously extracted)
+        # &p=B2C_1A_PRD_signup_signin
         # with the following URLEncoded Form data
 
         # request_type: RESPONSE
@@ -350,11 +348,7 @@ class HydroClient:
         # Set the x-csrf-token header with the value previously extracted
         #
         # and the cookies captured in the last request
-        url = (
-            "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/SelfAsserted?tx="
-            + transId
-            + "&p=B2C_1A_PRD_signup_signin"
-        )
+        url = AUTH_URL + "?tx=" + transid + "&p=" + AZB2C_POLICY
         headers = {
             "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             "accept": "application/json, text/javascript, */*; q=0.01",
@@ -368,21 +362,29 @@ class HydroClient:
         }
         res = await self.http_request(url, "post", headers=headers, data=data)
 
-        # Call GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token=(previously extracted csrf token)&tx=(previously extracted transId value)&p=B2C_1A_PRD_signup_signin
+        # Call GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
+        # B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false
+        # &csrf_token=(previously extracted csrf token)&tx=(previously extracted transId value)
+        # &p=B2C_1A_PRD_signup_signin
         # with the session cookies
         # and the following http headers
         # accept:           text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
         #
-        # and extract the code attribute from the location header of the response which has the following format:
-        # location:                   msauth.com.hydroquebec.infos-pannes://auth/?state=%257B%2522redirectUrl%2522%3a%2522CONSO%2522%257D&code=(code value)
+        # and extract the code attribute from the location header of the response which
+        #  has the following format:
+        # location: msauth.com.hydroquebec.infos-pannes://
+        # auth/?state=%257B%2522redirectUrl%2522%3a%2522CONSO%2522%257D&code=(code value)
 
         # Set the HTTP request parameters
         url = (
-            "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false&csrf_token="
+            "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab"
+            + "/B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/"
+            + "confirmed?rememberMe=false&csrf_token="
             + csrf_token
             + "&tx="
-            + transId
-            + "&p=B2C_1A_PRD_signup_signin"
+            + transid
+            + "&p="
+            + AZB2C_POLICY
         )
         headers = {
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
@@ -394,7 +396,8 @@ class HydroClient:
         # Extract the code attribute from the location header
         code = re.search(r"code=(.+?)$", res.headers["Location"]).group(1)
 
-        # Call POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token HTTP/2.0
+        # POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
+        # b2c_1a_prd_signup_signin/oauth2/v2.0/token HTTP/2.0
         # with the following URLEncoded Form data
         # grant_type:    authorization_code
         # client_id:     09b0ae72-6db8-4ecc-a1be-041b67afc1cd
@@ -408,13 +411,16 @@ class HydroClient:
         #
 
         # Set the HTTP request parameters
-        url = "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token"
+        url = {
+            "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/"
+            + "b2c_1a_prd_signup_signin/oauth2/v2.0/token"
+        }
         headers = {"content-type": "application/x-www-form-urlencoded", "accept": "*/*"}
 
         data = {
             "grant_type": "authorization_code",
-            "client_id": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
-            "redirect_uri": "https://session.hydroquebec.com/oauth2/callback",
+            "client_id": AZB2C_CLIENT_ID_WEB,
+            "redirect_uri": AUTH_CALLBACK_URL,
             "code": code,
             "code_verifier": code_verifier,
         }
@@ -436,16 +442,18 @@ class HydroClient:
 
         return True
 
+    """Refresh current session."""
+
     async def _refresh_token(self) -> bool:
-        url = "https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/token"
+        url = TOKEN_URL
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json, text/plain, */*",
         }
         data = {
             "grant_type": "refresh_token",
-            "scope": "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client",
-            "client_id": "09b0ae72-6db8-4ecc-a1be-041b67afc1cd",
+            "scope": AZB2C_SCOPE_WEB,
+            "client_id": AZB2C_CLIENT_ID_WEB,
             "refresh_token": self.refresh_token,
         }
 

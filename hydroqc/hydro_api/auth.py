@@ -1,13 +1,17 @@
+"""Generate PKCE-compliant code verifier and code challenge."""
+
 # Implement an HTTP call with the following details and capture the session cookie.
 #
-#  GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/b2c_1a_prd_signup_signin/oauth2/v2.0/authorize
+# GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
+# b2c_1a_prd_signup_signin/oauth2/v2.0/authorize
 #
 # with the following query parameters
 # redirect_uri:          msauth.com.hydroquebec.infos-pannes://auth
 # client_id:             09b0ae72-6db8-4ecc-a1be-041b67afc1cd
 # response_type:         code
 # state:                 %7B%22redirectUrl%22:%22CONSO%22%7D
-# scope:                 openid offline_access https://connexionhq.onmicrosoft.com/hq-clientele-mobile/Espace.Client
+# scope:                 openid offline_access https://connexionhq.onmicrosoft.com/
+# hq-clientele-mobile/Espace.Client
 # prompt:                login
 # ui_locales:            fr
 # code_challenge:        VQhipatCIaStOosra0_550ztGC76U1ezBURCV9uKK1M
@@ -18,13 +22,8 @@
 
 import base64
 import hashlib
-import json
-import os
-import re
 import secrets
 from typing import Tuple
-
-import requests
 
 
 def generate_code_verifier(length: int = 128) -> str:

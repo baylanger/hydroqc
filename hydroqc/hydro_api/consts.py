@@ -21,17 +21,23 @@ AZB2C_POLICY = "B2C_1A_PRD_signup_signin"
 AZB2C_CLIENT_ID_WEB = "09b0ae72-6db8-4ecc-a1be-041b67afc1cd"
 AZB2C_CLIENT_ID_MOBILE = "70cd7b23-de9a-4d74-8592-d378afbfb863"
 AZB2C_RESPONSE_TYPE = "code"
-AZB2C_SCOPE = "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client"
+AZB2C_SCOPE_WEB = (
+    "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client"
+)
 AZB2C_CODE_CHALLENGE_METHOD = "S256"
 
 # Outages
 OUTAGES = f"{HOST_OUTAGES}/pan/web/api/v1/lieux-conso/etats/"
 # OAUTH PATHS
-TOKEN_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/oauth2/v2.0/token"
+AUTHORIZE_URL = (
+    f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY.lower()}/oauth2/v2.0/authorize"
+)
 AUTH_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/SelfAsserted"
+AUTH_CALLBACK_URL = f"{HOST_SESSION}/oauth2/callback"
+TOKEN_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY.lower()}/oauth2/v2.0/token"
 
 CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
-AUTHORIZE_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/oauth2/v2.0/authorize"
+
 
 SECURITY_URL = f"{HOST_SESSION}/config/security.json"
 SESSION_REFRESH_URL = f"{HOST_SESSION}/oauth2/callback/silent-refresh"
