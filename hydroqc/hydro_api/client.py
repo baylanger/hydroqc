@@ -459,9 +459,8 @@ class HydroClient:
 
         return True
 
-    """Refresh current session."""
-
     async def _refresh_token(self) -> bool:
+        """Refresh current session."""
         url = TOKEN_URL
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
