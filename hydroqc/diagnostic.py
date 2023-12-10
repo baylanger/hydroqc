@@ -261,10 +261,10 @@ class Diagnostic:
             # Contract Specific calls
             # CPC/Winter Credit
             if self.contract.rate == "D" and self.contract.rate_option == "CPC":
-                self.logger.info("Trying to get cpc data")
+                self.logger.info("%02d - Trying to get cpc data", self.diag_id)
                 contract_dcpc = cast(ContractDCPC, self.contract)
                 await contract_dcpc.peak_handler.refresh_data()
-                self.logger.info("Got cpc data")
+                self.logger.info("%02d - Got cpc data", self.diag_id - 1)
 
             # DCP/FlexD
             elif self.contract.rate == "DPC":
@@ -384,7 +384,7 @@ def main() -> None:
 
     # Fetch data
     loop.run_until_complete(diag.run())
-    close_fut = asyncio.wait([diag.webuser.close_session()])
+    close_fut = asyncio.gather(diag.webuser.close_session())
     loop.run_until_complete(close_fut)
     loop.close()
     # zip

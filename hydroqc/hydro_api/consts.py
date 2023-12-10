@@ -8,25 +8,41 @@
 REQUESTS_TIMEOUT = 30
 REQUESTS_TTL = 1
 
-HOST_LOGIN = "https://connexion.hydroquebec.com"
+HOST_LOGIN = "https://connexion.solutions.hydroquebec.com"
 HOST_SESSION = "https://session.hydroquebec.com"
 HOST_SERVICES = "https://cl-services.solutions.hydroquebec.com"
 HOST_SPRING = "https://cl-ec-lsw.solutions.hydroquebec.com"
 HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
 HOST_OUTAGES = "https://services-bs.solutions.hydroquebec.com"
 
+# Azure B2C
+AZB2C_TENANT_ID = "32bf9b91-0a36-4385-b231-d9a8fa3b05ab"
+AZB2C_POLICY = "B2C_1A_PRD_signup_signin"
+AZB2C_CLIENT_ID_WEB = "09b0ae72-6db8-4ecc-a1be-041b67afc1cd"
+AZB2C_CLIENT_ID_MOBILE = "70cd7b23-de9a-4d74-8592-d378afbfb863"
+AZB2C_RESPONSE_TYPE = "code"
+AZB2C_SCOPE_WEB = (
+    "openid https://connexionhq.onmicrosoft.com/hq-clientele/Espace.Client"
+)
+AZB2C_CODE_CHALLENGE_METHOD = "S256"
+
 # Outages
 OUTAGES = f"{HOST_OUTAGES}/pan/web/api/v1/lieux-conso/etats/"
 # OAUTH PATHS
-LOGIN_URL_1 = f"{HOST_LOGIN}/hqam/XUI/"  # not used
-LOGIN_URL_2 = f"{HOST_LOGIN}/hqam/json/serverinfo/*"  # not used
-AUTH_URL = f"{HOST_LOGIN}/hqam/json/realms/root/realms/clients/authenticate"
-SECURITY_URL = f"{HOST_SESSION}/config/security.json"
-TOKEN_URL = f"{HOST_LOGIN}/hqam/oauth2/access_token"
-SESSION_REFRESH_URL = f"{HOST_SESSION}/oauth2/callback/silent-refresh"
-AUTHORIZE_URL = f"{HOST_LOGIN}/hqam/oauth2/authorize"
-LOGIN_URL_6 = f"{HOST_SERVICES}/web/prive/api/v3_0/conversion/codeAcces"
+AUTHORIZE_URL = (
+    f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY.lower()}/oauth2/v2.0/authorize"
+)
+AUTH_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY}/SelfAsserted"
+AUTH_CALLBACK_URL = f"{HOST_SESSION}/oauth2/callback"
+TOKEN_URL = f"{HOST_LOGIN}/{AZB2C_TENANT_ID}/{AZB2C_POLICY.lower()}/oauth2/v2.0/token"
+
 CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
+
+
+SECURITY_URL = f"{HOST_SESSION}/config/security.json"
+SESSION_REFRESH_URL = f"{HOST_SESSION}/oauth2/callback/silent-refresh"
+LOGIN_URL_6 = f"{HOST_SERVICES}/web/prive/api/v3_0/conversion/codeAcces"
+
 # Initialization uri
 RELATION_URL = f"{HOST_SERVICES}/web/prive/api/v1_0/relations"
 
