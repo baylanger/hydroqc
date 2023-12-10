@@ -124,7 +124,7 @@ class DPCPeakHandler:
     @property
     def is_winter(self) -> bool:
         """Return true if we are in winter period."""
-        return self.winter_start_date >= utils.now() >= self.winter_end_date
+        return self.winter_start_date <= utils.now() <= self.winter_end_date
 
     # Peaks data
     @property
