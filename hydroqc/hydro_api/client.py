@@ -331,13 +331,15 @@ class HydroClient:
         if csrf_match := re.search(r'csrf":"(.+?)"', html_data):
             csrf_token = csrf_match.group(1)
         else:
-            raise HydroQcHTTPError("Error finding csrf token")
+            self._logger.error("Login error finding csrf token")
+            return False
 
         # Extract the transId
         if transid_match := re.search(r'transId":"(.+?)"', html_data):
             transid = transid_match.group(1)
         else:
-            raise HydroQcHTTPError("Error finding trans Id")
+            self._logger.error("Login error finding trans Id")
+            return False
 
         # POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
         # B2C_1A_PRD_signup_signin/SelfAsserted?tx=(transId value previously extracted)
@@ -372,9 +374,8 @@ class HydroClient:
         res_json = json.loads(res_text)
 
         if res_json.get("status") != "200":
-            raise HydroQcHTTPError(
-                f"Error trying to login: {res_json.get('message', 'unknown')}"
-            )
+            self._logger.error("Login error - %s", res_json.get("message", "unknown"))
+            return False
 
         # Call GET https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
         # B2C_1A_PRD_signup_signin/api/CombinedSigninAndSignup/confirmed?rememberMe=false
@@ -411,7 +412,8 @@ class HydroClient:
         if code_match := re.search(r"code=(.+?)$", res.headers["Location"]):
             code = code_match.group(1)
         else:
-            raise HydroQcHTTPError("Error finding code attribute in location header")
+            self._logger.error("Login error finding code attribute in location header")
+            return False
 
         # POST https://connexion.solutions.hydroquebec.com/32bf9b91-0a36-4385-b231-d9a8fa3b05ab/
         # b2c_1a_prd_signup_signin/oauth2/v2.0/token HTTP/2.0
