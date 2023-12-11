@@ -15,12 +15,12 @@ from importlib.metadata import PackageNotFoundError, version
 from io import StringIO
 from json import dumps as json_dumps
 from typing import Any
+from pkce import generate_pkce_pair
 
 import aiohttp
 import yarl
 
 from hydroqc.error import HydroQcError, HydroQcHTTPError
-from hydroqc.hydro_api.auth import generate_pkce_pair
 from hydroqc.hydro_api.cache import CCached
 from hydroqc.hydro_api.consts import (
     ANNUAL_DATA_URL,
