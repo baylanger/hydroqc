@@ -89,19 +89,20 @@ class OutageCode(Enum):
     # Unkonwn (not official HQ code)
     inconnu = "_"
     travaux_assignes = "A"
-    equipe_au_travail = "L"
+    travaux_en_cours = "L"
     equipe_en_route = "R"
-    non_disponible = "N"
+    en_analyse = "N"
 
 
 class OutageStatus(Enum):
     """Outage Status enum."""
 
-    prevu = "P"
-    commence = "C"
-    reporte = "R"
+    planifie_confirme = "P"
+    courante_confirme = "C"
+    planifie_reporte = "R"
     termine = "T"
     non_confirme = "N"
+    annule = "A"
 
 
 class OutageIdTyping(TypedDict, total=True):
