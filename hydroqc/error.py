@@ -8,6 +8,12 @@ class HydroQcError(Exception):
 class HydroQcHTTPError(HydroQcError):
     """HTTP HydroQc Error."""
 
+    def __init__(self, message: str, status_code: int | None = None) -> None:
+        """Initialize."""
+        self.message = message
+        self.status_code = status_code
+        super().__init__(message)
+
 
 class HydroQcAnnualError(HydroQcError):
     """Annual HydroQc Error."""
