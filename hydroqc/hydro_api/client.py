@@ -7,7 +7,6 @@ import os
 import platform
 import re
 import ssl
-import time
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta
@@ -30,6 +29,7 @@ from hydroqc.hydro_api.consts import (
     AZB2C_CLIENT_ID_WEB,
     AZB2C_POLICY,
     AZB2C_SCOPE_WEB,
+    AZB2C_TIMEOUT_SKEW_SECS,
     CONSO_CSV_URL,
     CONSO_OVERVIEW_CSV_URL,
     CONTRACT_LIST_URL,
@@ -41,7 +41,6 @@ from hydroqc.hydro_api.consts import (
     GET_CPC_API_URL,
     HOURLY_CONSUMPTION_API_URL,
     IS_HYDRO_PORTAL_UP_URL,
-    LOGIN_URL_6,
     MONTHLY_DATA_URL,
     OUTAGES,
     PERIOD_DATA_URL,
@@ -76,12 +75,6 @@ from hydroqc.utils import EST_TIMEZONE
 class HydroClient:
     """HydroQc HTTP Client."""
 
-    _id_token: str
-    access_token: str
-    _selected_customer: str
-    _selected_contract: str
-    cookies: dict[str, Any]
-
     def __init__(
         self,
         username: str,
@@ -97,7 +90,19 @@ class HydroClient:
         self.password: str = password
         self._timeout: int = timeout
         self._session: aiohttp.ClientSession | None = session
+        self._cookie_jar: aiohttp.CookieJar = aiohttp.CookieJar()
         self._verify_ssl: bool = verify_ssl
+
+        # OAuth handling variables
+        self._id_token: str = ""
+        self.access_token: str = ""
+        self.access_token_expiry: datetime = datetime.now()
+        self.refresh_token: str = ""
+        self.refresh_token_expiry: datetime = datetime.now()
+        self.web_session_expiry: datetime = datetime.now()
+
+        self._selected_customer: str
+        self._selected_contract: str
         self._diag_folder: str | None = diag_folder
         self._diag_id: int = 0
         self.guid: str = str(uuid.uuid1())
@@ -109,7 +114,11 @@ class HydroClient:
         """Reset collected data and temporary variable."""
         self._id_token = ""
         self.access_token = ""
-        self.cookies = {}
+        self.access_token_expiry = datetime.now()
+        self.refresh_token = ""
+        self.refresh_token_expiry = datetime.now()
+        self.web_session_expiry = datetime.now()
+        self._cookie_jar = aiohttp.CookieJar()
         self._selected_customer = ""
         self._selected_contract = ""
 
@@ -136,12 +145,10 @@ class HydroClient:
         data: str | dict[str, Any] | None = None,
         headers: dict[str, str] | None = None,
         verify_ssl: bool | None = None,
-        cookies: dict[str, Any] | None = None,
         status: int | None = 200,
         url_encoded: bool = False,
     ) -> aiohttp.ClientResponse:
-        """Prepare and run HTTP/S request."""
-        site = url.split("/")[2]
+        """Make an HTTP request."""
         if params is None:
             params = {}
         if data is None:
@@ -151,10 +158,6 @@ class HydroClient:
         headers["User-Agent"] = self.user_agent
         if verify_ssl is None:
             verify_ssl = self._verify_ssl
-        if cookies is None:
-            if site not in self.cookies:
-                self.cookies[site] = {}
-            cookies = self.cookies[site]
 
         ssl_context: ssl.SSLContext | None = None
         if verify_ssl:
@@ -182,6 +185,7 @@ class HydroClient:
                 )
 
         self._logger.debug("HTTP query %s to %s", url, method)
+
         url_url = yarl.URL(url, encoded=url_encoded)
         raw_res: aiohttp.ClientResponse = await getattr(self._session, method)(
             url_url,
@@ -189,9 +193,9 @@ class HydroClient:
             data=data,
             allow_redirects=False,
             ssl=ssl_context,
-            cookies=cookies,
             headers=headers,
         )
+
         # Result Diagnostic
         if self._diag_folder is not None:
             cleaned_url = url.replace("/", "_").replace(":", "").split("#", 1)[0]
@@ -215,9 +219,9 @@ class HydroClient:
             self._logger.exception("Exception in http_request")
             data = await raw_res.text()
             self._logger.debug(data)
-            raise HydroQcHTTPError(f"Error Fetching {url} - {raw_res.status}")
-
-        self.cookies[site] = raw_res.cookies
+            raise HydroQcHTTPError(
+                f"Error Fetching {url} - {raw_res.status}", raw_res.status
+            )
 
         return raw_res
 
@@ -237,31 +241,21 @@ class HydroClient:
         token_data: IDTokenTyping = self._load_json(base64.b64decode(raw_token_data))
         return token_data
 
-    @property
-    def session_expired(self) -> bool:
-        """Get Oauth session expired or not.
-
-        returns True if the session has expired.
-        """
-        if self._id_token in {"", None}:
-            return True
-        token_data = self.get_token_data()
-        return bool(time.time() > token_data["exp"])
-
     def _get_httpsession(self) -> None:
         """Set http session."""
         if self._session is None:
+            self._logger.debug("Creating new http session")
             self._session = aiohttp.ClientSession(
-                requote_redirect_url=False,
+                requote_redirect_url=False, cookie_jar=self._cookie_jar
             )
 
-    def _get_customer_http_headers(
-        self, applicant_id: str, customer_id: str
+    async def _get_customer_http_headers(
+        self, applicant_id: str, customer_id: str, force_refresh: bool = False
     ) -> dict[str, str]:
         """Prepare http headers for customer url queries."""
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.access_token,
+            "Authorization": "Bearer " + await self._get_access_token(force_refresh),
             "NO_PARTENAIRE_DEMANDEUR": applicant_id,
             "NO_PARTENAIRE_TITULAIRE": customer_id,
             "DATE_DERNIERE_VISITE": datetime.now().strftime(
@@ -274,7 +268,9 @@ class HydroClient:
     async def close_session(self) -> None:
         """Close current session."""
         if self._session is not None:
+            self._logger.debug("Closing http session")
             await self._session.close()
+            self._session = None
 
     async def check_portal_status(self) -> bool:
         """Check if Hydro Quebec portal is UP."""
@@ -293,7 +289,7 @@ class HydroClient:
     async def login(self) -> bool:
         """Log in HydroQuebec website.
 
-        Hydroquebec is using ForgeRock solution for authentication.
+        Hydroquebec is using B2C solution for authentication.
         """
         self._logger.info("Login using %s", self.username)
 
@@ -450,19 +446,22 @@ class HydroClient:
 
         self._id_token = res_json["id_token"]
         self.access_token = res_json["access_token"]
+        self.access_token_expiry = datetime.now() + timedelta(
+            seconds=int(res_json["expires_in"]) - AZB2C_TIMEOUT_SKEW_SECS
+        )
         self.refresh_token = res_json["refresh_token"]
+        self.refresh_token_expiry = datetime.now() + timedelta(
+            seconds=int(res_json["refresh_token_expires_in"]) - AZB2C_TIMEOUT_SKEW_SECS
+        )
 
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.access_token,
-        }
-        await self.http_request(LOGIN_URL_6, "get", headers=headers)
         self._logger.info("Login completed using %s", self.username)
 
         return True
 
     async def _refresh_token(self) -> bool:
         """Refresh current session."""
+        self._logger.debug("Refreshing access token")
+
         url = TOKEN_URL
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -477,15 +476,32 @@ class HydroClient:
 
         res = await self.http_request(url, "post", headers=headers, data=data)
         res_json = await res.json()
+
         self._id_token = res_json["id_token"]
         self.access_token = res_json["access_token"]
+        self.access_token_expiry = datetime.now() + timedelta(
+            seconds=int(res_json["expires_in"]) - AZB2C_TIMEOUT_SKEW_SECS
+        )
         self.refresh_token = res_json["refresh_token"]
+        self.refresh_token_expiry = datetime.now() + timedelta(
+            seconds=int(res_json["refresh_token_expires_in"]) - AZB2C_TIMEOUT_SKEW_SECS
+        )
+
         return True
 
-    @CCached(ttl=600)
-    async def refresh_session(self) -> bool:
-        """Refresh current session."""
-        return await self._refresh_token()
+    def is_session_expired(self) -> bool:
+        """Check if the session is expired."""
+        return self.refresh_token_expiry < datetime.now()
+
+    async def _get_access_token(self, force_refresh: bool = True) -> str:
+        """Get an access token."""
+        if self.is_session_expired():
+            await self.close_session()
+            await self.login()
+        elif force_refresh or self.access_token_expiry < datetime.now():
+            await self._refresh_token()
+
+        return self.access_token
 
     @property
     def selected_customer(self) -> str:
@@ -497,32 +513,45 @@ class HydroClient:
         """Return the current selected contract."""
         return self._selected_contract
 
-    async def _select_contract(
-        self, applicant_id: str, customer_id: str, contract_id: str, force: bool = False
+    async def _create_web_session(
+        self, applicant_id: str, customer_id: str, contract_id: str
     ) -> None:
-        """Select a customer on the Home page.
+        """Create a web session from a OAuth access_token."""
+        self._logger.debug("Creating new web session %s", contract_id)
 
-        Equivalent to click on the customer box on the Home page.
-        """
-        # Do nothing if self._selected_contract is already the good one
-        if self._selected_contract == contract_id and not force:
-            return
+        # Clearing all cookies. New SESSION must be created.
+        self._cookie_jar.clear()
 
-        self._logger.info("Selecting contract %s", contract_id)
-        if force and "cl-ec-spring.hydroquebec.com" in self.cookies:
-            del self.cookies["cl-ec-spring.hydroquebec.com"]
-
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
-        # await self.http_request(INFOBASE_URL, "get", headers=headers)
+        # Forcing a refresh of the access token.
+        # The new session that is created with SESSION_URL (/portal resources)
+        # seemed to break (calls returning HTTP 400) in alignment with
+        # the access_token expiry. With a new access_token, we can assume the web
+        # session invalid at the same time as the access token that was used to create it.
+        headers = await self._get_customer_http_headers(
+            applicant_id, customer_id, force_refresh=True
+        )
 
         params = {"mode": "web"}
         await self.http_request(SESSION_URL, "get", params=params, headers=headers)
+        self.web_session_expiry = self.access_token_expiry
 
-        # load overview page
-        # await self.http_request(CONTRACT_URL_3, "get", headers=headers)
-        # load consumption profile page
+    async def _select_contract(
+        self, applicant_id: str, customer_id: str, contract_id: str
+    ) -> None:
+        """Create a web session from a OAuth access_token and select a customer on the Home page.
+
+        Equivalent to click on the customer box on the Home page.
+        """
+        if self.web_session_expiry > datetime.now():
+            self._logger.debug("Not refreshing web session")
+            return
+
+        await self._create_web_session(applicant_id, customer_id, contract_id)
+
+        self._logger.info("Selecting contract %s", contract_id)
+
         params = {"noContrat": contract_id}
-        await self.http_request(PORTRAIT_URL, "get", params=params, headers=headers)
+        await self.http_request(PORTRAIT_URL, "get", params=params)
 
         self._selected_contract = contract_id
         self._selected_customer = customer_id
@@ -538,7 +567,7 @@ class HydroClient:
         self._logger.info("Fetching webuser info")
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.access_token,
+            "Authorization": "Bearer " + await self._get_access_token(),
         }
         res = await self.http_request(RELATION_URL, "get", headers=headers)
         # TODO http errors
@@ -551,7 +580,7 @@ class HydroClient:
     ) -> InfoAccountTyping:
         """Fetch customer data."""
         self._logger.info("Fetching customer info: c-%s", customer_id)
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
         params = {"withCredentials": "true"}
         api_call_response = await self.http_request(
             CUSTOMER_INFO_URL,
@@ -568,7 +597,7 @@ class HydroClient:
     ) -> list[PeriodDataTyping]:
         """Fetch all periods info."""
         await self._select_contract(applicant_id, customer_id, contract_id)
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
         res = await self.http_request(PERIOD_DATA_URL, "get", headers=headers)
         data = json.loads(await res.text())
 
@@ -599,7 +628,7 @@ class HydroClient:
         self, applicant_id: str, customer_id: str
     ) -> AccountContractSummaryTyping:
         """Get all  account_contract linked to a customer."""
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
         res = await self.http_request(CONTRACT_SUMMARY_URL, "get", headers=headers)
         data: AccountContractSummaryTyping = await res.json()
         return data
@@ -615,7 +644,7 @@ class HydroClient:
             customer_id,
             contract_id,
         )
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
         post_data = {
             "listeServices": ["PC"],
             "comptesContrats": [
@@ -645,7 +674,7 @@ class HydroClient:
         :return: raw JSON from hydro QC API
         """
         self._logger.info("Fetching cpc: c-%s c-%s", customer_id, contract_id)
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
         params = {"noContrat": contract_id}
         api_call_response = await self.http_request(
             GET_CPC_API_URL,
@@ -822,7 +851,7 @@ class HydroClient:
 
         """
         await self._select_contract(applicant_id, customer_id, contract_id)
-        headers = self._get_customer_http_headers(applicant_id, customer_id)
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
         params = {"noContrat": contract_id}
         api_call_response = await self.http_request(
             FLEXD_PEAK_URL, "get", params=params, headers=headers

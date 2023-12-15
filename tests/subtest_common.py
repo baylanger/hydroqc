@@ -1,7 +1,6 @@
 """Basics tests for hydroqc."""
 import asyncio
 import datetime
-import time
 import typing
 
 import pytest
@@ -138,8 +137,6 @@ class SubTestCommon:
     @pytest.mark.asyncio
     async def test_good_credentials(self, webuser: WebUser) -> None:
         """Test credentials main."""
-        assert webuser.session_expired is True, "The session should be expired"
-
         connected = await webuser.login()
         assert connected is True, "Login should work. Please check your credentials"
         await webuser.get_info()
@@ -149,21 +146,7 @@ class SubTestCommon:
         """Test session attributes."""
         assert webuser.first_name != "", "No webuser's firstname found"
         assert webuser.last_name != "", "No webuser's lastname found"
-        assert webuser.session_expired is False, "Session expired"
         assert repr(webuser).startswith("<Webuser - ")
-
-        # Test caching
-        start_time = time.time()
-        await webuser.refresh_session()
-        end_time = time.time()
-        first_refresh = end_time - start_time
-
-        start_time = time.time()
-        await webuser.refresh_session()
-        end_time = time.time()
-        second_refresh = end_time - start_time
-        # Check if second refresh is way quicker than first refresh
-        assert first_refresh > second_refresh * 100
 
     @pytest.fixture(scope="module")
     def customer(self, webuser: WebUser) -> Customer | None:

@@ -45,6 +45,11 @@ class WebUser:
         """Login to Hydroquebec website."""
         return await self._hydro_client.login()
 
+    @property
+    def session_expired(self) -> bool:
+        """Check if the session is expired."""
+        return self._hydro_client.is_session_expired()
+
     async def get_info(self) -> None:
         """Fetch data about this webuser.
 
@@ -95,15 +100,6 @@ class WebUser:
         """Get webuser lastname."""
         data = self._hydro_client.get_token_data()
         return data["family_name"]
-
-    @property
-    def session_expired(self) -> bool:
-        """Is the current session expired or not."""
-        return self._hydro_client.session_expired
-
-    async def refresh_session(self) -> None:
-        """Refresh the current session."""
-        await self._hydro_client.refresh_session()
 
     def get_customer(self, customer_id: str) -> Customer:
         """Find customer by id."""

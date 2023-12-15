@@ -26,6 +26,9 @@ AZB2C_SCOPE_WEB = (
 )
 AZB2C_CODE_CHALLENGE_METHOD = "S256"
 
+# Time to remove from the token expiration time to avoid calls to fail
+AZB2C_TIMEOUT_SKEW_SECS = 60
+
 # Outages
 OUTAGES = f"{HOST_OUTAGES}/pan/web/api/v1/lieux-conso/etats/"
 # OAUTH PATHS
