@@ -1,4 +1,6 @@
 """Contract DT tests module."""
+from types import NoneType
+
 import pytest
 
 from hydroqc.contract import ContractDT
@@ -16,35 +18,51 @@ class SubTestContractDT:
         assert contract.rate == "DT"
         assert contract.rate_option == ""
 
-        assert (
-            isinstance(contract.cp_current_bill, float)
-            and contract.cp_current_bill >= 0
-        )
-        assert (
-            isinstance(contract.cp_projected_bill, float)
-            and contract.cp_projected_bill >= 0
-        )
-        assert (
-            isinstance(contract.cp_daily_bill_mean, float)
-            and contract.cp_daily_bill_mean >= 0
-        )
-        assert (
-            isinstance(contract.cp_projected_total_consumption, int)
-            and contract.cp_projected_total_consumption >= 0
-        )
-        assert (
-            isinstance(contract.cp_kwh_cost_mean, float)
-            and contract.cp_kwh_cost_mean >= 0
-        )
+        if (
+            isinstance(contract.cp_current_day, int)
+            and isinstance(contract.cp_duration, int)
+            and (
+                contract.cp_current_day < 2
+                or contract.cp_duration - contract.cp_current_day < 2
+            )
+        ):
+            assert isinstance(contract.cp_current_bill, (float, NoneType))
+            assert isinstance(contract.cp_projected_bill, (float, NoneType))
+            assert isinstance(contract.cp_daily_bill_mean, (float, NoneType))
+            assert isinstance(contract.cp_projected_total_consumption, (int, NoneType))
+            assert isinstance(contract.cp_kwh_cost_mean, (float, NoneType))
+            assert isinstance(contract.cp_lower_price_consumption, (int, NoneType))
+            assert isinstance(contract.cp_higher_price_consumption, (int, NoneType))
+        else:
+            assert (
+                isinstance(contract.cp_current_bill, float)
+                and contract.cp_current_bill >= 0
+            )
+            assert (
+                isinstance(contract.cp_projected_bill, float)
+                and contract.cp_projected_bill >= 0
+            )
+            assert (
+                isinstance(contract.cp_daily_bill_mean, float)
+                and contract.cp_daily_bill_mean >= 0
+            )
+            assert (
+                isinstance(contract.cp_projected_total_consumption, int)
+                and contract.cp_projected_total_consumption >= 0
+            )
+            assert (
+                isinstance(contract.cp_kwh_cost_mean, float)
+                and contract.cp_kwh_cost_mean >= 0
+            )
 
-        assert (
-            isinstance(contract.cp_lower_price_consumption, int)
-            and contract.cp_lower_price_consumption >= 0
-        )
-        assert (
-            isinstance(contract.cp_higher_price_consumption, int)
-            and contract.cp_higher_price_consumption >= 0
-        )
+            assert (
+                isinstance(contract.cp_lower_price_consumption, int)
+                and contract.cp_lower_price_consumption >= 0
+            )
+            assert (
+                isinstance(contract.cp_higher_price_consumption, int)
+                and contract.cp_higher_price_consumption >= 0
+            )
 
         assert isinstance(contract.amount_saved_vs_base_rate, float)
 
