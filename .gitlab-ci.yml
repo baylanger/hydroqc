@@ -31,7 +31,7 @@ test:
   stage: test
   tags:
     - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:049f7935029b57bdb18554561581fde63e454fc51be38b89214ff8dc9de35db0
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:c2f84259e74c1bbd73497ee0d5a71fb5d8f8ff68befdd90f2f5e9b282da0f709
   script:
     - pip install tox
     - tox -e pylint,flake8,pydocstyle,typing,black,deps-conflict --parallel auto
@@ -70,7 +70,7 @@ test:
   stage: private_tests
   tags:
     - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:049f7935029b57bdb18554561581fde63e454fc51be38b89214ff8dc9de35db0
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:c2f84259e74c1bbd73497ee0d5a71fb5d8f8ff68befdd90f2f5e9b282da0f709
   script:
     #- apt update && apt install -y jq unzip curl
     - >
@@ -258,7 +258,7 @@ private_tests_done:
   stage: private_tests_done
   tags:
     - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:049f7935029b57bdb18554561581fde63e454fc51be38b89214ff8dc9de35db0
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:c2f84259e74c1bbd73497ee0d5a71fb5d8f8ff68befdd90f2f5e9b282da0f709
   script:
     #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
     - echo "Private Tests done"
@@ -301,7 +301,7 @@ package:
   stage: test
   tags:
     - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:049f7935029b57bdb18554561581fde63e454fc51be38b89214ff8dc9de35db0
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:c2f84259e74c1bbd73497ee0d5a71fb5d8f8ff68befdd90f2f5e9b282da0f709
   script:
     # Build a package with a version based on the commmit short sha
     - pip install --upgrade pip
@@ -331,7 +331,7 @@ promote2pypi:
   stage: pypi
   tags:
     - hydroqc
-  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:049f7935029b57bdb18554561581fde63e454fc51be38b89214ff8dc9de35db0
+  image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:c2f84259e74c1bbd73497ee0d5a71fb5d8f8ff68befdd90f2f5e9b282da0f709
   script:
     # TODO: try to pull the good package from gitlab pypi repo
     #       then change the version (promote)
