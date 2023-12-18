@@ -15,7 +15,7 @@ from hydroqc.contract.common import (
 )
 from hydroqc.contract.contract_dpc import check_dpc_data_present
 from hydroqc.customer import Customer
-from hydroqc.error import HydroQcError
+from hydroqc.error import HydroQcError, HydroQcHTTPError
 from hydroqc.peak.cpc.handler import CPCPeakHandler
 from hydroqc.webuser import WebUser
 
@@ -255,12 +255,35 @@ class SubTestCommon:
     @pytest.mark.asyncio
     async def test_hourly_consumption(self, contract: Contract) -> None:
         """Test hourly consumption stats."""
-        today_hourly_consumption = await contract.get_today_hourly_consumption()
-        assert today_hourly_consumption.get("success") is True
-        assert today_hourly_consumption.get("results", {}).get("dateJour") in (
-            today_str,
-            yesterday_str,
-        )
+        try:
+            today_hourly_consumption = await contract.get_today_hourly_consumption()
+            assert today_hourly_consumption.get("success") is True
+            assert today_hourly_consumption.get("results", {}).get("dateJour") in (
+                today_str,
+                yesterday_str,
+            )
+        except HydroQcHTTPError as exp:
+            # Failing at the end of the period
+            # So we are check if it's the case
+            # If not, it's an actual issue
+            await contract.get_periods_info()
+            if (
+                isinstance(contract.cp_current_day, int)
+                and isinstance(contract.cp_duration, int)
+                and (
+                    contract.cp_current_day < 2
+                    or contract.cp_duration - contract.cp_current_day < 2
+                )
+            ):
+                # end of period or new period detected
+                assert (
+                    True
+                ), "End of period or new period detected: no hourly consumption"
+            else:
+                assert (
+                    False
+                ), "NO End of period or new period detected: error in no hourly consumption"
+                raise exp
 
     @pytest.mark.asyncio
     async def test_total_hourly_consumption(self, contract: Contract) -> None:
@@ -338,12 +361,23 @@ class SubTestCommon:
     @pytest.mark.asyncio
     async def test_latest_period(self, contract: Contract) -> None:
         """Test latest_period."""
-        assert (
-            contract.cp_current_day is None
-        ), "Method get_period_info is already called but it should not"
-        assert (
-            not contract.latest_period_info
-        ), "Method get_period_info is already called but it should not"
+        if (
+            isinstance(contract.cp_current_day, int)
+            and isinstance(contract.cp_duration, int)
+            and (
+                contract.cp_current_day < 2
+                or contract.cp_duration - contract.cp_current_day < 2
+            )
+        ):
+            assert contract.cp_current_day is not None
+            assert contract.latest_period_info
+        else:
+            assert (
+                contract.cp_current_day is None
+            ), "Method get_period_info is already called but it should not"
+            assert (
+                not contract.latest_period_info
+            ), "Method get_period_info is already called but it should not"
 
     @typing.no_type_check
     @pytest.mark.asyncio
