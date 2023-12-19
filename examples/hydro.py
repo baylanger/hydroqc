@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import asyncio
 import os
+from datetime import date
 
 from hydroqc.webuser import WebUser
+
 
 USERNAME = os.getenv("hydroQcUsername")
 PASSWORD = os.getenv("hydroQcPassword")
@@ -32,28 +34,28 @@ async def async_func():
     print(data)
 
     # Can still access events but probably unnecessary
-    await contract.winter_credit.refresh_data()
-    data = contract.winter_credit.next_anchor
+    await contract.peak_handler.refresh_data()
+    data = contract.peak_handler.next_anchor
     print(data)
-    data = contract.winter_credit.next_peak
+    data = contract.peak_handler.next_peak
     print(data)
-    data = contract.winter_credit.next_peak_is_critical
+    data = contract.peak_handler.next_peak_is_critical
     print(data)
-    data = contract.winter_credit.cumulated_credit
+    data = contract.peak_handler.cumulated_credit
     print(data)
 
     # Need to call refresh_data before accessing attributes
-    await contract.winter_credit.refresh_data()
-    wc = contract.winter_credit.__dict__
+    await contract.peak_handler.refresh_data()
+    wc = contract.peak_handler.__dict__
     for k in wc.keys():
         if not k.startswith("value_"):
             continue
         else:
             print(k + " : " + str(wc[k]))
     # Still accessible through the data property
-    data = contract.winter_credit.raw_data
+    data = contract.peak_handler.raw_data
     print(data)
-    data = await contract.get_hourly_consumption("2022-01-20")
+    data = await contract.get_hourly_consumption(date.fromisoformat("2022-01-20"))
     print(data)
     data = await contract.get_today_hourly_consumption()
     print(data)
@@ -63,7 +65,7 @@ async def async_func():
     print(data)
     data = await contract.get_annual_consumption()
     print(data)
-    data = await contract.get_daily_consumption("2022-01-10", "2022-01-20")
+    data = await contract.get_daily_consumption(date.fromisoformat("2022-01-10"), date.fromisoformat("2022-01-20"))
     print(data)
 
 
