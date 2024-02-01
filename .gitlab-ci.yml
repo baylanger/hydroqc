@@ -30,10 +30,9 @@ renovate-config-validator:
 test:
   stage: test
   tags:
-    - hydroqc
+   - hydroqc
   image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:0f3e011c82c334b14282cb46e40cb87c676de8bb501600500d37855e548244f8
   script:
-    - pip install tox
     - tox -e pylint,flake8,pydocstyle,typing,black,deps-conflict --parallel auto
     - cat mypy-txt-report/index.txt
   artifacts:
@@ -68,11 +67,11 @@ test:
 
 .private_test_script: &private_test_script
   stage: private_tests
-  tags:
-    - hydroqc
+  # Run on shared runners to lighten the load on the private runners
+  # tags:
+  # - hydroqc
   image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.11@sha256:0f3e011c82c334b14282cb46e40cb87c676de8bb501600500d37855e548244f8
   script:
-    #- apt update && apt install -y jq unzip curl
     - >
       OUTPUT=$(curl
       --globoff
@@ -262,7 +261,6 @@ private_tests_done:
   script:
     #- apt-get update && apt-get install --no-install-recommends -y python3.10 python3-venv python3-pip --no-install-recommends git
     - echo "Private Tests done"
-    - pip install tox
     - find .
     - mv -v hydroqc/.coverage* .
     - mv -v hydroqc/*.xml .
