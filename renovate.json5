@@ -1,8 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended", ":dependencyDashboard", ":gitSignOff"],
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":disableRateLimiting",
+    ":gitSignOff"],
   "branchPrefix": "renovate-",
-  "platform": "gitlab",
+  "platformAutomerge": true,
   "pre-commit": {"enabled": true},
   "customManagers": [
     {
@@ -129,7 +133,7 @@
       "matchDatasources": ["docker"],
       "automerge": true,
       "ignoreTests": false,
-      "automergeType": "pr",
+      "automergeType": "branch",
       "matchUpdateTypes": ["digest"]
     }
   ]
