@@ -65,7 +65,9 @@ async def async_func():
     print(data)
     data = await contract.get_annual_consumption()
     print(data)
-    data = await contract.get_daily_consumption(date.fromisoformat("2022-01-10"), date.fromisoformat("2022-01-20"))
+    data = await contract.get_daily_consumption(
+        date.fromisoformat("2022-01-10"), date.fromisoformat("2022-01-20")
+    )
     print(data)
 
 

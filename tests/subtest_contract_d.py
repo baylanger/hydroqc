@@ -1,4 +1,5 @@
 """Contract D tests module."""
+
 import pytest
 
 from hydroqc.contract import ContractD

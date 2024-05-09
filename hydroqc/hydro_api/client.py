@@ -1,4 +1,5 @@
 """HydroQc Client Module."""
+
 import base64
 import csv
 import json

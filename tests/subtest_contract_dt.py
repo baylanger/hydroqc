@@ -1,4 +1,5 @@
 """Contract DT tests module."""
+
 from types import NoneType
 
 import pytest

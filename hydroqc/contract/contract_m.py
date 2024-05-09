@@ -1,4 +1,5 @@
 """Hydroquebec contract module."""
+
 from collections.abc import Iterator
 from datetime import date
 from io import StringIO

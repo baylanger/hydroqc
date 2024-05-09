@@ -1,4 +1,5 @@
 """Hydroqc Consts."""
+
 from dateutil import tz
 
 # Always get the time using HydroQuebec Local Time

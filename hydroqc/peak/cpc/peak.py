@@ -1,4 +1,5 @@
 """Class describing a period."""
+
 import datetime
 
 from hydroqc.error import HydroQcCPCPeakError

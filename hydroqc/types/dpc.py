@@ -1,4 +1,5 @@
 """Hydroqc DPC types."""
+
 # pylint: disable=invalid-name
 from typing import TypedDict
 

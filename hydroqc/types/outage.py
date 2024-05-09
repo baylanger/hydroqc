@@ -1,4 +1,5 @@
 """Outage output formats."""
+
 # pylint: disable=invalid-name
 from enum import Enum, IntEnum
 from typing import TypedDict

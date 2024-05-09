@@ -1,4 +1,5 @@
 """Constants module for winter credits."""
+
 # from typing import Literal
 import datetime
 

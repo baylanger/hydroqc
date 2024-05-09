@@ -1,4 +1,5 @@
 """pytest configuration file."""
+
 import typing
 
 

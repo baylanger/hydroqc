@@ -1,4 +1,5 @@
 """Contract json output formats."""
+
 # pylint: disable=invalid-name
 from typing import TypedDict
 

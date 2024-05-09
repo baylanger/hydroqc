@@ -1,4 +1,5 @@
 """Hydroquebec contract module."""
+
 from collections.abc import Callable
 from datetime import date
 

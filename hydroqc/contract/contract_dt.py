@@ -1,4 +1,5 @@
 """Hydroquebec contract module."""
+
 from hydroqc.contract.common import check_annual_data_present, check_period_data_present
 from hydroqc.contract.contract_residential import ContractResidential
 from hydroqc.hydro_api.client import HydroClient

@@ -1,4 +1,5 @@
 """Class describing a period."""
+
 import datetime
 
 from hydroqc.peak.dpc.consts import DEFAULT_PRE_HEAT_DURATION

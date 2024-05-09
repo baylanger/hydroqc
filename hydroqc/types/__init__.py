@@ -1,4 +1,5 @@
 """Hydroqc custom types."""
+
 from hydroqc.types.account import (
     AccountContractSummaryTyping,
     AccountTyping,

@@ -1,4 +1,5 @@
 """Hydroquebec contract module."""
+
 import functools
 import logging
 from abc import ABC

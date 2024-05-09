@@ -1,4 +1,5 @@
 """Logging module."""
+
 import logging
 
 from hydroqc.consts import LOGGING_LEVELS
