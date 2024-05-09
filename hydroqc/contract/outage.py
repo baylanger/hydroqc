@@ -5,6 +5,7 @@ See:
     * https://infopannes.solutions.hydroquebec.com/statut-adresse/
     * https://www.hydroquebec.com/data/loi-sur-acces/pdf/description-des-codes-interruption.pdf
 """
+
 import datetime
 import logging
 

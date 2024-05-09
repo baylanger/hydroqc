@@ -1,4 +1,5 @@
 """Hydroquebec customer module."""
+
 import logging
 
 from hydroqc import contract as contractModule

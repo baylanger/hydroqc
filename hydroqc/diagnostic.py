@@ -1,4 +1,5 @@
 """Diagnostic module to help users to send debug to devs."""
+
 import argparse
 import asyncio
 import copy

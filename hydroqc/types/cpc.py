@@ -1,4 +1,5 @@
 """Hydroqc custom types."""
+
 from typing import TypedDict
 
 

@@ -1,4 +1,5 @@
 """Common types."""
+
 # pylint: disable=invalid-name
 from enum import Enum
 from typing import TypedDict

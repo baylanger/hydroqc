@@ -1,4 +1,5 @@
 """Info account json output formats."""
+
 # pylint: disable=invalid-name
 from typing import Any, TypedDict
 

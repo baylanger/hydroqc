@@ -1,4 +1,5 @@
 """Contracts module."""
+
 from hydroqc.contract.common import ContractFallBack
 from hydroqc.contract.contract_d import ContractD
 from hydroqc.contract.contract_d_cpc import ContractDCPC

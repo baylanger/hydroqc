@@ -1,4 +1,5 @@
 """Basics tests for hydroqc."""
+
 import parameterized  # type: ignore
 
 from .subtest_common import SubTestCommon

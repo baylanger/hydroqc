@@ -1,4 +1,5 @@
 """Hydroquebec webuser module."""
+
 import logging
 
 from hydroqc.customer import Customer

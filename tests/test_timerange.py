@@ -1,4 +1,5 @@
 """TimeRange tests for hydroqc."""
+
 import datetime
 
 import pytest

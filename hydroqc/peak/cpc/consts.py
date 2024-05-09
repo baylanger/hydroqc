@@ -1,4 +1,5 @@
 """Constants module for CPC."""
+
 # from typing import Literal
 import datetime
 

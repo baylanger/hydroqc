@@ -1,4 +1,5 @@
 """Class describing an interval of time."""
+
 import datetime
 
 

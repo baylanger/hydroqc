@@ -1,4 +1,5 @@
 """Contract D CPC tests module."""
+
 import datetime
 
 import pytest
