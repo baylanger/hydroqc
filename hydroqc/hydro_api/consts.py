@@ -11,8 +11,8 @@ REQUESTS_TTL = 1
 
 HOST_LOGIN = "https://connexion.solutions.hydroquebec.com"
 HOST_SESSION = "https://session.hydroquebec.com"
-HOST_SERVICES = "https://cl-services.solutions.hydroquebec.com"
-HOST_SPRING = "https://cl-ec-lsw.solutions.hydroquebec.com"
+HOST_SERVICES = "https://services-cl.solutions.hydroquebec.com"
+# HOST_SPRING = "https://cl-ec-lsw.solutions.hydroquebec.com"
 HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
 HOST_OUTAGES = "https://services-bs.solutions.hydroquebec.com"
 
@@ -45,82 +45,82 @@ CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
 
 SECURITY_URL = f"{HOST_SESSION}/config/security.json"
 SESSION_REFRESH_URL = f"{HOST_SESSION}/oauth2/callback/silent-refresh"
-LOGIN_URL_6 = f"{HOST_SERVICES}/web/prive/api/v3_0/conversion/codeAcces"
+LOGIN_URL_6 = f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/conversion/codeAcces"
 
 # Initialization uri
-RELATION_URL = f"{HOST_SERVICES}/web/prive/api/v1_0/relations"
+RELATION_URL = f"{HOST_SERVICES}/wsapi/web/prive/api/v1_0/relations"
 
 FLEXD_DATA_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesMoisHiverFlex"
 )
-FLEXD_PEAK_URL = f"{HOST_RB_SOL}/portraitweb/api/v3_0/conso"
+FLEXD_PEAK_URL = f"{HOST_SERVICES}/conso/portraitweb/api/v3_0/conso"
 CONSO_CSV_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceTelechargerDonneesConsommation"
 )
 CONSO_OVERVIEW_CSV_URL = (
-    f"{HOST_SPRING}/portail/en/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/en/group/clientele/portrait-de-consommation/"
     "resourceTelechargerPeriodesFacturation"
 )
 
 # TODO avoid all the /portail/ URLs
-SESSION_URL = f"{HOST_SPRING}/portail/prive/maj-session/"
+SESSION_URL = f"{HOST_SERVICES}/lsw/portail/prive/maj-session/"
 # TODO avoid all the /portail/ URLs
-CONTRACT_HTML_URL = f"{HOST_SPRING}/portail/fr/group/clientele/gerer-mon-compte"
+CONTRACT_HTML_URL = f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/gerer-mon-compte"
 #
-INFOBASE_URL = f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/infoBase"
+INFOBASE_URL = f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/partenaires/infoBase"
 CONTRACT_SUMMARY_URL = (
-    f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/"
+    f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/partenaires/"
     "calculerSommaireContractuel?indMAJNombres=true"
 )
-CONTRACT_LIST_URL = f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/contrats"
-# CONTRACT_URL_4 = (f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/"
-#                  "calculerSommaireContractuel")
+CONTRACT_LIST_URL = f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/partenaires/contrats"
 
-CUSTOMER_INFO_URL = f"{HOST_SERVICES}/web/prive/api/v3_0/partenaires/infoCompte"
+CUSTOMER_INFO_URL = f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/partenaires/infoCompte"
 
 # TODO avoid all the /portail/ URLs
-PORTRAIT_URL = f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation"
+PORTRAIT_URL = (
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation"
+)
 # TODO avoid all the /portail/ URLs
 PERIOD_DATA_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesPeriodesConsommation"
 )
 
 # TODO avoid all the /portail/ URLs
 ANNUAL_DATA_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesConsommationAnnuelles"
 )
 
 # TODO avoid all the /portail/ URLs
 MONTHLY_DATA_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesConsommationMensuelles"
 )
 
 # TODO avoid all the /portail/ URLs
 DAILY_CONSUMPTION_API_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesQuotidiennesConsommation"
 )
 
 # TODO avoid all the /portail/ URLs
 HOURLY_CONSUMPTION_API_URL = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesConsommationHoraires"
 )
 # TODO avoid all the /portail/ URLs
 HOURLY_DATA_URL_2 = (
-    f"{HOST_SPRING}/portail/fr/group/clientele/portrait-de-consommation/"
+    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
     "resourceObtenirDonneesMeteoHoraires"  # not used
 )
 
 # CPC
 GET_CPC_API_URL = (
-    f"{HOST_SERVICES}/web/prive/api/v3_0/tarificationDynamique/creditPointeCritique"
+    f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/tarificationDynamique/"
+    "creditPointeCritique"
 )
-
 # IS PORTAL RUNNING
 IS_HYDRO_PORTAL_UP_URL = f"{HOST_SESSION}/portail/fr/group/clientele/gerer-mon-compte"
