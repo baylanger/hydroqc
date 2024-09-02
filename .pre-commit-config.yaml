@@ -35,12 +35,12 @@ repos:
     #    additional_dependencies: [toml]
 
 - repo: https://github.com/PyCQA/doc8
-  rev: v1.1.1
+  rev: v1.1.2
   hooks:
   - id: doc8
 
 - repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v1.11.1
+  rev: v1.11.2
   hooks:
   - id: mypy
     args: [--strict, --pretty, --show-error-codes]
