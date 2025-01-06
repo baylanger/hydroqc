@@ -2,9 +2,9 @@
 
 import datetime
 
-from hydroqc.peak.dpc.consts import DEFAULT_PRE_HEAT_DURATION
+from hydroqc.peak.basepeak import BasePeak
+from hydroqc.peak.consts import DEFAULT_PRE_HEAT_DURATION
 from hydroqc.timerange import TimeRange
-from hydroqc.utils import EST_TIMEZONE
 
 __all__ = ["PreHeat", "Peak"]
 
@@ -21,7 +21,7 @@ class PreHeat(TimeRange):
         super().__init__(start_date, end_date, True)
 
 
-class Peak(TimeRange):
+class Peak(BasePeak):
     """This class describe a period object."""
 
     # preheat: PreHeat
@@ -33,15 +33,11 @@ class Peak(TimeRange):
         preheat_duration: int = DEFAULT_PRE_HEAT_DURATION,
     ):
         """Period constructor."""
-        self._start_date: datetime.datetime = start_date.astimezone(EST_TIMEZONE)
-        self._end_date: datetime.datetime = end_date.astimezone(EST_TIMEZONE)
         self._preheat_duration: int = preheat_duration
-        super().__init__(self.start_date, self.end_date, is_critical=True)
-
-    @property
-    def date(self) -> datetime.date:
-        """Get the day, without time, of the peak."""
-        return self._start_date.date()
+        super().__init__(start_date, end_date)
+        # For DPC, all peaks are criticals, since peaks
+        # exist only when it's needed
+        self._is_critical = True
 
     @property
     def preheat(self) -> PreHeat:
@@ -50,13 +46,3 @@ class Peak(TimeRange):
             minutes=self._preheat_duration
         )
         return PreHeat(preheat_start_date, self.start_date)
-
-    @property
-    def start_date(self) -> datetime.datetime:
-        """Get the start date of the peak."""
-        return self._start_date
-
-    @property
-    def end_date(self) -> datetime.datetime:
-        """Get the end date of the peak."""
-        return self._end_date

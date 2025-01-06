@@ -14,11 +14,11 @@ from datetime import date, datetime, timedelta
 from importlib.metadata import PackageNotFoundError, version
 from io import StringIO
 from json import dumps as json_dumps
-from typing import Any
-from pkce import generate_pkce_pair
+from typing import Any, cast
 
 import aiohttp
 import yarl
+from pkce import generate_pkce_pair
 
 from hydroqc.error import HydroQcError, HydroQcHTTPError
 from hydroqc.hydro_api.cache import CCached
@@ -43,6 +43,7 @@ from hydroqc.hydro_api.consts import (
     HOURLY_CONSUMPTION_API_URL,
     IS_HYDRO_PORTAL_UP_URL,
     MONTHLY_DATA_URL,
+    OPEN_DATA_PEAK_URL,
     OUTAGES,
     PERIOD_DATA_URL,
     PORTRAIT_URL,
@@ -67,6 +68,8 @@ from hydroqc.types import (
     InfoAccountTyping,
     ListAccountsContractsTyping,
     ListContractsTyping,
+    OpenDataPeakEvent,
+    OpenDataPeakEventOffer,
     OutageListTyping,
     PeriodDataTyping,
 )
@@ -75,6 +78,8 @@ from hydroqc.utils import EST_TIMEZONE
 
 class HydroClient:
     """HydroQc HTTP Client."""
+
+    _cookie_jar: aiohttp.CookieJar
 
     def __init__(
         self,
@@ -91,7 +96,6 @@ class HydroClient:
         self.password: str = password
         self._timeout: int = timeout
         self._session: aiohttp.ClientSession | None = session
-        self._cookie_jar: aiohttp.CookieJar = aiohttp.CookieJar()
         self._verify_ssl: bool = verify_ssl
 
         # OAuth handling variables
@@ -119,7 +123,7 @@ class HydroClient:
         self.refresh_token = ""
         self.refresh_token_expiry = datetime.now()
         self.web_session_expiry = datetime.now()
-        self._cookie_jar = aiohttp.CookieJar()
+        # self._cookie_jar = aiohttp.CookieJar()
         self._selected_customer = ""
         self._selected_contract = ""
 
@@ -234,16 +238,20 @@ class HydroClient:
             self._logger.debug("JSON received : ", data)
             raise HydroQcHTTPError("Bad JSON format") from exp
 
-    def get_token_data(self) -> IDTokenTyping:
+    def get_token_data(self) -> IDTokenTyping | None:
         """Decode id token data."""
+        if not self._id_token:
+            return None
         raw_token_data = self._id_token.split(".")[1]
         # In some cases padding get lost, adding it to avoid issues with base64 decode
         raw_token_data += "=" * ((4 - len(raw_token_data) % 4) % 4)
         token_data: IDTokenTyping = self._load_json(base64.b64decode(raw_token_data))
         return token_data
 
-    def _get_httpsession(self) -> None:
+    async def _get_httpsession(self) -> None:
         """Set http session."""
+        if not hasattr(self, "_cookie_jar"):
+            self._cookie_jar = aiohttp.CookieJar()
         if self._session is None:
             self._logger.debug("Creating new http session")
             self._session = aiohttp.ClientSession(
@@ -276,7 +284,7 @@ class HydroClient:
     async def check_portal_status(self) -> bool:
         """Check if Hydro Quebec portal is UP."""
         # Get http session
-        self._get_httpsession()
+        await self._get_httpsession()
         self._logger.info("Checking if the Hydro Quebec portal is UP")
         api_call_response = await self.http_request(
             IS_HYDRO_PORTAL_UP_URL,
@@ -301,7 +309,7 @@ class HydroClient:
         code_verifier, code_challenge = generate_pkce_pair()
 
         # Get http session
-        self._get_httpsession()
+        await self._get_httpsession()
 
         url = f"{AUTHORIZE_URL}"
         headers = {
@@ -912,3 +920,27 @@ class HydroClient:
             return content
         data_csv: Iterator[Any] = csv.reader(content, delimiter=";")
         return data_csv
+
+    @CCached(ttl=300)
+    async def get_open_data_peaks(
+        self,
+        offer: OpenDataPeakEventOffer | None = None,
+    ) -> list[OpenDataPeakEvent]:
+        """Get the list of peak event from open data url."""
+        await self._get_httpsession()
+        res = await self.http_request(OPEN_DATA_PEAK_URL, "get")
+        content = await res.text()
+        try:
+            raw_res_json = json.loads(content)
+        except json.JSONDecodeError:
+            # Try to clean up json removing comments
+            cleaned_json = ""
+            res_text = await res.text()
+            for line in res_text.splitlines():
+                if not line.startswith("/") and not line.startswith("#"):
+                    cleaned_json += line
+            raw_res_json = json.loads(cleaned_json)
+        res_json = cast(list[OpenDataPeakEvent], raw_res_json.get("evenements", []))
+        if not offer:
+            return res_json
+        return [e for e in res_json if e["offre"] == offer]

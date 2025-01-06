@@ -87,19 +87,22 @@ class WebUser:
     @property
     def webuser_id(self) -> str:
         """Get webuser id."""
-        data = self._hydro_client.get_token_data()
-        return data["sub"]
+        if not (data := self._hydro_client.get_token_data()):
+            return ""
+        return data.get("sub", "")
 
     @property
     def first_name(self) -> str:
         """Get webuser firstname."""
-        data = self._hydro_client.get_token_data()
+        if not (data := self._hydro_client.get_token_data()):
+            return ""
         return data["given_name"]
 
     @property
     def last_name(self) -> str:
         """Get webuser lastname."""
-        data = self._hydro_client.get_token_data()
+        if not (data := self._hydro_client.get_token_data()):
+            return ""
         return data["family_name"]
 
     def get_customer(self, customer_id: str) -> Customer:

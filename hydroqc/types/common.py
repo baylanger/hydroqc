@@ -2,7 +2,7 @@
 
 # pylint: disable=invalid-name
 from enum import Enum
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 
 class IDTokenTyping(TypedDict, total=True):
@@ -47,3 +47,34 @@ class RateOptions(Enum):
 
     CPC: str = "CPC"
     GDP: str = "GDP"
+
+
+OpenDataPeakEventOffer = Literal[
+    "OEA-M",
+    "GDP-Affaires",
+    "TPC-LC2",
+    "CPC-D",
+    "CPC-G",
+    "TPC-DPC",
+    "TPC-GPC",
+    "TPC-M",
+    "TPC-LD2",
+    "OEA-L",
+]
+
+
+class OpenDataPeakEvent(TypedDict):
+    """Peak event on open data source."""
+
+    offre: OpenDataPeakEventOffer
+    dateDebut: str
+    dateFin: str
+    plageHoraire: Literal["AM", "PM"]
+    duree: str
+    secteurClient: Literal["Affaires", "Residentielle"]
+
+
+class OpenDataPeakEvents(TypedDict):
+    """Peak event list on open data source."""
+
+    evenements: list[OpenDataPeakEvent]

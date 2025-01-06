@@ -16,11 +16,24 @@ from hydroqc.peak.cpc.consts import (
 from .tools import SkipIfBadRate, today, tomorrow, yesterday
 
 
+@pytest.mark.asyncio(loop_scope="session")
 class SubTestContractDCPC:
     """Contract D CPCtests class."""
 
+    # @typing.no_type_check
+    # @pytest_asyncio.fixture(loop_scope="module", scope="module")
+    # def event_loop(self):
+    #    """Override asyncio event_loop to keep the loop running through the whole module."""
+    #    print("FFFFFFFFFFFFFFFFFFFFF")
+    #    try:
+    #        loop = asyncio.get_running_loop()
+    #    except RuntimeError:
+    #        loop = asyncio.new_event_loop()
+    #    print(loop)
+    #    yield loop
+    #    loop.close()
+
     @SkipIfBadRate(["D"], "CPC")
-    @pytest.mark.asyncio
     async def test_contract_d_cpc_specific(  # pylint: disable=too-many-statements
         self, account: Account, contract: ContractDCPC
     ) -> None:
@@ -63,6 +76,11 @@ class SubTestContractDCPC:
         assert (
             len(peak_handler.raw_data) == 0
         ), "Raw data should be empty, data not fetched yet"
+
+        await peak_handler.refresh_open_data()
+
+        if peak_handler.raw_open_data:
+            assert peak_handler.raw_open_data[0]["offre"] == peak_handler.offer_code
 
         await peak_handler.refresh_data()
 

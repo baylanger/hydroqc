@@ -6,21 +6,55 @@ import logging
 from hydroqc import utils
 from hydroqc.error import HydroQcCPCPeakError
 from hydroqc.hydro_api.client import HydroClient
+from hydroqc.peak.basepeakhandler import BasePeakHandler
 from hydroqc.peak.cpc.consts import (
+    DEFAULT_EVENING_PEAK_END,
     DEFAULT_EVENING_PEAK_START,
+    DEFAULT_MORNING_PEAK_END,
     DEFAULT_MORNING_PEAK_START,
-    DEFAULT_PRE_HEAT_DURATION,
+    MORNING_EVENING,
 )
 from hydroqc.peak.cpc.peak import Anchor, Peak
-from hydroqc.types import CPCDataTyping, CriticalPeakDataTyping
+from hydroqc.types import CPCDataTyping, CriticalPeakDataTyping, OpenDataPeakEventOffer
+from hydroqc.utils import EST_TIMEZONE
 
 
-class CPCPeakHandler:
+def get_peak_date(
+    peak_date: datetime.datetime, start_end: str, morning_evening: str
+) -> datetime.datetime:
+    """Get the start date of the peak."""
+    default_dates = {
+        "morning": {
+            "start": DEFAULT_MORNING_PEAK_START,
+            "end": DEFAULT_MORNING_PEAK_END,
+        },
+        "evening": {
+            "start": DEFAULT_EVENING_PEAK_START,
+            "end": DEFAULT_EVENING_PEAK_END,
+        },
+    }
+    if start_end not in ("start", "end"):
+        msg = f"Peak date type {start_end} needs be one of ('start', 'end')"
+        raise HydroQcCPCPeakError(msg)
+    if morning_evening not in ("morning", "evening"):
+        msg = f"Peak type {morning_evening} needs be one of {MORNING_EVENING}"
+        raise HydroQcCPCPeakError(msg)
+    event_date = peak_date.replace(
+        hour=default_dates[morning_evening][start_end].hour,
+        minute=default_dates[morning_evening][start_end].minute,
+        second=default_dates[morning_evening][start_end].second,
+    ).astimezone(EST_TIMEZONE)
+    return event_date
+
+
+class CPCPeakHandler(BasePeakHandler[Peak]):
     """CPC extra logic.
 
     This class supplements Hydro API data by providing calculated values for pre_heat period,
     anchor period detection as well as next event information.
     """
+
+    _offer_code: OpenDataPeakEventOffer = "CPC-D"
 
     def __init__(
         self,
@@ -31,35 +65,15 @@ class CPCPeakHandler:
         logger: logging.Logger,
     ):
         """CPC constructor."""
-        self._no_partenaire_demandeur: str = applicant_id
-        self._no_partenaire_titulaire: str = customer_id
-        self._no_contrat: str = contract_id
-        self._hydro_client: HydroClient = hydro_client
-        self._logger: logging.Logger = logger
+        super().__init__(
+            applicant_id,
+            customer_id,
+            contract_id,
+            hydro_client,
+            logger,
+        )
 
         self._raw_data: CPCDataTyping = {}
-        self._preheat_duration = DEFAULT_PRE_HEAT_DURATION
-        self._is_enabled: bool = False
-
-    # Basics
-    @property
-    def applicant_id(self) -> str:
-        """Get applicant id."""
-        return self._no_partenaire_demandeur
-
-    @property
-    def customer_id(self) -> str:
-        """Get customer id."""
-        return self._no_partenaire_titulaire
-
-    @property
-    def contract_id(self) -> str:
-        """Get contract id."""
-        return self._no_contrat
-
-    def set_preheat_duration(self, duration: int) -> None:
-        """Set preheat duration in minutes."""
-        self._preheat_duration = duration
 
     # Fetch raw data
     async def refresh_data(self) -> None:
@@ -84,7 +98,7 @@ class CPCPeakHandler:
     @property
     def _raw_critical_peaks(self) -> list[CriticalPeakDataTyping]:
         """Shortcut to get quickly critical peaks."""
-        if self._raw_data["periodesEffacementsHivers"]:
+        if self._raw_data.get("periodesEffacementsHivers"):
             return self._raw_data["periodesEffacementsHivers"][0][
                 "periodesEffacementHiver"
             ]
@@ -98,6 +112,18 @@ class CPCPeakHandler:
             default_start_time_str = DEFAULT_MORNING_PEAK_START.strftime("%H:%M:%S")
         else:
             raise HydroQcCPCPeakError("Bad morning_evening value")
+
+        for open_critical_peak in self.raw_open_data:
+            critical_peak_enddate = datetime.datetime.fromisoformat(
+                open_critical_peak["dateFin"]
+            )
+            # TODO which want do we want ?
+            # if critical_peak_startdate > utils.now() \
+            # and critical_peak_startdate == peak.start_date:
+            if critical_peak_enddate == peak.end_date:
+                raw_stats: CriticalPeakDataTyping = {}
+                peak.set_critical(raw_stats)
+                break
 
         for critical_peak in self._raw_critical_peaks:
             critical_peak_date = datetime.datetime.strptime(
@@ -115,53 +141,22 @@ class CPCPeakHandler:
     @property
     def winter_start_date(self) -> datetime.datetime:
         """Get start date of the cpc peaks period."""
-        if not self._raw_data["periodesEffacementsHivers"]:
-            today = datetime.date.today()
-            if today.month >= 12:
-                return datetime.datetime.strptime(
-                    f"{today.year}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
-                )
-            if today.month <= 3:
-                return datetime.datetime.strptime(
-                    f"{today.year-1}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
-                )
-            # TODO ensure the value
-            # today.month > 4
-            return datetime.datetime.strptime(
-                f"{today.year}-12-01T05:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
-            )
+        if not self._raw_data.get("periodesEffacementsHivers"):
+            return super().winter_start_date
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateDebutPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
-        )
+        ).astimezone(EST_TIMEZONE)
 
     @property
     def winter_end_date(self) -> datetime.datetime:
         """Get end date of the cpc peaks period."""
-        if not self._raw_data["periodesEffacementsHivers"]:
-            today = datetime.date.today()
-            if today.month >= 12:
-                return datetime.datetime.strptime(
-                    f"{today.year+1}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
-                )
-            if today.month <= 3:
-                return datetime.datetime.strptime(
-                    f"{today.year}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
-                )
-            # TODO ensure the value
-            # today.month > 4
-            return datetime.datetime.strptime(
-                f"{today.year+1}-03-31T04:00:00.000+0000", "%Y-%m-%dT%H:%M:%S.%f%z"
-            )
+        if not self._raw_data.get("periodesEffacementsHivers"):
+            return super().winter_end_date
         return datetime.datetime.strptime(
             self._raw_data["periodesEffacementsHivers"][0]["dateFinPeriodeHiver"],
             "%Y-%m-%dT%H:%M:%S.%f%z",
-        )
-
-    @property
-    def is_winter(self) -> bool:
-        """Return true if we are in winter period."""
-        return self.winter_start_date <= utils.now() <= self.winter_end_date
+        ).astimezone(EST_TIMEZONE)
 
     @property
     def cumulated_credit(self) -> float:
@@ -197,11 +192,6 @@ class CPCPeakHandler:
             raise HydroQcCPCPeakError("Bad cumulated credit raw value") from exp
 
     # Peaks data
-    @property
-    def peaks(self) -> list[Peak]:
-        """List all peaks of the current winter."""
-        return self._get_peaks()
-
     def _get_peaks(self) -> list[Peak]:
         """Get all peaks of the current winter."""
         current_date = self.winter_start_date
@@ -210,13 +200,17 @@ class CPCPeakHandler:
         while current_date.date() <= self.winter_end_date.date():
             # Morning
             peak = Peak(
-                current_date, "morning", preheat_duration=self._preheat_duration
+                start_date=get_peak_date(current_date, "start", "morning"),
+                end_date=get_peak_date(current_date, "end", "morning"),
+                preheat_duration=self._preheat_duration,
             )
             self._set_peak_critical(peak)
             peak_list.append(peak)
             # Evening
             peak = Peak(
-                current_date, "evening", preheat_duration=self._preheat_duration
+                start_date=get_peak_date(current_date, "start", "evening"),
+                end_date=get_peak_date(current_date, "end", "evening"),
+                preheat_duration=self._preheat_duration,
             )
             self._set_peak_critical(peak)
             peak_list.append(peak)
@@ -226,31 +220,11 @@ class CPCPeakHandler:
         return peak_list
 
     @property
-    def sonic(self) -> list[Peak]:
-        """Piaf's joke."""
-        return self._get_peaks()
-
-    @property
     def critical_peaks(self) -> list[Peak]:
         """Get all critical peaks of the current credits."""
         return [p for p in self.peaks if p.is_critical]
 
     # Current peak
-    @property
-    def current_peak(self) -> Peak | None:
-        """Get current peak.
-
-        Return None if no peak is currently running
-        FIXME This could be USELESS
-        """
-        now = utils.now()
-        peaks: list[Peak] = [p for p in self.peaks if p.start_date < now < p.end_date]
-        if len(peaks) > 1:
-            raise HydroQcCPCPeakError("There is more than one current peak !")
-        if len(peaks) == 1:
-            return peaks[0]
-        return None
-
     @property
     def current_peak_is_critical(self) -> bool | None:
         """Return True if the current peak is critical."""
@@ -285,15 +259,9 @@ class CPCPeakHandler:
         return "normal"
 
     @property
-    def preheat_in_progress(self) -> bool:
-        """Get the preheat state.
-
-        Returns True if we have a preheat period is in progress.
-        """
-        now = utils.now()
-        if self.next_peak is None:
-            return False
-        return self.next_peak.preheat.start_date < now < self.next_peak.preheat.end_date
+    def next_peak(self) -> Peak | None:
+        """Get next peak or current peak."""
+        return self._get_next_peak()
 
     # Upcoming
     @property
@@ -307,20 +275,6 @@ class CPCPeakHandler:
         return bool(self.next_critical_peak)
 
     # Next peak
-    @property
-    def next_peak(self) -> Peak | None:
-        """Get next peak or current peak."""
-        return self._get_next_peak()
-
-    def _get_next_peak(self) -> Peak | None:
-        """Get next peak or current peak."""
-        now = utils.now()
-        peaks: list[Peak] = [p for p in self.peaks if now < p.end_date]
-        if not peaks:  # pylint: disable=consider-using-assignment-expr
-            return None
-        next_peak = min(peaks, key=lambda x: x.start_date)
-        return next_peak
-
     @property
     def next_peak_is_critical(self) -> bool:
         """Return True if the following next peak is critical.
@@ -349,64 +303,6 @@ class CPCPeakHandler:
             return None
         next_peak = min(peaks, key=lambda x: x.start_date)
         return next_peak
-
-    # Today peaks
-    @property
-    def today_morning_peak(self) -> Peak | None:
-        """Get the peak of today morning."""
-        now = utils.now()
-        peaks: list[Peak] = [
-            p for p in self.peaks if p.day == now.date() and p.is_morning
-        ]
-        if len(peaks) > 1:
-            raise HydroQcCPCPeakError("There is more than one morning peak today !")
-        if len(peaks) == 1:
-            return peaks[0]
-        return None
-
-    @property
-    def today_evening_peak(self) -> Peak | None:
-        """Get the peak of today evening."""
-        now = utils.now()
-        peaks: list[Peak] = [
-            p for p in self.peaks if p.day == now.date() and p.is_evening
-        ]
-        if len(peaks) > 1:
-            raise HydroQcCPCPeakError("There is more than one evening peak today !")
-        if len(peaks) == 1:
-            return peaks[0]
-        return None
-
-    # Tomorrow Peaks
-    @property
-    def tomorrow_morning_peak(self) -> Peak | None:
-        """Get the peak of tomorrow morning."""
-        now = utils.now()
-        peaks: list[Peak] = [
-            p
-            for p in self.peaks
-            if p.day == now.date() + datetime.timedelta(days=1) and p.is_morning
-        ]
-        if len(peaks) > 1:
-            raise HydroQcCPCPeakError("There is more than one morning peak tomorrow !")
-        if len(peaks) == 1:
-            return peaks[0]
-        return None
-
-    @property
-    def tomorrow_evening_peak(self) -> Peak | None:
-        """Get the peak of tomorrow evening."""
-        now = utils.now()
-        peaks: list[Peak] = [
-            p
-            for p in self.peaks
-            if p.day == now.date() + datetime.timedelta(days=1) and p.is_evening
-        ]
-        if len(peaks) > 1:
-            raise HydroQcCPCPeakError("There is more than one evening peak tomorrow !")
-        if len(peaks) == 1:
-            return peaks[0]
-        return None
 
     # Yesterday peaks
     @property

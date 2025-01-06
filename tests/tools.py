@@ -56,7 +56,7 @@ def get_env_vars() -> list[list[str | bool | int | None]]:
     for param in PARAMS_LIST:
         env_var = f"{PARAMS_PREFIX}_{param[0]}"
         try:
-            deprec_value: str | int | bool | None = param[1](env_var)  # type: ignore
+            deprec_value: str | int | bool | None = param[1](env_var)
             deprecated_params.append(deprec_value)
         except KeyError:
             continue
@@ -87,7 +87,7 @@ def get_env_vars() -> list[list[str | bool | int | None]]:
             params = []
             for param in PARAMS_LIST:
                 env_var_name = f"{PARAMS_PREFIX}_{index}_{param[0]}"
-                value: str | int | bool | None = param[1](env_var_name)  # type: ignore
+                value: str | int | bool | None = param[1](env_var_name)
                 if isinstance(value, str) and value == "NONE":
                     value = ""
                 params.append(value)

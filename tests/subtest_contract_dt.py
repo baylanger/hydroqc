@@ -9,11 +9,11 @@ from hydroqc.contract import ContractDT
 from .tools import SkipIfBadRate, today, yesterday
 
 
+@pytest.mark.asyncio(loop_scope="session")
 class SubTestContractDT:
     """Contract DT tests class."""
 
     @SkipIfBadRate(["DT"], "")
-    @pytest.mark.asyncio
     async def test_contract_dt_specific(self, contract: ContractDT) -> None:
         """Test total hourly consumption stats."""
         assert contract.rate == "DT"

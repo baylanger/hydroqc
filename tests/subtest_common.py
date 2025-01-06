@@ -1,10 +1,12 @@
 """Basics tests for hydroqc."""
 
-import asyncio
 import datetime
 import typing
+from collections.abc import AsyncGenerator
 
+import aiohttp
 import pytest
+import pytest_asyncio
 
 from hydroqc.account import Account
 from hydroqc.contract import ContractDCPC
@@ -41,6 +43,7 @@ async def is_young_contract(contract: Contract) -> bool:
     return False
 
 
+@pytest.mark.asyncio(loop_scope="session")
 class SubTestCommon:
     """Base test class."""
 
@@ -55,19 +58,8 @@ class SubTestCommon:
     HYDROQC_EPP_ENABLED: str
     HYDROQC_WC_ENABLED: bool
     HYDROQC_ACCOUNT_ID: int
+    session: aiohttp.ClientSession
 
-    @typing.no_type_check
-    @pytest.fixture(scope="module")
-    def event_loop(self):
-        """Override asyncio event_loop to keep the loop running through the whole module."""
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-        yield loop
-        loop.close()
-
-    @pytest.mark.asyncio
     async def test_bad_credentials(self) -> None:
         """Test bad credentials management."""
         # Webuser
@@ -75,25 +67,19 @@ class SubTestCommon:
         connected = await webuser.login()
         assert connected is False, "Login should not work"
 
-    @pytest.fixture(scope="module")
-    def webuser(self) -> WebUser:
+    @pytest_asyncio.fixture(loop_scope="session", scope="session")
+    async def webuser(self) -> AsyncGenerator[WebUser]:
         """Fixture to keep the webuser instance through all tests."""
-        return WebUser(
+        webuser = WebUser(
             self.HYDROQC_USERNAME,
             self.HYDROQC_PASSWORD,
             verify_ssl=True,
             log_level="ERROR",
             http_log_level="ERROR",
         )
-
-    @pytest.mark.asyncio
-    async def teardown_ends(self, webuser: WebUser) -> None:
-        """Run all needed steps to ends tests."""
-        print("teardown")
-        # Close session
+        yield webuser
         await webuser.close_session()
 
-    @pytest.mark.asyncio
     async def test_error_cases(self) -> None:
         """Test some edge cases."""
 
@@ -135,22 +121,20 @@ class SubTestCommon:
         assert fake_contract.rate == "Unknown rate"
         assert fake_contract.cp_kwh_cost_mean is None
 
-    @pytest.mark.asyncio
     async def test_good_credentials(self, webuser: WebUser) -> None:
         """Test credentials main."""
         connected = await webuser.login()
         assert connected is True, "Login should work. Please check your credentials"
         await webuser.get_info()
 
-    @pytest.mark.asyncio
     async def test_session(self, webuser: WebUser) -> None:
         """Test session attributes."""
         assert webuser.first_name != "", "No webuser's firstname found"
         assert webuser.last_name != "", "No webuser's lastname found"
         assert repr(webuser).startswith("<Webuser - ")
 
-    @pytest.fixture(scope="module")
-    def customer(self, webuser: WebUser) -> Customer | None:
+    @pytest_asyncio.fixture(loop_scope="session", scope="session")
+    async def customer(self, webuser: WebUser) -> Customer | None:
         """Fixture to keep the customer instance through all tests."""
         # New env var
         if self.HYDROQC_CUSTOMER_NUMBER is not None:
@@ -171,7 +155,6 @@ class SubTestCommon:
         return None
 
     @typing.no_type_check
-    @pytest.mark.asyncio
     async def test_customer(self, webuser: WebUser, customer: Customer) -> None:
         """Test customer attributes."""
         assert len(webuser.customers) > 0, "No customer found"
@@ -193,14 +176,13 @@ class SubTestCommon:
         else:
             assert customer.infocompte_enabled is True
 
-    @pytest.fixture(scope="module")
-    def account(self, customer: Customer) -> Account | None:
+    @pytest_asyncio.fixture(loop_scope="session", scope="session")
+    async def account(self, customer: Customer) -> Account | None:
         """Fixture to keep the account instance through all tests."""
         if len(customer.accounts) <= 0:
             return None
         return customer.accounts[0]
 
-    @pytest.mark.asyncio
     async def test_account(self, customer: Customer, account: Account) -> None:
         """Test account attributes."""
         assert len(customer.accounts) > 0, "No account found"
@@ -216,14 +198,13 @@ class SubTestCommon:
             assert isinstance(account.balance, float)
         assert repr(account).startswith("<Account - ")
 
-    @pytest.fixture(scope="module")
-    def contract(self, account: Account) -> Contract | None:
+    @pytest_asyncio.fixture(loop_scope="session", scope="session")
+    async def contract(self, account: Account) -> Contract | None:
         """Fixture to keep the contract instance through all tests."""
         if len(account.contracts) <= 0:
             return None
         return account.contracts[0]
 
-    @pytest.mark.asyncio
     async def test_contract(self, account: Account, contract: Contract) -> None:
         """Test contract attributes."""
         assert len(account.contracts) > 0, "No contract found"
@@ -253,7 +234,6 @@ class SubTestCommon:
         assert isinstance(contract.meter_id, str)
         assert contract.meter_id != ""
 
-    @pytest.mark.asyncio
     async def test_hourly_consumption(self, contract: Contract) -> None:
         """Test hourly consumption stats."""
         try:
@@ -286,14 +266,12 @@ class SubTestCommon:
                 ), "NO End of period or new period detected: error in no hourly consumption"
                 raise exp
 
-    @pytest.mark.asyncio
     async def test_total_hourly_consumption(self, contract: Contract) -> None:
         """Test total hourly consumption stats."""
         hourly_consumption = await contract.get_hourly_consumption(yesterday)
         assert hourly_consumption.get("success") is True
         assert hourly_consumption.get("results", {}).get("dateJour") == yesterday_str
 
-    @pytest.mark.asyncio
     async def test_daily_consumption(self, contract: Contract) -> None:
         """Test daily consumption stats."""
         daily_consumption = await contract.get_daily_consumption(lastweekday, yesterday)
@@ -304,7 +282,6 @@ class SubTestCommon:
             == lastweekday_str
         )
 
-    @pytest.mark.asyncio
     async def test_total_daily_consumption(self, contract: Contract) -> None:
         """Test total hourly consumption stats."""
         today_daily_consumption = await contract.get_today_daily_consumption()
@@ -320,7 +297,6 @@ class SubTestCommon:
         "config.getoption('--new-contract')",
         reason="No history available on new contracts",
     )
-    @pytest.mark.asyncio
     async def test_monthly_consumption(self, contract: Contract) -> None:
         """Test monthly consumption stats."""
         monthly_consumption = await contract.get_monthly_consumption()
@@ -335,7 +311,6 @@ class SubTestCommon:
         "config.getoption('--new-contract')",
         reason="No history available on new contracts",
     )
-    @pytest.mark.asyncio
     async def test_annual_consumption(self, contract: Contract) -> None:
         """Test annual consumption stats."""
         annual_consumption = await contract.get_annual_consumption()
@@ -359,7 +334,6 @@ class SubTestCommon:
                 days=70
             ), "Annual data doesn't seems up-to-date"
 
-    @pytest.mark.asyncio
     async def test_latest_period(self, contract: Contract) -> None:
         """Test latest_period."""
         if (
@@ -381,7 +355,6 @@ class SubTestCommon:
             ), "Method get_period_info is already called but it should not"
 
     @typing.no_type_check
-    @pytest.mark.asyncio
     async def test_contract_info(self, contract: Contract) -> None:
         """Test contract information validity."""
         await contract.get_periods_info()
@@ -404,15 +377,14 @@ class SubTestCommon:
             contract.cp_epp_enabled == self.HYDROQC_EPP_ENABLED
         ), "Bad EPP status, please check the value of self.HYDROQC_EPP_ENABLED"
 
-    @pytest.fixture(scope="module")
-    def cpc(self, contract: Contract) -> CPCPeakHandler | None:
+    @pytest_asyncio.fixture(loop_scope="session", scope="session")
+    async def cpc(self, contract: Contract) -> CPCPeakHandler | None:
         """Fixture to keep the cpc instance through all tests."""
         if self.HYDROQC_RATE == "D" and self.HYDROQC_RATE_OPTION == "CPC":
             contract_dcpc = typing.cast(ContractDCPC, contract)
             return contract_dcpc.peak_handler
         return None
 
-    @pytest.mark.asyncio
     async def test_csv(
         self,
         contract: Contract,
@@ -465,7 +437,6 @@ class SubTestCommon:
                 "Code de température",
             ], "Bad get_hourly_energy CSV headers"
 
-    @pytest.mark.asyncio
     async def test_outages(self, contract: Contract) -> None:
         """Test outages."""
         await contract.refresh_outages()
