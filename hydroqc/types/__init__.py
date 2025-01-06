@@ -6,7 +6,12 @@ from hydroqc.types.account import (
     InfoAccountTyping,
     ListAccountsContractsTyping,
 )
-from hydroqc.types.common import IDTokenTyping, Rates
+from hydroqc.types.common import (
+    IDTokenTyping,
+    OpenDataPeakEvent,
+    OpenDataPeakEventOffer,
+    Rates,
+)
 from hydroqc.types.consump import (
     ConsumpAnnualTyping,
     ConsumpDailyTyping,
@@ -52,4 +57,6 @@ __all__ = [
     "OutageStatus",
     "OutageCode",
     "Rates",
+    "OpenDataPeakEventOffer",
+    "OpenDataPeakEvent",
 ]

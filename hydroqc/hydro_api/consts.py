@@ -15,6 +15,7 @@ HOST_SERVICES = "https://services-cl.solutions.hydroquebec.com"
 # HOST_SPRING = "https://cl-ec-lsw.solutions.hydroquebec.com"
 HOST_RB_SOL = "https://rb.solutions.hydroquebec.com"
 HOST_OUTAGES = "https://services-bs.solutions.hydroquebec.com"
+HOST_OPEN_DATA = "https://donnees.solutions.hydroquebec.com"
 
 # Azure B2C
 AZB2C_TENANT_ID = "32bf9b91-0a36-4385-b231-d9a8fa3b05ab"
@@ -46,6 +47,11 @@ CHECK_SESSION_URL = f"{HOST_LOGIN}/hqam/oauth2/connect/checkSession"
 SECURITY_URL = f"{HOST_SESSION}/config/security.json"
 SESSION_REFRESH_URL = f"{HOST_SESSION}/oauth2/callback/silent-refresh"
 LOGIN_URL_6 = f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/conversion/codeAcces"
+
+# OPEN DATA PEAK URL
+OPEN_DATA_PEAK_URL = (
+    f"{HOST_OPEN_DATA}/donnees-ouvertes/data/json/pointeshivernales.json"
+)
 
 # Initialization uri
 RELATION_URL = f"{HOST_SERVICES}/wsapi/web/prive/api/v1_0/relations"

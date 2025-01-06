@@ -9,11 +9,11 @@ from hydroqc.contract import ContractDPC
 from .tools import SkipIfBadRate, today, yesterday
 
 
+@pytest.mark.asyncio(loop_scope="session")
 class SubTestContractDPC:  # pylint: disable=too-many-statements
     """Contract DPC tests class."""
 
     @SkipIfBadRate(["DPC"], "")
-    @pytest.mark.asyncio
     async def test_contract_dpc_specific(self, contract: ContractDPC) -> None:
         """Test total hourly consumption stats."""
         assert contract.rate == "DPC"
@@ -126,9 +126,14 @@ class SubTestContractDPC:  # pylint: disable=too-many-statements
         ], "Bad get_consumption_overview_csv CSV headers"
 
         # Get dpc specific data
-        data = await contract.peak_handler.refresh_data()
+        await contract.peak_handler.refresh_open_data()
+        if contract.peak_handler.raw_open_data:
+            assert (
+                contract.peak_handler.raw_open_data[0]["offre"]
+                == contract.peak_handler.offer_code
+            )
 
-        assert data["codeTarif"] == "DPC"
+        await contract.peak_handler.refresh_data()
 
         assert isinstance(contract.peak_handler.raw_data, list)
         assert contract.peak_handler.winter_start_date.day == 1

@@ -20,6 +20,7 @@ from dateutil.relativedelta import relativedelta
 from hydroqc.contract import ContractDCPC, ContractDPC, ContractM
 from hydroqc.error import HydroQcError
 from hydroqc.logger import get_logger
+from hydroqc.public_client import PublicClient
 from hydroqc.webuser import WebUser
 
 LOG_LEVEL = (
@@ -39,10 +40,12 @@ class Diagnostic:
         """Contructor."""
         # Get base settings
         self.diagnostic_folder = cli_settings.output_folder
+        self.diagnostic_folder_public = os.path.join(self.diagnostic_folder, "public")
         # Prepare output folder
         if os.path.exists(self.diagnostic_folder):
             shutil.rmtree(self.diagnostic_folder)
         os.makedirs(self.diagnostic_folder)
+        os.makedirs(self.diagnostic_folder_public)
         # Prepare logger
         self._log_file = os.path.join(self.diagnostic_folder, "diagnostic.log")
         log_level = cli_settings.log_level
@@ -51,6 +54,7 @@ class Diagnostic:
         file_handler.setFormatter(self.logger.handlers[0].formatter)
         file_handler.setLevel(self.logger.level)
         self.logger.addHandler(file_handler)
+        self.logger_public = self.logger.getChild("public")
         http_log_level = cli_settings.http_log_level
 
         # Get settings
@@ -68,6 +72,15 @@ class Diagnostic:
             http_log_level=http_log_level,
             log_file=self._log_file,
             diag_folder=self.diagnostic_folder,
+        )
+        self.public_client = PublicClient(
+            rate_code="DPC",
+            # rate_option_code="CPC",
+            verify_ssl=True,
+            log_level=log_level,
+            http_log_level=http_log_level,
+            log_file=self._log_file,
+            diag_folder=self.diagnostic_folder_public,
         )
 
     def zip(self) -> None:
@@ -87,6 +100,11 @@ class Diagnostic:
         """Get diagnostic http ID."""
         return self.webuser._hydro_client._diag_id
 
+    @property
+    def public_diag_id(self) -> int:
+        """Get diagnostic http ID."""
+        return self.public_client._hydro_client._diag_id
+
     async def run(self) -> None:  # pylint: disable=too-many-statements
         """Run diagnostic."""
         today = datetime.date.today()
@@ -94,6 +112,24 @@ class Diagnostic:
         day_2 = today - datetime.timedelta(days=2)
 
         try:
+            self.logger_public.info(
+                "%02d - Checking HQ portal status", self.public_diag_id
+            )
+            hq_status = await self.public_client.check_hq_portal_status()
+            self.logger_public.info(
+                "%02d - HQ portal available: %s", self.public_diag_id - 1, hq_status
+            )
+
+            self.logger_public.info(
+                "%02d - Fetch peak using open data", self.public_diag_id
+            )
+            await self.public_client.fetch_peak_data()
+            self.logger_public.info(
+                "%02d - Peak found: %s",
+                self.public_diag_id - 1,
+                len(self.public_client.peaks),
+            )
+
             self.logger.info("%02d - Checking HQ portal status", self.diag_id)
             hq_status = await self.webuser.check_hq_portal_status()
             self.logger.info(
@@ -267,6 +303,10 @@ class Diagnostic:
                 await contract_dcpc.peak_handler.refresh_data()
                 self.logger.info("%02d - Got cpc data", self.diag_id - 1)
 
+                self.logger.info("%02d - Trying to get opn data", self.diag_id)
+                await contract_dcpc.peak_handler.refresh_open_data()
+                self.logger.info("%02d - Got open data", self.diag_id - 1)
+
             # DCP/FlexD
             elif self.contract.rate == "DPC":
                 self.logger.info("%02d - Trying to get flexD data", self.diag_id)
@@ -288,6 +328,10 @@ class Diagnostic:
                 self.logger.info("%02d - Trying to get flexD data", self.diag_id)
                 await contract_dpc.peak_handler.refresh_data()
                 self.logger.info("%02d - Got flexD data", self.diag_id - 1)
+
+                self.logger.info("%02d - Trying to get opn data", self.diag_id)
+                await contract_dcpc.peak_handler.refresh_open_data()
+                self.logger.info("%02d - Got open data", self.diag_id - 1)
 
             # DT
             if self.contract.rate == "DT":
@@ -330,6 +374,9 @@ class Diagnostic:
             traceback.print_exception(exp, file=fhtb)
             fhtb.seek(0)
             self.logger.error(fhtb.read())
+        finally:
+            await self.webuser.close_session()
+            await self.public_client.close_session()
 
 
 def parse_args() -> argparse.Namespace:
@@ -380,14 +427,10 @@ def main() -> None:
     """Run diagnostic."""
     cli_settings = parse_args()
 
-    loop = asyncio.get_event_loop()
     diag = Diagnostic(cli_settings)
 
     # Fetch data
-    loop.run_until_complete(diag.run())
-    close_fut = asyncio.gather(diag.webuser.close_session())
-    loop.run_until_complete(close_fut)
-    loop.close()
+    asyncio.run(diag.run())
     # zip
     diag.zip()
 

@@ -1,1 +1,1 @@
-mqtt-hass-base==4.3.0
+mqtt-hass-base==4.4.0
