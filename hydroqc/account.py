@@ -21,6 +21,7 @@ class Account:
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         account_id: str,
         contracts: list[Contract],
         hydro_client: HydroClient,

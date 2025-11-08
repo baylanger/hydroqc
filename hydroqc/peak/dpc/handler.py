@@ -23,6 +23,7 @@ class DPCPeakHandler(BasePeakHandler[Peak]):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         contract_id: str,
         hydro_client: HydroClient,
         logger: logging.Logger,
@@ -31,9 +32,9 @@ class DPCPeakHandler(BasePeakHandler[Peak]):
         super().__init__(
             applicant_id,
             customer_id,
-            contract_id,
-            hydro_client,
-            logger,
+            contract_id=contract_id,
+            hydro_client=hydro_client,
+            logger=logger,
         )
 
         self._raw_data: list[DPCPeakDataTyping] = []

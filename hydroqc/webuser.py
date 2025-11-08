@@ -18,6 +18,7 @@ class WebUser:
         self,
         username: str,
         password: str,
+        *,
         verify_ssl: bool,
         log_level: str | None = None,
         http_log_level: str | None = None,
@@ -28,7 +29,7 @@ class WebUser:
         self._hydro_client = HydroClient(
             username,
             password,
-            verify_ssl,
+            verify_ssl=verify_ssl,
             log_level=http_log_level,
             diag_folder=diag_folder,
         )
@@ -77,9 +78,9 @@ class WebUser:
                 customer = Customer(
                     customer_data["noPartenaireDemandeur"],
                     customer_data["noPartenaireTitulaire"],
-                    customer_names,
-                    self._hydro_client,
-                    self._log_level,
+                    customer_names=customer_names,
+                    hydro_client=self._hydro_client,
+                    log_level=self._log_level,
                 )
                 self.customers.append(customer)
         self._logger.debug("Got webuser info")

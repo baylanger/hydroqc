@@ -17,6 +17,7 @@ class PublicClient:
         self,
         rate_code: str | None = None,
         rate_option_code: str | None = None,
+        *,
         verify_ssl: bool = True,
         log_level: str | None = None,
         http_log_level: str | None = None,
@@ -43,11 +44,19 @@ class PublicClient:
         ) = None
         if self._rate_code == "D" and self._rate_option_code == "CPC":
             self.peak_handler = CPCPeakHandler(
-                "", "", "", self._hydro_client, self._logger
+                "",
+                "",
+                contract_id="",
+                hydro_client=self._hydro_client,
+                logger=self._logger,
             )
         elif self._rate_code == "DPC":
             self.peak_handler = DPCPeakHandler(
-                "", "", "", self._hydro_client, self._logger
+                "",
+                "",
+                contract_id="",
+                hydro_client=self._hydro_client,
+                logger=self._logger,
             )
 
     async def check_hq_portal_status(self) -> bool:

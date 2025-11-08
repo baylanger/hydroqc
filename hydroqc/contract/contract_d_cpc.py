@@ -17,6 +17,7 @@ class ContractDCPC(ContractD):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
@@ -27,18 +28,18 @@ class ContractDCPC(ContractD):
             self,
             applicant_id,
             customer_id,
-            account_id,
-            contract_id,
-            hydro_client,
-            log_level,
+            account_id=account_id,
+            contract_id=contract_id,
+            hydro_client=hydro_client,
+            log_level=log_level,
         )
         wch_logger = self._logger.getChild("wch")
         self._wch: CPCPeakHandler = CPCPeakHandler(
             self.applicant_id,
             self.customer_id,
-            self.contract_id,
-            hydro_client,
-            wch_logger,
+            contract_id=self.contract_id,
+            hydro_client=hydro_client,
+            logger=wch_logger,
         )
 
     @property

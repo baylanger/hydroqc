@@ -18,6 +18,7 @@ class ContractResidential(Contract):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
@@ -28,10 +29,10 @@ class ContractResidential(Contract):
             self,
             applicant_id,
             customer_id,
-            account_id,
-            contract_id,
-            hydro_client,
-            log_level,
+            account_id=account_id,
+            contract_id=contract_id,
+            hydro_client=hydro_client,
+            log_level=log_level,
         )
 
     async def get_daily_energy(
@@ -44,10 +45,10 @@ class ContractResidential(Contract):
         data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,
-            self.contract_id,
-            start_date,
-            end_date,
-            "energie-jour",
-            raw_output,
+            contract_id=self.contract_id,
+            start_date=start_date,
+            end_date=end_date,
+            option="energie-jour",
+            raw_output=raw_output,
         )
         return data_csv

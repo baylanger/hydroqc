@@ -27,7 +27,7 @@ P = ParamSpec("P")
 
 
 def check_period_data_present(
-    method: Callable[..., None | str | bool | float | PeriodDataTyping]
+    method: Callable[..., None | str | bool | float | PeriodDataTyping],
 ) -> Callable[..., None | str | bool | float | PeriodDataTyping]:
     """Check if contract's data are present."""
 
@@ -47,7 +47,7 @@ def check_period_data_present(
 
 
 def check_info_data_present(
-    method: Callable[..., None | str | bool | float | date]
+    method: Callable[..., None | str | bool | float | date],
 ) -> Callable[..., None | str | bool | float | date]:
     """Check if contract's data are present."""
 
@@ -67,7 +67,7 @@ def check_info_data_present(
 
 
 def check_annual_data_present(
-    method: Callable[..., None | str | bool | float | date]
+    method: Callable[..., None | str | bool | float | date],
 ) -> Callable[..., None | str | bool | float | date]:
     """Check if contract's data are present."""
 
@@ -124,6 +124,7 @@ class Contract(ABC):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
@@ -273,7 +274,11 @@ class Contract(ABC):
     ) -> ConsumpDailyTyping:
         """Fetch daily consumption."""
         return await self._hydro_client.get_daily_consumption(
-            self.applicant_id, self.customer_id, self.contract_id, start_date, end_date
+            self.applicant_id,
+            self.customer_id,
+            contract_id=self.contract_id,
+            start_date=start_date,
+            end_date=end_date,
         )
 
     async def get_today_daily_consumption(self) -> ConsumpDailyTyping:
@@ -313,11 +318,11 @@ class Contract(ABC):
         data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,
-            self.contract_id,
-            start_date,
-            end_date,
-            "energie-jour",
-            raw_output,
+            contract_id=self.contract_id,
+            start_date=start_date,
+            end_date=end_date,
+            option="energie-jour",
+            raw_output=raw_output,
         )
         return data_csv
 
@@ -334,11 +339,11 @@ class Contract(ABC):
         data_csv = await self._hydro_client.get_consumption_csv(
             self.applicant_id,
             self.customer_id,
-            self.contract_id,
-            start_date,
-            end_date,
-            "energie-heure",
-            raw_output,
+            contract_id=self.contract_id,
+            start_date=start_date,
+            end_date=end_date,
+            option="energie-heure",
+            raw_output=raw_output,
         )
         return data_csv
 
@@ -379,7 +384,7 @@ class Contract(ABC):
     @check_period_data_present
     def cp_projected_bill(self) -> float:
         """Projected bill of the current period."""
-        return self._all_period_data[0]["montantProjetePeriode"]
+        return float(self._all_period_data[0]["montantProjetePeriode"])
 
     @property
     @check_period_data_present
@@ -453,6 +458,7 @@ class ContractFallBack(Contract):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
@@ -463,8 +469,8 @@ class ContractFallBack(Contract):
             self,
             applicant_id,
             customer_id,
-            account_id,
-            contract_id,
-            hydro_client,
-            log_level,
+            account_id=account_id,
+            contract_id=contract_id,
+            hydro_client=hydro_client,
+            log_level=log_level,
         )
