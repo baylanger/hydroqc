@@ -19,6 +19,7 @@ class Customer:
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         customer_names: list[str],
         hydro_client: HydroClient,
         log_level: str | None = None,
@@ -71,10 +72,10 @@ class Customer:
                 account = Account(
                     self.applicant_id,
                     self.customer_id,
-                    account_id,
-                    [],
-                    self._hydro_client,
-                    self._log_level,
+                    account_id=account_id,
+                    contracts=[],
+                    hydro_client=self._hydro_client,
+                    log_level=self._log_level,
                 )
                 self.accounts.append(account)
             else:
@@ -103,10 +104,10 @@ class Customer:
                     contract = getattr(contractModule, contract_class_name)(
                         self.applicant_id,
                         self.customer_id,
-                        account_id,
-                        contract_id,
-                        self._hydro_client,
-                        self._log_level,
+                        account_id=account_id,
+                        contract_id=contract_id,
+                        hydro_client=self._hydro_client,
+                        log_level=self._log_level,
                     )
                     account.contracts.append(contract)
                 else:

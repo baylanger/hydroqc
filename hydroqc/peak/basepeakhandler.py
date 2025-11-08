@@ -24,6 +24,7 @@ class BasePeakHandler(Generic[T]):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         contract_id: str,
         hydro_client: HydroClient,
         logger: logging.Logger,

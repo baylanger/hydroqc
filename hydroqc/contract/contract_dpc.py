@@ -11,7 +11,7 @@ from hydroqc.types import DPCDataTyping
 
 
 def check_dpc_data_present(
-    method: Callable[..., None | str | bool | float | date]
+    method: Callable[..., None | str | bool | float | date],
 ) -> Callable[..., None | str | bool | float | date]:
     """Check if contractDPC's data are present."""
 
@@ -45,6 +45,7 @@ class ContractDPC(ContractResidential):
         self,
         applicant_id: str,
         customer_id: str,
+        *,
         account_id: str,
         contract_id: str,
         hydro_client: HydroClient,
@@ -55,18 +56,18 @@ class ContractDPC(ContractResidential):
             self,
             applicant_id,
             customer_id,
-            account_id,
-            contract_id,
-            hydro_client,
-            log_level,
+            account_id=account_id,
+            contract_id=contract_id,
+            hydro_client=hydro_client,
+            log_level=log_level,
         )
         peaks_logger = self._logger.getChild("peaks")
         self._peakh: DPCPeakHandler = DPCPeakHandler(
             self.applicant_id,
             self.customer_id,
-            self.contract_id,
-            hydro_client,
-            peaks_logger,
+            contract_id=self.contract_id,
+            hydro_client=hydro_client,
+            logger=peaks_logger,
         )
 
     @property

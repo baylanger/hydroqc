@@ -4,7 +4,14 @@ import datetime
 
 from hydroqc.peak.basepeak import BasePeak
 from hydroqc.peak.consts import DEFAULT_PRE_HEAT_DURATION
-from hydroqc.peak.cpc.consts import DEFAULT_ANCHOR_DURATION, DEFAULT_ANCHOR_START_OFFSET
+from hydroqc.peak.cpc.consts import (
+    DEFAULT_MORNING_ANCHOR_DURATION,
+    DEFAULT_MORNING_ANCHOR_START_OFFSET,
+    DEFAULT_EVENING_ANCHOR_DURATION,
+    DEFAULT_EVENING_ANCHOR_START_OFFSET,
+    DEFAULT_MORNING_PEAK_START,
+    DEFAULT_MORNING_PEAK_END,
+)
 from hydroqc.timerange import TimeRange
 from hydroqc.types import CriticalPeakDataTyping
 
@@ -71,15 +78,25 @@ class Peak(BasePeak):
         self._is_critical = True
         self._raw_stats = stats
 
+    def is_morning_peak(self) -> bool:
+        """Determine if this peak is a morning peak based on its start time."""
+        peak_time = self.start_date.time()
+        return DEFAULT_MORNING_PEAK_START <= peak_time <= DEFAULT_MORNING_PEAK_END
+
     @property
     def anchor(self) -> Anchor:
         """Get the anchor period of the peak."""
+        if self.is_morning_peak():
+            anchor_start_offset = DEFAULT_MORNING_ANCHOR_START_OFFSET
+            anchor_duration = DEFAULT_MORNING_ANCHOR_DURATION
+        else:
+            anchor_start_offset = DEFAULT_EVENING_ANCHOR_START_OFFSET
+            anchor_duration = DEFAULT_EVENING_ANCHOR_DURATION
+
         anchor_start_date = self.start_date - datetime.timedelta(
-            hours=DEFAULT_ANCHOR_START_OFFSET
+            hours=anchor_start_offset
         )
-        anchor_end_date = anchor_start_date + datetime.timedelta(
-            hours=DEFAULT_ANCHOR_DURATION
-        )
+        anchor_end_date = anchor_start_date + datetime.timedelta(hours=anchor_duration)
         return Anchor(anchor_start_date, anchor_end_date, self.is_critical)
 
     @property

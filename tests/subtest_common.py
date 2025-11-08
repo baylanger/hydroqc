@@ -112,7 +112,13 @@ class SubTestCommon:
                 """Fake property 4 for test."""
                 return "True"
 
-        fake_contract = FakeContract("aid", "cid", "aid", "cid", None)  # type: ignore[arg-type]
+        fake_contract = FakeContract(
+            "aid",
+            "cid",
+            account_id="aid",
+            contract_id="cid",
+            hydro_client=None,  # type: ignore[arg-type]
+        )
         fake_contract._all_period_data = [{"coutCentkWh": None}]  # type: ignore[typeddict-item]
         assert fake_contract.fake_bad_property1 is None
         assert fake_contract.fake_bad_property2 is None
