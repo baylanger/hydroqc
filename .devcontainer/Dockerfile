@@ -7,6 +7,7 @@ RUN useradd -m -s /bin/bash devcontainer \
 
 WORKDIR /home/devcontainer
 USER devcontainer
+COPY test_requirements.txt .
 RUN mkdir -p /home/devcontainer/.local/bin \
-    export PATH=$PATH:/home/devcontainer/.local/bin \
-    pip install --upgrade black tox
+    && export PATH=$PATH:/home/devcontainer/.local/bin \
+    && pip install -r test_requirements.txt
