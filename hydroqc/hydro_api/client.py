@@ -154,6 +154,7 @@ class HydroClient:
         verify_ssl: bool | None = None,
         status: int | None = 200,
         url_encoded: bool = False,
+        allow_redirects: bool | None = None,
     ) -> aiohttp.ClientResponse:
         """Make an HTTP request."""
         if params is None:
@@ -194,11 +195,16 @@ class HydroClient:
         self._logger.debug("HTTP query %s to %s", url, method)
 
         url_url = yarl.URL(url, encoded=url_encoded)
+        # Since aiohttp 3.13 redirect handling for some endpoints (notably Azure B2C flows)
+        # appears to differ (initial authorize endpoint may now return a 302 first),
+        # we allow callers to opt-in to following redirects. Default keeps previous behavior.
+        if allow_redirects is None:
+            allow_redirects = False
         raw_res: aiohttp.ClientResponse = await getattr(self._session, method)(
             url_url,
             params=params,
             data=data,
-            allow_redirects=False,
+            allow_redirects=allow_redirects,
             ssl=ssl_context,
             headers=headers,
         )
@@ -253,7 +259,11 @@ class HydroClient:
     async def _get_httpsession(self) -> None:
         """Set http session."""
         if not hasattr(self, "_cookie_jar"):
-            self._cookie_jar = aiohttp.CookieJar()
+            # aiohttp 3.12+ changed cookie quoting behavior for shared/default-scope cookies.
+            # Azure B2C endpoints used in the login flow can be sensitive to quoted cookies.
+            # Disable quoting to preserve legacy behavior and improve compatibility.
+            # Also allow 'unsafe' cookies as some endpoints may not strictly adhere to RFCs.
+            self._cookie_jar = aiohttp.CookieJar(quote_cookie=False, unsafe=True)
         if self._session is None:
             self._logger.debug("Creating new http session")
             self._session = aiohttp.ClientSession(
@@ -312,6 +322,12 @@ class HydroClient:
 
         # Get http session
         await self._get_httpsession()
+        # Ensure a clean slate for authentication cookies (csrf, TransId, etc.)
+        # Some Azure B2C flows reject reused cookies leading to 400 on SelfAsserted.
+        try:
+            self._cookie_jar.clear()
+        except AttributeError:  # pragma: no cover - defensive
+            self._logger.debug("Failed to clear cookie jar before login", exc_info=True)
 
         url = f"{AUTHORIZE_URL}"
         headers = {
@@ -329,7 +345,11 @@ class HydroClient:
             "mobile": "false",
         }
 
-        res = await self.http_request(url, "get", headers=headers, params=params)
+        # Allow redirects for initial authorize call
+        # (Azure B2C sometimes issues a 302 before final HTML)
+        res = await self.http_request(
+            url, "get", headers=headers, params=params, allow_redirects=True
+        )
 
         html_data = await res.text()
 
