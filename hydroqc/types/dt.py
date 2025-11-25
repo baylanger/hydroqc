@@ -3,9 +3,19 @@
 # pylint: disable=invalid-name
 from typing import TypedDict
 
-from hydroqc.types.dpc import DPCDataResultsTyping
 
-DTDataResultsTyping = DPCDataResultsTyping
+class DTDataResultsTyping(TypedDict, total=True):
+    """DT winter period data (legacy format)."""
+
+    dateDebut: str
+    dateFin: str
+    dateDernMaj: str
+    hrsCritiquesAppelee: str
+    hrsCritiquesAppeleesMax: str
+    montantEconPerteVSTarifBase: float
+    nbJoursTotauxHiver: int
+    nbJoursDernMaj: int
+    etatHiver: str
 
 
 class DTDataTyping(TypedDict, total=True):

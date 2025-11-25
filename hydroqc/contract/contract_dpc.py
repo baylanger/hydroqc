@@ -1,13 +1,21 @@
 """Hydroquebec contract module."""
 
 from collections.abc import Callable
-from datetime import date
+from datetime import date, datetime
+from enum import Enum
 
 from hydroqc.contract.common import check_period_data_present
 from hydroqc.contract.contract_residential import ContractResidential
 from hydroqc.hydro_api.client import HydroClient
 from hydroqc.peak.dpc.handler import DPCPeakHandler
 from hydroqc.types import DPCDataTyping
+
+
+class WinterState(str, Enum):
+    """Winter period state."""
+
+    CURRENT = "C"  # Current/Active (within winter period)
+    FINISHED = "F"  # Finished (past winter period)
 
 
 def check_dpc_data_present(
@@ -26,6 +34,20 @@ def check_dpc_data_present(
                 "Maybe you did a rate change recently. "
                 "This message should disappear at the beginning of the next bill period."
             )
+            return None
+
+        # Check if winter period data is available
+        if (
+            "periodesHiver" not in contract._dpc_data
+            or not contract._dpc_data.get("periodesHiver")
+            or len(contract._dpc_data["periodesHiver"]) == 0
+        ):
+            contract._logger.info(
+                "DPC data is empty or incomplete. "
+                "This may occur outside the winter period or during a rate transition."
+            )
+            return None
+
         return method(contract)
 
     return wrapper
@@ -86,6 +108,13 @@ class ContractDPC(ContractResidential):
         )
         return self._dpc_data
 
+    def _get_dpc_field(self, field_name: str) -> str | float | int:
+        """Get DPC field from periodesHiver data."""
+        winter_period = self._dpc_data["periodesHiver"][0]
+        if field_name in winter_period:
+            return winter_period[field_name]  # type: ignore
+        raise KeyError(f"Field {field_name} not found in DPC data")
+
     @property
     @check_period_data_present
     def cp_lower_price_consumption(self) -> float:
@@ -111,44 +140,63 @@ class ContractDPC(ContractResidential):
     @check_dpc_data_present
     def last_update_date(self) -> date:
         """DPC data last update."""
-        return date.fromisoformat(self._dpc_data["results"][0]["dateDernMaj"])
+        date_str = str(self._get_dpc_field("dateMaj"))
+        # Handle ISO format with timezone
+        if "T" in date_str:
+            return date.fromisoformat(date_str.split("T", maxsplit=1)[0])
+        return date.fromisoformat(date_str)
 
     @property
     @check_dpc_data_present
     def critical_called_hours(self) -> int:
         """Get number of critical hours."""
-        return int(self._dpc_data["results"][0]["hrsCritiquesAppelees"])
+        return int(self._get_dpc_field("hrsCritiquesAppelees"))
 
     @property
     @check_dpc_data_present
     def max_critical_called_hours(self) -> int:
         """Get max number of critical hours."""
-        return int(self._dpc_data["results"][0]["hrsCritiquesAppeleesMax"])
+        return int(self._get_dpc_field("hrsCritiquesAppeleesMax"))
 
     @property
     @check_dpc_data_present
     def amount_saved_vs_base_rate(self) -> float:
         """Amount saved or not versus the base rate."""
-        return self._dpc_data["results"][0]["montantEconPerteVSTarifBase"]
+        return float(self._get_dpc_field("montantEconPerteVSTarifBase"))
 
     @property
     @check_dpc_data_present
     def winter_total_days(self) -> int:
-        """Get number of winter days."""
-        return self._dpc_data["results"][0]["nbJoursTotauxHiver"]
+        """Get number of winter days (calculated from period dates)."""
+        winter = self._dpc_data["periodesHiver"][0]
+        start = datetime.fromisoformat(winter["dateDebut"].replace("Z", "+00:00"))
+        end = datetime.fromisoformat(winter["dateFin"].replace("Z", "+00:00"))
+        return (end - start).days
 
     @property
     @check_dpc_data_present
     def winter_total_days_last_update(self) -> int:
-        """Get number of days since winter starts."""
-        return self._dpc_data["results"][0]["nbJoursDernMaj"]
+        """Get number of days since winter starts (calculated from dates)."""
+        winter = self._dpc_data["periodesHiver"][0]
+        start = datetime.fromisoformat(winter["dateDebut"].replace("Z", "+00:00"))
+        update = datetime.fromisoformat(winter["dateMaj"].replace("Z", "+00:00"))
+        return (update - start).days
 
     @property
     @check_dpc_data_present
-    def winter_state(self) -> str:
-        """Get winter state.
+    def winter_state(self) -> WinterState:
+        """Get winter state (computed from dates).
 
-        C: started
-        ?: ???????
+        Returns:
+            WinterState.CURRENT: Within winter period
+            WinterState.FINISHED: Past winter period
         """
-        return self._dpc_data["results"][0]["etatHiver"]
+        winter = self._dpc_data["periodesHiver"][0]
+        now = datetime.now(
+            datetime.fromisoformat(winter["dateDebut"].replace("Z", "+00:00")).tzinfo
+        )
+        start = datetime.fromisoformat(winter["dateDebut"].replace("Z", "+00:00"))
+        end = datetime.fromisoformat(winter["dateFin"].replace("Z", "+00:00"))
+        if start <= now <= end:
+            return WinterState.CURRENT
+        return WinterState.FINISHED

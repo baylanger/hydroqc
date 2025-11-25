@@ -862,12 +862,16 @@ class HydroClient:
     ) -> DPCDataTyping:
         """Fetch FlexD data of the current year.
 
-        API URL: https://cl-ec-spring.hydroquebec.com/portail/fr/group/clientele/
-        portrait-de-consommation/resourceObtenirDonneesMoisHiverFlex
+        API URL: https://services-cl.solutions.hydroquebec.com/wsapi/web/prive/api/
+        v3_0/tarificationDynamique/tarifPointeCritique
 
         """
         await self._select_contract(applicant_id, customer_id, contract_id)
-        api_call_response = await self.http_request(FLEXD_DATA_URL, "get")
+        headers = await self._get_customer_http_headers(applicant_id, customer_id)
+        params = {"noContrat": contract_id}
+        api_call_response = await self.http_request(
+            FLEXD_DATA_URL, "get", params=params, headers=headers
+        )
         # We can not use res.json() because the response header are not application/json
         data: DPCDataTyping = self._load_json(await api_call_response.text())
         return data

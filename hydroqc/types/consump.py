@@ -169,23 +169,6 @@ class DPCDataResultsTyping(TypedDict, total=True):
     etatHiver: str
 
 
-class DPCDataTyping(TypedDict, total=True):
-    """FlexD data json output format."""
-
-    success: bool
-    results: list[DPCDataResultsTyping]
-
-
-DTDataResultsTyping = DPCDataResultsTyping
-
-
-class DTDataTyping(TypedDict, total=True):
-    """FlexD data json output format."""
-
-    success: bool
-    results: list[DTDataResultsTyping]
-
-
 class DPCPeakDataTyping(TypedDict, total=True):
     """DPC Peak data json output format."""
 

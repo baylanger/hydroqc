@@ -4,25 +4,42 @@
 from typing import TypedDict
 
 
-class DPCDataResultsTyping(TypedDict, total=True):
-    """FlexD data json sub output format."""
+class DPCPeriodeHiverTyping(TypedDict, total=True):
+    """FlexD winter period data (API v3_0 format)."""
 
     dateDebut: str
     dateFin: str
-    dateDernMaj: str
+    dateMaj: str
     hrsCritiquesAppelees: str
     hrsCritiquesAppeleesMax: str
     montantEconPerteVSTarifBase: float
-    nbJoursTotauxHiver: int
-    nbJoursDernMaj: int
-    etatHiver: str
 
 
-class DPCDataTyping(TypedDict, total=True):
-    """FlexD data json output format."""
+class DPCEvenementPointeTyping(TypedDict, total=True):
+    """FlexD peak event data (API v3_0 format)."""
 
-    success: bool
-    results: list[DPCDataResultsTyping]
+    dateEvenement: str
+    heureDebut: str
+    heureFin: str
+    consoReelle: float
+    codeConso: str
+    indFacture: bool
+
+
+class DPCEvenementsPointeWrapperTyping(TypedDict, total=True):
+    """FlexD peak events wrapper (API v3_0 format)."""
+
+    dateDebutPeriodeHiver: str
+    dateFinPeriodeHiver: str
+    evenementsPointe: list[DPCEvenementPointeTyping]
+
+
+class DPCDataTyping(TypedDict, total=False):
+    """FlexD data json output format (API v3_0)."""
+
+    dateTestAffichageWeb: str
+    periodesHiver: list[DPCPeriodeHiverTyping]
+    evenementsPointe: list[DPCEvenementsPointeWrapperTyping]
 
 
 class DPCPeakDataTyping(TypedDict, total=True):

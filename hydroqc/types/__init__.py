@@ -17,13 +17,13 @@ from hydroqc.types.consump import (
     ConsumpDailyTyping,
     ConsumpHourlyTyping,
     ConsumpMonthlyTyping,
-    DPCDataTyping,
     DPCPeakDataTyping,
     DPCPeakListDataTyping,
-    DTDataTyping,
 )
 from hydroqc.types.contract import ContractTyping, ListContractsTyping
 from hydroqc.types.cpc import CPCDataTyping, CriticalPeakDataTyping, PeriodDataTyping
+from hydroqc.types.dpc import DPCDataTyping
+from hydroqc.types.dt import DTDataTyping
 from hydroqc.types.outage import (
     OutageCause,
     OutageCode,
