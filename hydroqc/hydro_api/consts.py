@@ -57,8 +57,8 @@ OPEN_DATA_PEAK_URL = (
 RELATION_URL = f"{HOST_SERVICES}/wsapi/web/prive/api/v1_0/relations"
 
 FLEXD_DATA_URL = (
-    f"{HOST_SERVICES}/lsw/portail/fr/group/clientele/portrait-de-consommation/"
-    "resourceObtenirDonneesMoisHiverFlex"
+    f"{HOST_SERVICES}/wsapi/web/prive/api/v3_0/"
+    "tarificationDynamique/tarifPointeCritique"
 )
 FLEXD_PEAK_URL = f"{HOST_SERVICES}/conso/portraitweb/api/v3_0/conso"
 CONSO_CSV_URL = (
