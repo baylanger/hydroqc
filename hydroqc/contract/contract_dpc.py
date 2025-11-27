@@ -19,11 +19,13 @@ class WinterState(str, Enum):
 
 
 def check_dpc_data_present(
-    method: Callable[..., None | str | bool | float | date],
-) -> Callable[..., None | str | bool | float | date]:
+    method: Callable[..., None | str | bool | float | int | date | WinterState],
+) -> Callable[..., None | str | bool | float | int | date | WinterState]:
     """Check if contractDPC's data are present."""
 
-    def wrapper(contract: "ContractDPC") -> None | str | bool | float | date:
+    def wrapper(
+        contract: "ContractDPC",
+    ) -> None | str | bool | float | int | date | WinterState:
         if not hasattr(contract, "_dpc_data"):
             contract._logger.warning("You need to call get_dpc_data method first")
             return None
@@ -109,11 +111,17 @@ class ContractDPC(ContractResidential):
         return self._dpc_data
 
     def _get_dpc_field(self, field_name: str) -> str | float | int:
-        """Get DPC field from periodesHiver data."""
+        """Get DPC field from periodesHiver data.
+
+        Raises:
+            KeyError: If the required field is not present in the API response.
+        """
         winter_period = self._dpc_data["periodesHiver"][0]
-        if field_name in winter_period:
-            return winter_period[field_name]  # type: ignore
-        raise KeyError(f"Field {field_name} not found in DPC data")
+        if field_name not in winter_period:
+            raise KeyError(
+                f"Required field '{field_name}' not found in DPC periodesHiver data"
+            )
+        return winter_period[field_name]  # type: ignore
 
     @property
     @check_period_data_present
@@ -160,9 +168,15 @@ class ContractDPC(ContractResidential):
 
     @property
     @check_dpc_data_present
-    def amount_saved_vs_base_rate(self) -> float:
-        """Amount saved or not versus the base rate."""
-        return float(self._get_dpc_field("montantEconPerteVSTarifBase"))
+    def amount_saved_vs_base_rate(self) -> float | None:
+        """Amount saved or not versus the base rate.
+
+        Returns None if comparison data is not yet available (e.g., first year on Flex D).
+        """
+        try:
+            return float(self._get_dpc_field("montantEconPerteVSTarifBase"))
+        except KeyError:
+            return None
 
     @property
     @check_dpc_data_present
