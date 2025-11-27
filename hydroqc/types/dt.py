@@ -4,8 +4,12 @@
 from typing import TypedDict
 
 
-class DTDataResultsTyping(TypedDict, total=True):
-    """DT winter period data (legacy format)."""
+class DTDataResultsTyping(TypedDict, total=False):
+    """DT winter period data (legacy format).
+
+    Note: montantEconPerteVSTarifBase may not be available when comparison
+    data from previous billing is unavailable.
+    """
 
     dateDebut: str
     dateFin: str

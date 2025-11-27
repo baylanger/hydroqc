@@ -155,8 +155,12 @@ class ConsumpAnnualTyping(TypedDict, total=True):
     results: list[ConsumpAnnualResultsTyping]
 
 
-class DPCDataResultsTyping(TypedDict, total=True):
-    """FlexD data json sub output format."""
+class DPCDataResultsTyping(TypedDict, total=False):
+    """FlexD data json sub output format.
+
+    Note: montantEconPerteVSTarifBase may not be available in the first year of Flex D
+    as it requires comparison data from previous Rate D billing.
+    """
 
     dateDebut: str
     dateFin: str

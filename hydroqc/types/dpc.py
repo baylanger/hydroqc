@@ -4,8 +4,12 @@
 from typing import TypedDict
 
 
-class DPCPeriodeHiverTyping(TypedDict, total=True):
-    """FlexD winter period data (API v3_0 format)."""
+class DPCPeriodeHiverTyping(TypedDict, total=False):
+    """FlexD winter period data (API v3_0 format).
+
+    Note: montantEconPerteVSTarifBase may not be available in the first year of Flex D
+    as it requires comparison data from previous Rate D billing.
+    """
 
     dateDebut: str
     dateFin: str
