@@ -354,6 +354,7 @@ promote2pypi:
     - python3 -m build -o dist
     - python3 -m twine check --strict dist/*
     - twine upload --verbose --non-interactive --repository pypi dist/*
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python3 -m twine upload --verbose --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
   rules:
     - if: "$CI_SKIP =~ /pypi/"
       when: never
