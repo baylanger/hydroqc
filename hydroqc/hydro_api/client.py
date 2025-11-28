@@ -1,5 +1,6 @@
 """HydroQc Client Module."""
 
+import asyncio
 import base64
 import csv
 import json
@@ -7,7 +8,6 @@ import logging
 import os
 import platform
 import re
-import ssl
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime, timedelta
@@ -114,6 +114,8 @@ class HydroClient:
         self.guid: str = str(uuid.uuid1())
         self._logger: logging.Logger = get_logger("httpclient", log_level)
         self._logger.debug("HydroQc initialized")
+        # Cache for blocking operations (initialized lazily)
+        self._cached_version: str | None = None
         self.reset()
 
     def reset(self) -> None:
@@ -128,20 +130,27 @@ class HydroClient:
         self._selected_customer = ""
         self._selected_contract = ""
 
-    @property
-    def user_agent(self) -> str:
+    async def _get_user_agent(self) -> str:
         """Get http client user_agent."""
-        try:
-            hydroqc_version = version("Hydro_Quebec_API_Wrapper")
-        except PackageNotFoundError:
-            # package is not installed
-            self._logger.warning(
-                "Python package `Hydro_Quebec_API_Wrapper` is not installed. "
-                "Install it using pip"
-            )
-            hydroqc_version = "unkwown"
+        if self._cached_version is None:
+            # Run blocking version lookup in executor to avoid blocking event loop
+            loop = asyncio.get_event_loop()
+            try:
+                self._cached_version = await loop.run_in_executor(
+                    None, version, "Hydro_Quebec_API_Wrapper"
+                )
+            except PackageNotFoundError:
+                # package is not installed
+                self._logger.warning(
+                    "Python package `Hydro_Quebec_API_Wrapper` is not installed. "
+                    "Install it using pip"
+                )
+                self._cached_version = "unkwown"
         os_name = platform.system()
-        return f"Hydroqc/{hydroqc_version} (dev@hydroqc.ca; https://gitlab.com/hydroqc) {os_name}"
+        return (
+            f"Hydroqc/{self._cached_version} "
+            f"(dev@hydroqc.ca; https://gitlab.com/hydroqc) {os_name}"
+        )
 
     async def http_request(
         self,
@@ -163,14 +172,9 @@ class HydroClient:
             data = {}
         if headers is None:
             headers = {}
-        headers["User-Agent"] = self.user_agent
+        headers["User-Agent"] = await self._get_user_agent()
         if verify_ssl is None:
             verify_ssl = self._verify_ssl
-
-        ssl_context: ssl.SSLContext | None = None
-        if verify_ssl:
-            ssl_context = ssl.create_default_context()
-            ssl_context.set_ciphers("DEFAULT")  # Needed for python3.10
 
         # Query Diagnostic
         if self._diag_folder is not None:
@@ -205,7 +209,7 @@ class HydroClient:
             params=params,
             data=data,
             allow_redirects=allow_redirects,
-            ssl=ssl_context,
+            ssl=verify_ssl,
             headers=headers,
         )
 
