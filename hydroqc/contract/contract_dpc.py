@@ -21,7 +21,10 @@ class WinterState(str, Enum):
 def check_dpc_data_present(
     method: Callable[..., None | str | bool | float | int | date | WinterState],
 ) -> Callable[..., None | str | bool | float | int | date | WinterState]:
-    """Check if contractDPC's data are present."""
+    """Check if contractDPC's data are present.
+
+    Returns None if data is not available or incomplete.
+    """
 
     def wrapper(
         contract: "ContractDPC",
@@ -110,19 +113,6 @@ class ContractDPC(ContractResidential):
         )
         return self._dpc_data
 
-    def _get_dpc_field(self, field_name: str) -> str | float | int:
-        """Get DPC field from periodesHiver data.
-
-        Raises:
-            KeyError: If the required field is not present in the API response.
-        """
-        winter_period = self._dpc_data["periodesHiver"][0]
-        if field_name not in winter_period:
-            raise KeyError(
-                f"Required field '{field_name}' not found in DPC periodesHiver data"
-            )
-        return winter_period[field_name]  # type: ignore
-
     @property
     @check_period_data_present
     def cp_lower_price_consumption(self) -> float:
@@ -148,7 +138,7 @@ class ContractDPC(ContractResidential):
     @check_dpc_data_present
     def last_update_date(self) -> date:
         """DPC data last update."""
-        date_str = str(self._get_dpc_field("dateMaj"))
+        date_str = str(self._dpc_data["periodesHiver"][0]["dateMaj"])
         # Handle ISO format with timezone
         if "T" in date_str:
             return date.fromisoformat(date_str.split("T", maxsplit=1)[0])
@@ -158,13 +148,13 @@ class ContractDPC(ContractResidential):
     @check_dpc_data_present
     def critical_called_hours(self) -> int:
         """Get number of critical hours."""
-        return int(self._get_dpc_field("hrsCritiquesAppelees"))
+        return int(self._dpc_data["periodesHiver"][0]["hrsCritiquesAppelees"])
 
     @property
     @check_dpc_data_present
     def max_critical_called_hours(self) -> int:
         """Get max number of critical hours."""
-        return int(self._get_dpc_field("hrsCritiquesAppeleesMax"))
+        return int(self._dpc_data["periodesHiver"][0]["hrsCritiquesAppeleesMax"])
 
     @property
     @check_dpc_data_present
@@ -173,10 +163,12 @@ class ContractDPC(ContractResidential):
 
         Returns None if comparison data is not yet available (e.g., first year on Flex D).
         """
-        try:
-            return float(self._get_dpc_field("montantEconPerteVSTarifBase"))
-        except KeyError:
+        if (
+            self._dpc_data["periodesHiver"][0].get("montantEconPerteVSTarifBase")
+            is None
+        ):
             return None
+        return float(self._dpc_data["periodesHiver"][0]["montantEconPerteVSTarifBase"])
 
     @property
     @check_dpc_data_present
