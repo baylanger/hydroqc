@@ -147,8 +147,11 @@ class ContractDPC(ContractResidential):
     @property
     @check_dpc_data_present
     def critical_called_hours(self) -> int:
-        """Get number of critical hours."""
-        return int(self._dpc_data["periodesHiver"][0]["hrsCritiquesAppelees"])
+        """Get number of critical hours.
+
+        Returns 0 for current ongoing winter period where hours haven't been called yet.
+        """
+        return int(self._dpc_data["periodesHiver"][0].get("hrsCritiquesAppelees", 0))
 
     @property
     @check_dpc_data_present
@@ -182,11 +185,14 @@ class ContractDPC(ContractResidential):
     @property
     @check_dpc_data_present
     def winter_total_days_last_update(self) -> int:
-        """Get number of days since winter starts (calculated from dates)."""
+        """Get number of days since winter starts (calculated from dates).
+
+        Returns 0 if last update is before winter start (pre-season setup).
+        """
         winter = self._dpc_data["periodesHiver"][0]
         start = datetime.fromisoformat(winter["dateDebut"].replace("Z", "+00:00"))
         update = datetime.fromisoformat(winter["dateMaj"].replace("Z", "+00:00"))
-        return (update - start).days
+        return max(0, (update - start).days)
 
     @property
     @check_dpc_data_present
