@@ -29,8 +29,8 @@ renovate-config-validator:
 
 test:
   stage: test
-  tags:
-   - hydroqc
+  # tags:
+  #  - hydroqc
   image: registry.gitlab.com/hydroqc/hydroqc-base-container/3.13:latest
   script:
     - tox -e pylint,flake8,pydocstyle,typing,black,deps-conflict --parallel auto
