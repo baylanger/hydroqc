@@ -91,13 +91,27 @@ class HydroClient:
         session: aiohttp.ClientSession | None = None,
         log_level: str | None = "INFO",
         diag_folder: str | None = None,
+        enable_cache: bool = True,
     ):
-        """Initialize the client object."""
+        """Initialize the client object.
+
+        Args:
+            username: Hydro-Québec account username.
+            password: Hydro-Québec account password.
+            timeout: HTTP request timeout in seconds. Defaults to REQUESTS_TIMEOUT.
+            verify_ssl: Whether to verify SSL certificates. Defaults to True.
+            session: Optional aiohttp ClientSession to reuse. Defaults to None.
+            log_level: Logging level. Defaults to "INFO".
+            diag_folder: Optional folder path for diagnostic output. Defaults to None.
+            enable_cache: Whether to enable response caching. Defaults to True.
+
+        """
         self.username: str = username
         self.password: str = password
         self._timeout: int = timeout
         self._session: aiohttp.ClientSession | None = session
         self._verify_ssl: bool = verify_ssl
+        self.enable_cache: bool = enable_cache
 
         # OAuth handling variables
         self._id_token: str = ""
@@ -113,7 +127,10 @@ class HydroClient:
         self._diag_id: int = 0
         self.guid: str = str(uuid.uuid1())
         self._logger: logging.Logger = get_logger("httpclient", log_level)
-        self._logger.debug("HydroQc initialized")
+        self._logger.debug(
+            "HydroQc initialized (caching: %s)",
+            "enabled" if enable_cache else "disabled",
+        )
         # Cache for blocking operations (initialized lazily)
         self._cached_version: str | None = None
         self.reset()
