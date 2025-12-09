@@ -247,8 +247,26 @@ class HydroClient:
         try:
             return json.loads(data)
         except json.decoder.JSONDecodeError as exp:
-            self._logger.debug("JSON received : ", data)
-            raise HydroQcHTTPError("Bad JSON format") from exp
+            # Log the actual response for debugging
+            data_preview = (
+                (
+                    data[:500]
+                    if isinstance(data, str)
+                    else data[:500].decode("utf-8", errors="replace")
+                )
+                if data
+                else "(empty response)"
+            )
+            self._logger.error(
+                "Failed to parse JSON response. Position: line %d column %d. "
+                "Response preview (first 500 chars): %s",
+                exp.lineno,
+                exp.colno,
+                data_preview,
+            )
+            raise HydroQcHTTPError(
+                f"Bad JSON format at line {exp.lineno} column {exp.colno}: {exp.msg}"
+            ) from exp
 
     def get_token_data(self) -> IDTokenTyping | None:
         """Decode id token data."""
@@ -776,7 +794,20 @@ class HydroClient:
             HOURLY_CONSUMPTION_API_URL, "get", params=params
         )
         # We can not use res.json() because the response header are not application/json
-        data: ConsumpHourlyTyping = self._load_json(await api_call_response.text())
+        response_text = await api_call_response.text()
+
+        # Check if response is empty or whitespace only
+        if not response_text or not response_text.strip():
+            self._logger.warning(
+                "Empty response received for hourly consumption on %s. "
+                "Data may not be available yet from Hydro-Québec.",
+                date_wanted.isoformat(),
+            )
+            raise HydroQcHTTPError(
+                f"No data available for date {date_wanted.isoformat()}"
+            )
+
+        data: ConsumpHourlyTyping = self._load_json(response_text)
         return data
 
     @CCached(ttl=43200)
