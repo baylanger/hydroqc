@@ -71,6 +71,23 @@ async def test_login_reports_mfa_for_a_code_step() -> None:
 
 
 @pytest.mark.asyncio(loop_scope="module")
+async def test_login_can_skip_requesting_the_code() -> None:
+    """A background caller can stop at the code step without sending an e-mail."""
+    transport = build_mfa_login()
+    client = build_client(transport)
+
+    assert await client.login(send_mfa_code=False) is LoginStatus.MFA_REQUIRED
+    assert client._mfa_challenge is not None
+    assert not transport.called(SEND_CODE_URL)
+
+    # The caller that actually asks the user for the code sends it explicitly.
+    assert await client.request_mfa_code() is True
+    assert transport.called(SEND_CODE_URL)
+
+    await client.close_session()
+
+
+@pytest.mark.asyncio(loop_scope="module")
 async def test_login_reports_mfa_from_a_redirect() -> None:
     """A redirect to the verification page is also recognised."""
     transport = build_mfa_login(page_location=SELF_ASSERTED_PAGE)

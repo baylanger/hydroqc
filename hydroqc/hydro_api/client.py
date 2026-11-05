@@ -167,6 +167,7 @@ class HydroClient:
         # Azure AD B2C login state
         self._code_verifier: str = ""
         self._mfa_challenge: MFAChallenge | None = None
+        self._send_mfa_code: bool = True
         self._pending_cookies: list[dict[str, Any]] = []
 
         # OAuth handling variables
@@ -413,15 +414,18 @@ class HydroClient:
             return False
         return True
 
-    async def login(self) -> LoginStatus:
+    async def login(self, *, send_mfa_code: bool = True) -> LoginStatus:
         """Log in HydroQuebec website.
 
         Hydroquebec is using B2C solution for authentication. The policy may now
         stop after the password round trip and ask for a one-time code sent by
         e-mail: :attr:`LoginStatus.MFA_REQUIRED` is then returned and the code
-        has to be submitted with :meth:`submit_mfa_code`.
+        has to be submitted with :meth:`submit_mfa_code`. Set ``send_mfa_code``
+        to ``False`` to stop at that step without asking the portal to send a
+        code: only an interactive caller should let the user request one.
         """
         self._logger.info("Login using %s", self.username)
+        self._send_mfa_code = send_mfa_code
 
         # Reset cache
         self.reset()
@@ -658,7 +662,8 @@ class HydroClient:
             self.username,
             challenge.description,
         )
-        await self.request_mfa_code()
+        if self._send_mfa_code:
+            await self.request_mfa_code()
         return LoginStatus.MFA_REQUIRED
 
     async def request_mfa_code(self) -> bool:
