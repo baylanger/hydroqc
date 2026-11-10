@@ -32,6 +32,7 @@ class WebUser:
         http_log_level: str | None = None,
         log_file: str | None = None,
         diag_folder: str | None = None,
+        session: aiohttp.ClientSession | None = None,
         family: socket.AddressFamily = socket.AF_UNSPEC,  # pylint: disable=no-member
         cookie_jar: aiohttp.CookieJar | None = None,
         refresh_token: str = "",
@@ -42,6 +43,24 @@ class WebUser:
 
         ``auth_client`` selects the B2C client, ``"web"`` (default) or
         ``"mobile"``, see :class:`HydroClient`.
+
+        Args:
+            username: Hydro-Québec account username (email).
+            password: Hydro-Québec account password.
+            verify_ssl: Whether to verify SSL certificates.
+            log_level: Log level for the library logger.
+            http_log_level: Log level for HTTP request/response logging.
+            log_file: Optional path to a log file.
+            diag_folder: Optional folder path for diagnostic output.
+            session: Optional pre-configured aiohttp.ClientSession to pass
+                through to HydroClient. When provided, the caller owns the
+                session lifecycle and must close it independently.
+                The session must be created with:
+                  ``aiohttp.CookieJar(quote_cookie=False, unsafe=True)``
+                to ensure Azure B2C authentication cookies are handled
+                correctly. When None (default), HydroClient creates and
+                manages its own session.
+
         """
         self._hydro_client = HydroClient(
             username,
@@ -49,6 +68,7 @@ class WebUser:
             verify_ssl=verify_ssl,
             log_level=http_log_level,
             diag_folder=diag_folder,
+            session=session,
             family=family,
             cookie_jar=cookie_jar,
             refresh_token=refresh_token,

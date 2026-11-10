@@ -165,9 +165,14 @@ class HydroClient:
         self.password: str = password
         self._timeout: int = timeout
         self._session: aiohttp.ClientSession | None = session
+        self._external_session: bool = session is not None
         self._verify_ssl: bool = verify_ssl
         self.enable_cache: bool = enable_cache
         self._family: socket.AddressFamily = family  # pylint: disable=no-member
+        # An injected session carries its own cookie jar: use it so cookie
+        # clearing and session export/import act on the jar actually in use.
+        if cookie_jar is None and session is not None:
+            cookie_jar = session.cookie_jar  # type: ignore[assignment]
         self._cookie_jar = cookie_jar
 
         # Azure AD B2C login state
@@ -400,7 +405,15 @@ class HydroClient:
         return headers
 
     async def close_session(self) -> None:
-        """Close current session."""
+        """Close current session.
+
+        External sessions (injected via the ``session`` constructor argument)
+        are *not* closed here — the caller that created them is responsible
+        for their lifecycle.
+        """
+        if self._external_session:
+            self._logger.debug("Skipping close: session is externally managed")
+            return
         if self._session is not None:
             self._logger.debug("Closing http session")
             await self._session.close()
