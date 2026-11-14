@@ -196,3 +196,11 @@ AUTH_CLIENTS = {
         api_channel="mobile",
     ),
 }
+
+# Maintenance windows the Espace client reads (indisponibiliteUrl in its config/app.json).
+PORTAL_UNAVAILABILITY_URL = (
+    "https://clientele-statique.solutions.hydroquebec.com/config/indispo/"
+    "indisponibilites.json"
+)
+PORTAL_UNAVAILABILITY_SERVICES = ("libreService", "appMobileAuthentifiee")
+PORTAL_UNAVAILABILITY_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
